@@ -1,0 +1,136 @@
+Telemetry Viewer v0.7 Settings
+
+GUI Settings:
+
+	tile column count = 6
+	tile row count = 6
+	time format = Only Time
+	show 24-hour time = false
+	show plot tooltips = true
+	smooth scrolling = true
+	show fps and period = false
+	chart index for benchmarks = -1
+	antialiasing level = 16
+
+Communication Settings:
+
+	port = UART: COM4
+	uart baud rate = 115200
+	tcp/udp port number = 8080
+	packet type = CSV
+	sample rate = 10000
+
+7 Data Structure Locations:
+
+	location = 0
+	binary processor = null
+	name = rpm
+	color = 0xFF0000
+	unit = rpm
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 1
+	binary processor = null
+	name = engine_temp
+	color = 0x3333FF
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 2
+	binary processor = null
+	name = rad_temp
+	color = 0xFF9933
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 3
+	binary processor = null
+	name = fuel
+	color = 0x33FF33
+	unit = %
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 4
+	binary processor = null
+	name = throttle
+	color = 0xFF33FF
+	unit = %
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 5
+	binary processor = null
+	name = extra
+	color = 0x00FFCC
+	unit = %
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 6
+	binary processor = null
+	name = extra2
+	color = 0x000000
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+Checksum:
+
+	location = -1
+	checksum processor = null
+
+3 Charts:
+
+	chart type = Dial
+	top left x = 4
+	top left y = 0
+	bottom right x = 5
+	bottom right y = 1
+	normal datasets = 0
+	bitfield edge states = 
+	bitfield level states = 
+	autoscale dial minimum = true
+	manual dial minimum = -1.0
+	autoscale dial maximum = true
+	manual dial maximum = 1.0
+	sample count = 1000
+	show dataset label = true
+	show reading label = true
+	show min/max labels = true
+	show statistics = true
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 0
+	bottom right x = 1
+	bottom right y = 1
+	normal datasets = 1
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 500
+	x-axis = Sample Count
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = false
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Quaternion
+	top left x = 2
+	top left y = 0
+	bottom right x = 2
+	bottom right y = 0
+	normal datasets = 0,0,0,0
+	bitfield edge states = 
+	bitfield level states = 
+	show text label = true
