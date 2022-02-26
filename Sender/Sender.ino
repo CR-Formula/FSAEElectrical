@@ -21,7 +21,7 @@ int integerFromPC = 0;
 typedef struct test_struct {
   
   //Array to store CAN information
-  int nums[5];
+  int nums[14]; //Change if added Sensors
   
 } test_struct;
 test_struct test;
@@ -69,21 +69,55 @@ void loop() {
   showNewData();
 
   //Loop for copying values into data structure array
-  String tempNums = "";
-  int k = 0;
-  for (int i = 0; receivedChars[i] != '\0'; i++) {
-    if (isDigit(receivedChars[i])) {
-      tempNums += receivedChars[i];
+  //TODO -- Custom CAN Packets
+
+  /*Add if statements for each custom Packet ID
+  Run the below int scan and conversion
+  place values into specific main buffer locations*/
+
+  /*Convert the recived chars array
+  Add values to tempVal array
+  scan for ID in tempVal Array -- tempVal[0]
+  assign values to specific main buffer locations*/
+
+  // receivedChars -> each index is 1 byte [2, 3, ','...]
+
+  int tempVal[numChars];
+  String tempNums = ""; //Hold the current number from received chars
+  int k = 0; //index for main nums buffer
+  //add to struct array -> test.nums[index]
+  for (int i = 0; receivedChars[i] != '\0'; i++) { //checks each value in recivedChars
+    if (isDigit(receivedChars[i])) { //checks if the value is a digit
+      tempNums += receivedChars[i]; //places the digit into tempnums
     }
-    else if (receivedChars[i] == ',') {
-      test.nums[k] = tempNums.toInt();
-      k++;
-      tempNums = "";
+    else if (receivedChars[i] == ',') { //checks of the value is a comma
+     tempVal[k] = tempNums.toInt(); //adds the current value of temp nums to temp array -- was test.nums[k]
+      k++; //interates index for main buffer array
+      tempNums = ""; //clears tempnums for next number value
     }
   }
 
-  //Tests that the data was sent successfully
+  if (tempVal[0] == 1) {
+      int i;
+      for (i = 0; i < 8; i++) { //RPM, TPS, Fuel Open Time, Ignition Angle
+          test.nums[i] = tempVal[i + 1];
+      }
+  }
+  else if (tempVal[0] == 2) { //Lambda
+      test.nums[8] = tempVal[1];
+      test.nums[9] = tempVal[2];
+  }
+  else if (tempVal[0] == 3) { //Air temp, Coolant Temp
+      test.nums[10] = tempVal[1];
+      test.nums[11] = tempVal[2];
+      test.nums[12] = tempVal[3];
+      test.nums[13] = tempVal[4];
+  }
+
+  //sends the specified data
   esp_err_t result = esp_now_send(0, (uint8_t *) &test, sizeof(test_struct)); 
+
+  //Tests that the data was sent successfully
   if (result == ESP_OK) {
     Serial.println("Sent with success");
   }
@@ -92,7 +126,7 @@ void loop() {
   }
 }
 
-//Gets data from the CAN bus
+//Gets data from the CAN filter
 void recWithStartEndMarkers() {
   static boolean recInProgress = false;
   static byte ndx = 0;
@@ -124,7 +158,7 @@ void recWithStartEndMarkers() {
  }
 }
 
-//Shows data recieved from CAN bus
+//Shows data recieved from CAN filter
 void showNewData() {
   if (newData == true) {
     Serial.print("CAN PACKET: ");

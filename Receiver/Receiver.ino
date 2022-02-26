@@ -13,7 +13,7 @@
 typedef struct test_struct {
 
   //Array to store CAN information
-  int nums[5];
+  int nums[14]; //Change if added Sensors
   
 } test_struct;
 
@@ -45,14 +45,17 @@ void loop() {
   //variables for the PE3 ECU CAN data
   //All 2 byte data is stored [LowByte, HighByte]
   //Num = (HighByte*256 + LowByte) * resolution
-  int temp = myData.nums[0] + (myData.nums[1] * 256);
-  //Serial.println("%d", temp);
 
-  //will have to add the code to print variables as CSV for GUI, need to know how many variables we will have
+  //May need to add some statements for possible negative values
+
+  int RPM = (myData.nums[0] + myData.nums[1] * 256) * 1; //Holds RPM value
+  double TPS = (myData.nums[2] + myData.nums[3] * 256) * 0.1; //Holds TPS value
+  double FOT = (myData.nums[4] + myData.nums[5] * 256) * 0.1; //holds Fuel Open Time value
+  double IA = (myData.nums[6] + myData.nums[7] * 256) * 0.1; //Holds Ignition Angle value
+  double Lam = (myData.nums[8] + myData.nums[9] * 256) * 0.01; //Holds Lambda value
+  double AirT = (myData.nums[10] + myData.nums[11] * 256) * 0.1; //Holds Air Temp value
+  double CoolT = (myData.nums[12] + myData.nums[13] * 256) * 0.1; //Holds Coolent Temp value
   
-  for (int i = 0; i < 5; i++) {
-    Serial.print(myData.nums[i]);
-    Serial.print(", ");
-  }
-  Serial.println("");
+  //CSV format Serial Print
+  Serial.println("%d, %d, %d, %d, %d, %d, %d", RPM, TPS, FOT, IA, Lam, AirT, CoolT);
 }
