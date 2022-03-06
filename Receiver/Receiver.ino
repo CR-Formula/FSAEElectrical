@@ -51,12 +51,12 @@ void loop() {
   
 
   unsigned int RPM = (myData.nums[0] + myData.nums[1] * 256) * 1; //Holds RPM value
-  signed double TPS = (myData.nums[2] + myData.nums[3] * 256) * 0.1; //Holds TPS value
-  signed double FOT = (myData.nums[4] + myData.nums[5] * 256) * 0.1; //holds Fuel Open Time value
-  signed double IA = (myData.nums[6] + myData.nums[7] * 256) * 0.1; //Holds Ignition Angle value
-  signed double Lam = (myData.nums[8] + myData.nums[9] * 256) * 0.01; //Holds Lambda value
-  signed double AirT = (myData.nums[10] + myData.nums[11] * 256) * 0.1; //Holds Air Temp value
-  signed double CoolT = (myData.nums[12] + myData.nums[13] * 256) * 0.1; //Holds Coolent Temp value
+  double TPS = (myData.nums[2] + myData.nums[3] * 256) * 0.1; //Holds TPS value
+  double FOT = (myData.nums[4] + myData.nums[5] * 256) * 0.1; //holds Fuel Open Time value
+  double IA = (myData.nums[6] + myData.nums[7] * 256) * 0.1; //Holds Ignition Angle value
+  double 6Lam = (myData.nums[8] + myData.nums[9] * 256) * 0.01; //Holds Lambda value
+  double AirT = (myData.nums[10] + myData.nums[11] * 256) * 0.1; //Holds Air Temp value
+  double CoolT = (myData.nums[12] + myData.nums[13] * 256) * 0.1; //Holds Coolent Temp value
   
   //CSV format Serial Print
   Serial.printf("%d, %d, %d, %d, %d, %d, %d\n", RPM, TPS, FOT, IA, Lam, AirT, CoolT);

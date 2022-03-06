@@ -1,4 +1,4 @@
-/* 2021 Iowa State Formula SAE Electrical Subsystem*/
+                                      /* 2021 Iowa State Formula SAE Electrical Subsystem*/
 
 #include <esp_now.h>
 #include <WiFi.h>
@@ -68,17 +68,10 @@ void loop() {
   //Print data for testing
   showNewData();
 
-  //Loop for copying values into data structure array
-  //TODO -- Custom CAN Packets
-
-  /*Add if statements for each custom Packet ID
-  Run the below int scan and conversion
-  place values into specific main buffer locations*/
-
-  /*Convert the recived chars array
-  Add values to tempVal array
-  scan for ID in tempVal Array -- tempVal[0]
-  assign values to specific main buffer locations*/
+  /*Loop for copying values into data structure array
+  * 
+  * Look into using Serial.read() as it may prevent conversion issues
+  */
 
   // receivedChars -> each index is 1 byte [2, 3, ','...]
 

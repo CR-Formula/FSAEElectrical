@@ -39,6 +39,9 @@ void setup()
 /**
  * Method for sending the data from the CAN Packets
  * Passes a data array and a length value
+ * 
+ * Look into Serial.send() instead, may lead to less need for conversion
+ * 
  */
 void sendTheData(unsigned char data[], int n)
 {
@@ -58,7 +61,8 @@ void loop()
   {
     //Read Data to data buffer array
     CAN0.readMsgBuf(&rxId, &len, rxBuf);
-    
+
+    //Old Example Code
     /*if((rxId & 0x80000000) == 0x80000000)     // Determine if ID is standard (11 bits) or extended (29 bits)
       sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (rxId & 0x1FFFFFFF), len);
     else

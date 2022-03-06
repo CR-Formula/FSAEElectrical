@@ -14,7 +14,7 @@ GUI Settings:
 
 Communication Settings:
 
-	port = UART: COM4
+	port = UART: COM6
 	uart baud rate = 115200
 	tcp/udp port number = 8080
 	packet type = CSV
@@ -24,7 +24,7 @@ Communication Settings:
 
 	location = 0
 	binary processor = null
-	name = rpm
+	name = RPM
 	color = 0xFF0000
 	unit = rpm
 	conversion factor a = 1.0
@@ -32,49 +32,49 @@ Communication Settings:
 
 	location = 1
 	binary processor = null
-	name = engine_temp
-	color = 0x3333FF
-	unit = C
+	name = TPS
+	color = 0xFF00FF
+	unit = %
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
 	location = 2
 	binary processor = null
-	name = rad_temp
-	color = 0xFF9933
-	unit = C
+	name = Fuel Open Time
+	color = 0x3333FF
+	unit = ms
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
 	location = 3
 	binary processor = null
-	name = fuel
-	color = 0x33FF33
-	unit = %
+	name = Ignition Angle
+	color = 0x66FF33
+	unit = deg
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
 	location = 4
 	binary processor = null
-	name = throttle
-	color = 0xFF33FF
-	unit = %
+	name = Lambda
+	color = 0xFF9933
+	unit = Lambda
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
 	location = 5
 	binary processor = null
-	name = extra
-	color = 0x00FFCC
-	unit = %
+	name = Air Temp
+	color = 0x33FFFF
+	unit = deg
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
 	location = 6
 	binary processor = null
-	name = extra2
-	color = 0x000000
-	unit = C
+	name = Coolant Temp
+	color = 0x00CC00
+	unit = deg
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
@@ -83,14 +83,142 @@ Checksum:
 	location = -1
 	checksum processor = null
 
-3 Charts:
+7 Charts:
 
 	chart type = Dial
+	top left x = 0
+	top left y = 0
+	bottom right x = 1
+	bottom right y = 1
+	normal datasets = 0
+	bitfield edge states = 
+	bitfield level states = 
+	autoscale dial minimum = false
+	manual dial minimum = 0.0
+	autoscale dial maximum = false
+	manual dial maximum = 15000.0
+	sample count = 1000
+	show dataset label = true
+	show reading label = true
+	show min/max labels = true
+	show statistics = true
+
+	chart type = Time Domain
+	top left x = 2
+	top left y = 0
+	bottom right x = 3
+	bottom right y = 1
+	normal datasets = 5
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Time Domain
 	top left x = 4
 	top left y = 0
 	bottom right x = 5
 	bottom right y = 1
-	normal datasets = 0
+	normal datasets = 6
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 2
+	bottom right x = 1
+	bottom right y = 3
+	normal datasets = 1
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Time Domain
+	top left x = 2
+	top left y = 2
+	bottom right x = 3
+	bottom right y = 3
+	normal datasets = 2
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 4
+	bottom right x = 5
+	bottom right y = 5
+	normal datasets = 4
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Dial
+	top left x = 4
+	top left y = 2
+	bottom right x = 5
+	bottom right y = 3
+	normal datasets = 3
 	bitfield edge states = 
 	bitfield level states = 
 	autoscale dial minimum = true
@@ -102,35 +230,3 @@ Checksum:
 	show reading label = true
 	show min/max labels = true
 	show statistics = true
-
-	chart type = Time Domain
-	top left x = 0
-	top left y = 0
-	bottom right x = 1
-	bottom right y = 1
-	normal datasets = 1
-	bitfield edge states = 
-	bitfield level states = 
-	duration type = Samples
-	duration = 500
-	x-axis = Sample Count
-	autoscale y-axis minimum = true
-	manual y-axis minimum = -1.0
-	autoscale y-axis maximum = true
-	manual y-axis maximum = 1.0
-	show x-axis title = false
-	show x-axis scale = true
-	show y-axis title = true
-	show y-axis scale = true
-	show legend = true
-	cached mode = false
-
-	chart type = Quaternion
-	top left x = 2
-	top left y = 0
-	bottom right x = 2
-	bottom right y = 0
-	normal datasets = 0,0,0,0
-	bitfield edge states = 
-	bitfield level states = 
-	show text label = true
