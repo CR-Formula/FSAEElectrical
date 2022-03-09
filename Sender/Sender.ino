@@ -1,4 +1,4 @@
-                                      /* 2021 Iowa State Formula SAE Electrical Subsystem*/
+/* 2021 Iowa State Formula SAE Electrical Subsystem*/
 
 #include <esp_now.h>
 #include <WiFi.h>
@@ -28,14 +28,7 @@ test_struct test;
 
 //Function to check if data send was successful
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
-  char macStr[18];
-  Serial.print("Packet to: ");
-  // Copies the sender mac address to a string
-  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  Serial.print(macStr);
-  Serial.print(" send status:\t");
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "" : "Delivery Fail");
 }
  
 void setup() {
@@ -73,49 +66,63 @@ void loop() {
   * Look into using Serial.read() as it may prevent conversion issues
   */
 
-  // receivedChars -> each index is 1 byte [2, 3, ','...]
+  // receivedChars -> CAN PACKET: 1.,.0.,.0.,.2.,.0.,.D.6.,.1.,.6.4.,.0.,
 
   int tempVal[numChars];
-  String tempNums = ""; //Hold the current number from received chars
+  char base[32] = "0x";
+  char tempNums[32] = "0x"; //Hold the current number from received chars
   int k = 0; //index for main nums buffer
+  int q = 0; //index for tracking tempNums index
   //add to struct array -> test.nums[index]
-  for (int i = 0; receivedChars[i] != '\0'; i++) { //checks each value in recivedChars
-    if (isDigit(receivedChars[i])) { //checks if the value is a digit
-      tempNums += receivedChars[i]; //places the digit into tempnums
+
+  for (int i = 0; receivedChars[i] != '\0'; i++) {
+    if (receivedChars[i] != ',') {
+      tempNums[q] = receivedChars[i];
+      q++;  
     }
-    else if (receivedChars[i] == ',') { //checks of the value is a comma
-     tempVal[k] = tempNums.toInt(); //adds the current value of temp nums to temp array -- was test.nums[k]
-      k++; //interates index for main buffer array
-      tempNums = ""; //clears tempnums for next number value
+    else if (receivedChars[i] == ',') {
+      tempVal[k] = (int)strtol(tempNums, NULL, 16);
+      k++;
+      q = 0;
+      strcpy(tempNums, base);
     }
   }
-
-  if (tempVal[0] == 1) {
+  
+  
+  if (receivedChars[0] == '1') {
       int i;
       for (i = 0; i < 8; i++) { //RPM, TPS, Fuel Open Time, Ignition Angle
           test.nums[i] = tempVal[i + 1];
       }
   }
-  else if (tempVal[0] == 2) { //Lambda
+  if (receivedChars[0] == '2') { //Lambda
       test.nums[8] = tempVal[1];
       test.nums[9] = tempVal[2];
   }
-  else if (tempVal[0] == 3) { //Air temp, Coolant Temp
+  if (receivedChars[0] == '3') { //Air temp, Coolant Temp
       test.nums[10] = tempVal[1];
       test.nums[11] = tempVal[2];
       test.nums[12] = tempVal[3];
       test.nums[13] = tempVal[4];
   }
 
+  
   //sends the specified data
   esp_err_t result = esp_now_send(0, (uint8_t *) &test, sizeof(test_struct)); 
 
   //Tests that the data was sent successfully
   if (result == ESP_OK) {
-    Serial.println("Sent with success");
+    //Serial.println("Sent with success");
+    int a = 0;
+    Serial.print("Buffer: ");
+    for (a = 0; a < 14; a++) {
+      Serial.print(test.nums[a], HEX);
+      Serial.print(',');
+    }
+    Serial.println(' ');
   }
   else {
-    Serial.println("Error sending the data");
+    //Serial.println("Error sending the data");
   }
 }
 

@@ -14,7 +14,7 @@ GUI Settings:
 
 Communication Settings:
 
-	port = UART: COM6
+	port = UART: COM3
 	uart baud rate = 115200
 	tcp/udp port number = 8080
 	packet type = CSV
@@ -111,9 +111,9 @@ Checksum:
 	normal datasets = 5
 	bitfield edge states = 
 	bitfield level states = 
-	duration type = Samples
-	duration = 1000
-	x-axis = Sample Count
+	duration type = Seconds
+	duration = 3.0
+	x-axis = Timestamps
 	autoscale y-axis minimum = true
 	manual y-axis minimum = -1.0
 	autoscale y-axis maximum = true
@@ -133,31 +133,9 @@ Checksum:
 	normal datasets = 6
 	bitfield edge states = 
 	bitfield level states = 
-	duration type = Samples
-	duration = 1000
-	x-axis = Sample Count
-	autoscale y-axis minimum = true
-	manual y-axis minimum = -1.0
-	autoscale y-axis maximum = true
-	manual y-axis maximum = 1.0
-	show x-axis title = true
-	show x-axis scale = true
-	show y-axis title = true
-	show y-axis scale = true
-	show legend = true
-	cached mode = false
-
-	chart type = Time Domain
-	top left x = 0
-	top left y = 2
-	bottom right x = 1
-	bottom right y = 3
-	normal datasets = 1
-	bitfield edge states = 
-	bitfield level states = 
-	duration type = Samples
-	duration = 1000
-	x-axis = Sample Count
+	duration type = Seconds
+	duration = 3.0
+	x-axis = Timestamps
 	autoscale y-axis minimum = true
 	manual y-axis minimum = -1.0
 	autoscale y-axis maximum = true
@@ -177,9 +155,9 @@ Checksum:
 	normal datasets = 2
 	bitfield edge states = 
 	bitfield level states = 
-	duration type = Samples
-	duration = 1000
-	x-axis = Sample Count
+	duration type = Seconds
+	duration = 3.0
+	x-axis = Timestamps
 	autoscale y-axis minimum = true
 	manual y-axis minimum = -1.0
 	autoscale y-axis maximum = true
@@ -199,9 +177,9 @@ Checksum:
 	normal datasets = 4
 	bitfield edge states = 
 	bitfield level states = 
-	duration type = Samples
-	duration = 1000
-	x-axis = Sample Count
+	duration type = Seconds
+	duration = 10.0
+	x-axis = Timestamps
 	autoscale y-axis minimum = true
 	manual y-axis minimum = -1.0
 	autoscale y-axis maximum = true
@@ -225,6 +203,24 @@ Checksum:
 	manual dial minimum = -1.0
 	autoscale dial maximum = true
 	manual dial maximum = 1.0
+	sample count = 1000
+	show dataset label = true
+	show reading label = true
+	show min/max labels = true
+	show statistics = true
+
+	chart type = Dial
+	top left x = 0
+	top left y = 2
+	bottom right x = 1
+	bottom right y = 3
+	normal datasets = 1
+	bitfield edge states = 
+	bitfield level states = 
+	autoscale dial minimum = false
+	manual dial minimum = 0.0
+	autoscale dial maximum = false
+	manual dial maximum = 100.0
 	sample count = 1000
 	show dataset label = true
 	show reading label = true

@@ -98,7 +98,7 @@ void loop()
         }
 
         sendTheData(data, 9);
-        delay(50); //Will have to tune these for each package
+        //delay(50); //Will have to tune these for each package
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF148) { //Lambda
       unsigned char newID = 0x2;
@@ -108,7 +108,7 @@ void loop()
       data[2] = rxBuf[3];
 
       sendTheData(data, 3);
-      delay(50);
+      //delay(50);
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF548) { //Air Temp, Coolant Temp
        unsigned char newID = 0x3;
@@ -124,7 +124,7 @@ void loop()
        sendTheData(data, 5);
        //Serial.print(rxBuf[4], DEC);
        //Serial.print(rxBuf[5], DEC);
-       delay(50);
+       //delay(50);
     }
     
     
