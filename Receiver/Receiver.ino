@@ -1,4 +1,4 @@
- /* 2021 Iowa State Formula SAE Electrical Subsystem*/
+/* 2021 Iowa State Formula SAE Electrical Subsystem*/
 
 #include <esp_now.h>
 #include <WiFi.h>
@@ -14,6 +14,7 @@ typedef struct test_struct {
 
   //Array to store CAN information
   int nums[14]; //Change if added Sensors
+  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool]
   
 } test_struct;
 
@@ -30,6 +31,7 @@ void setup() {
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
 
+  //init the ESP connection
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
@@ -46,9 +48,6 @@ void loop() {
   //All 2 byte data is stored [LowByte, HighByte]
   //Num = (HighByte*256 + LowByte) * resolution
 
-  //May need to add some statements for possible negative values
-
-  
 
   unsigned int RPM = (myData.nums[0] + myData.nums[1] * 256) * 1; //Holds RPM value
   double TPS = (myData.nums[2] + myData.nums[3] * 256) * 0.1; //Holds TPS value

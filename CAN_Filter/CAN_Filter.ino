@@ -1,4 +1,4 @@
-// CAN Bus Filter
+/*2021-22 Iowa State Formula SAE Electrical Subsystem*/
 
 #include <mcp_can.h>
 #include <SPI.h>
@@ -39,9 +39,6 @@ void setup()
 /**
  * Method for sending the data from the CAN Packets
  * Passes a data array and a length value
- * 
- * Look into Serial.send() instead, may lead to less need for conversion
- * 
  */
 void sendTheData(unsigned char data[], int n)
 {
@@ -62,30 +59,6 @@ void loop()
     //Read Data to data buffer array
     CAN0.readMsgBuf(&rxId, &len, rxBuf);
 
-    //Old Example Code
-    /*if((rxId & 0x80000000) == 0x80000000)     // Determine if ID is standard (11 bits) or extended (29 bits)
-      sprintf(msgString, "Extended ID: 0x%.8lX  DLC: %1d  Data:", (rxId & 0x1FFFFFFF), len);
-    else
-      sprintf(msgString, "Standard ID: 0x%.3lX       DLC: %1d  Data:", rxId, len);
-  
-    Serial.print(msgString);
-  
-    if((rxId & 0x40000000) == 0x40000000){    // Determine if message is a remote request frame.
-      sprintf(msgString, " REMOTE REQUEST FRAME");
-      Serial.print(msgString);
-    } else {
-      for(byte i = 0; i<len; i++){
-        sprintf(msgString, " 0x%.2X", rxBuf[i]);
-        Serial.print(msgString);
-      }
-    }
-    if((rxId & 0x1FFFFFFF) == 0x0CFFF548){
-      Serial.print(rxBuf[4]);
-    }
-    Serial.println();
-  }
-  */
-
     //check for specific CAN ID. pull need data, and repackage the data
     //Change if added Sensors
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF048) { //RPM, TPS, Fuel Open Time, Igniton Angle
@@ -98,7 +71,6 @@ void loop()
         }
 
         sendTheData(data, 9);
-        //delay(50); //Will have to tune these for each package
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF148) { //Lambda
       unsigned char newID = 0x2;
@@ -108,7 +80,6 @@ void loop()
       data[2] = rxBuf[3];
 
       sendTheData(data, 3);
-      //delay(50);
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF548) { //Air Temp, Coolant Temp
        unsigned char newID = 0x3;
@@ -122,11 +93,10 @@ void loop()
 
        //Send new CAN Packet to the sender ESP board
        sendTheData(data, 5);
+       //Code to test values
        //Serial.print(rxBuf[4], DEC);
        //Serial.print(rxBuf[5], DEC);
        //delay(50);
     }
-    
-    
   }
 }

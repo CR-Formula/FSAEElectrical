@@ -18,10 +18,12 @@ boolean newData = false;
 int integerFromPC = 0;
 
 //Data Structure to store variables to be sent
+//struct must match receiver
 typedef struct test_struct {
   
   //Array to store CAN information
   int nums[14]; //Change if added Sensors
+  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool]
   
 } test_struct;
 test_struct test;
@@ -36,12 +38,13 @@ void setup() {
   Serial2.begin(115200);
   WiFi.mode(WIFI_STA);
  
+  //Checks for ESP connection
   if (esp_now_init() != ESP_OK) {
     Serial.println("Error initializing ESP-NOW");
     return;
   }
   
-  esp_now_register_send_cb(OnDataSent);
+  esp_now_register_send_cb(OnDataSent); //sends data
    
   //Set Receiver information
   esp_now_peer_info_t peerInfo;
@@ -61,37 +64,35 @@ void loop() {
   //Print data for testing
   showNewData();
 
-  /*Loop for copying values into data structure array
-  * 
-  * Look into using Serial.read() as it may prevent conversion issues
-  */
+  //Loop for copying values into data structure array
+  //receivedChars -> CAN PACKET: 1.,.0.,.0.,.2.,.0.,.D.6.,.1.,.6.4.,.0.,
+  //'.' seperate the indexes in the recievedChars array
 
-  // receivedChars -> CAN PACKET: 1.,.0.,.0.,.2.,.0.,.D.6.,.1.,.6.4.,.0.,
-
-  int tempVal[numChars];
-  char base[32] = "0x";
+  int tempVal[numChars]; //Holds the CAN packet info
+  char base[32] = "0x"; //used to clear string -- Could be "" as the 0x is overwrittten anyway
   char tempNums[32] = "0x"; //Hold the current number from received chars
   int k = 0; //index for main nums buffer
   int q = 0; //index for tracking tempNums index
   //add to struct array -> test.nums[index]
 
+  //Conversion algorithm for hex char to int values
   for (int i = 0; receivedChars[i] != '\0'; i++) {
-    if (receivedChars[i] != ',') {
+    if (receivedChars[i] != ',') { //check for values between commas
       tempNums[q] = receivedChars[i];
       q++;  
     }
-    else if (receivedChars[i] == ',') {
+    else if (receivedChars[i] == ',') { //empty the char array to tempVal
       tempVal[k] = (int)strtol(tempNums, NULL, 16);
       k++;
-      q = 0;
-      strcpy(tempNums, base);
+      q = 0; //reset tempNums index
+      strcpy(tempNums, base); //clear string by copying the value from base
     }
   }
   
   
-  if (receivedChars[0] == '1') {
+  if (receivedChars[0] == '1') {//RPM, TPS, Fuel Open Time, Ignition Angle
       int i;
-      for (i = 0; i < 8; i++) { //RPM, TPS, Fuel Open Time, Ignition Angle
+      for (i = 0; i < 8; i++) { 
           test.nums[i] = tempVal[i + 1];
       }
   }
@@ -114,6 +115,7 @@ void loop() {
   if (result == ESP_OK) {
     //Serial.println("Sent with success");
     int a = 0;
+    //prints the buffer value
     Serial.print("Buffer: ");
     for (a = 0; a < 14; a++) {
       Serial.print(test.nums[a], HEX);
@@ -121,19 +123,20 @@ void loop() {
     }
     Serial.println(' ');
   }
-  else {
+  else { //should be able to remove this
     //Serial.println("Error sending the data");
   }
 }
 
-//Gets data from the CAN filter
+//Gets data from the CAN filter and removes delimiters
 void recWithStartEndMarkers() {
   static boolean recInProgress = false;
   static byte ndx = 0;
-  char startMarker = '<';
-  char endMarker = '>';
+  char startMarker = '<'; //sets the start marker
+  char endMarker = '>'; //sets the end marker
   char rc;
 
+  //copys the input string to receivedChars without start/end markers
   while (Serial2.available() && newData == false) {
     rc = Serial2.read();
 
@@ -158,7 +161,8 @@ void recWithStartEndMarkers() {
  }
 }
 
-//Shows data recieved from CAN filter
+//Shows the custom CAN packets that have been received
+//Prints receivedChars as a string
 void showNewData() {
   if (newData == true) {
     Serial.print("CAN PACKET: ");
