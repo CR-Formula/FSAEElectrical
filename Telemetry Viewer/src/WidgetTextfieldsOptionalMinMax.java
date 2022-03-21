@@ -27,7 +27,6 @@ public class WidgetTextfieldsOptionalMinMax extends Widget {
 	 * A widget that lets the user make minimum and maximum values be fixed or autoscaled.
 	 * 
 	 * @param labelPrefix        Text to show before the "Minimum" or "Maximum" label.
-	 * @param allowAutoscale     True to allow autoscaling, false to require specific min/max values.
 	 * @param defaultMin         Default value for minimum.
 	 * @param defaultMax         Default value for maximum.
 	 * @param lowerLimit         Minimum allowed value.
@@ -35,7 +34,7 @@ public class WidgetTextfieldsOptionalMinMax extends Widget {
 	 * @param minEventHandler    Will be notified when the minimum changes.
 	 * @param maxEventHandler    Will be notified when the maximum changes.
 	 */
-	public WidgetTextfieldsOptionalMinMax(String labelPrefix, boolean allowAutoscale, float defaultMin, float defaultMax, float lowerLimit, float upperLimit, BiConsumer<Boolean, Float> minEventHandler, BiConsumer<Boolean, Float> maxEventHandler) {
+	public WidgetTextfieldsOptionalMinMax(String labelPrefix, float defaultMin, float defaultMax, float lowerLimit, float upperLimit, BiConsumer<Boolean, Float> minEventHandler, BiConsumer<Boolean, Float> maxEventHandler) {
 		
 		super();
 		
@@ -53,9 +52,9 @@ public class WidgetTextfieldsOptionalMinMax extends Widget {
 			@Override public void focusLost(FocusEvent fe)   { sanityCheck(); }
 			@Override public void focusGained(FocusEvent fe) { maxTextfield.selectAll(); }
 		});
-		maxTextfield.addActionListener(event -> sanityCheck());
 		
-		maxCheckbox = new JCheckBox("Automatic", allowAutoscale);
+		maxCheckbox = new JCheckBox("Automatic");
+		maxCheckbox.setSelected(true);
 		maxCheckbox.addActionListener(event -> sanityCheck());
 		
 		minTextfield = new JTextField(Float.toString(defaultMin));
@@ -64,17 +63,15 @@ public class WidgetTextfieldsOptionalMinMax extends Widget {
 			@Override public void focusLost(FocusEvent fe)   { sanityCheck(); }
 			@Override public void focusGained(FocusEvent fe) { minTextfield.selectAll(); }
 		});
-		minTextfield.addActionListener(event -> sanityCheck());
 		
-		minCheckbox = new JCheckBox("Automatic", allowAutoscale);
+		minCheckbox = new JCheckBox("Automatic");
+		minCheckbox.setSelected(true);
 		minCheckbox.addActionListener(event -> sanityCheck());
 		
 		JPanel maxPanel = new JPanel();
 		maxPanel.setLayout(new BoxLayout(maxPanel, BoxLayout.X_AXIS));
-		if(allowAutoscale) {
-			maxPanel.add(maxCheckbox);
-			maxPanel.add(Box.createHorizontalStrut(Theme.padding));
-		}
+		maxPanel.add(maxCheckbox);
+		maxPanel.add(Box.createHorizontalStrut(Theme.padding));
 		maxPanel.add(maxTextfield);
 		
 		widgets.put(new JLabel(labelPrefix + " Maximum: "), "");
@@ -82,10 +79,8 @@ public class WidgetTextfieldsOptionalMinMax extends Widget {
 		
 		JPanel minPanel = new JPanel();
 		minPanel.setLayout(new BoxLayout(minPanel, BoxLayout.X_AXIS));
-		if(allowAutoscale) {
-			minPanel.add(minCheckbox);
-			minPanel.add(Box.createHorizontalStrut(Theme.padding));
-		}
+		minPanel.add(minCheckbox);
+		minPanel.add(Box.createHorizontalStrut(Theme.padding));
 		minPanel.add(minTextfield);
 		
 		widgets.put(new JLabel(labelPrefix + " Minimum: "), "");
@@ -154,7 +149,7 @@ public class WidgetTextfieldsOptionalMinMax extends Widget {
 	 * 
 	 * @param lines    A queue of remaining lines from the layout file.
 	 */
-	@Override public void importState(ConnectionsController.QueueOfLines lines) {
+	@Override public void importState(CommunicationController.QueueOfLines lines) {
 
 		// parse the text
 		boolean autoscaleMin = ChartUtils.parseBoolean(lines.remove(), "autoscale " + prefix.trim().toLowerCase() + " minimum = %b");

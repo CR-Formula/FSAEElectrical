@@ -21,15 +21,6 @@ public class ChartsController {
 	}
 	
 	/**
-	 * @return    The display scaling factor for GUI widgets.
-	 */
-	public static float getDisplayScalingFactorForGUI() {
-		
-		return dpiScalingFactorJava8 * dpiScalingFactorJava9;
-		
-	}
-	
-	/**
 	 * @return    The display scaling factor requested by the user.
 	 */
 	public static float getDisplayScalingFactorUser() {
@@ -67,6 +58,15 @@ public class ChartsController {
 	}
 	
 	/**
+	 * @return    The display scaling factor specified by the OS if using Java 9+.
+	 */
+	public static float getDisplayScalingFactorJava9() {
+		
+		return dpiScalingFactorJava9;
+		
+	}
+	
+	/**
 	 * @return    An array of Strings, one for each possible chart type.
 	 */
 	public static String[] getChartTypes() {
@@ -75,8 +75,8 @@ public class ChartsController {
 			"Time Domain",
 			"Frequency Domain",
 			"Histogram",
-			"Statistics",
 			"Dial",
+			"Dot Plot",
 			"Quaternion",
 			"Camera",
 			"Timeline"
@@ -101,8 +101,8 @@ public class ChartsController {
 		     if(chartType.equals("Time Domain"))      chart = new OpenGLTimeDomainChart(x1, y1, x2, y2);
 		else if(chartType.equals("Frequency Domain")) chart = new OpenGLFrequencyDomainChart(x1, y1, x2, y2);
 		else if(chartType.equals("Histogram"))        chart = new OpenGLHistogramChart(x1, y1, x2, y2);
-		else if(chartType.equals("Statistics"))       chart = new OpenGLStatisticsChart(x1, y1, x2, y2);
 		else if(chartType.equals("Dial"))             chart = new OpenGLDialChart(x1, y1, x2, y2);
+		else if(chartType.equals("Dot Plot"))         chart = new OpenGLDotPlot(x1, y1, x2, y2);
 		else if(chartType.equals("Quaternion"))       chart = new OpenGLQuaternionChart(x1, y1, x2, y2);
 		else if(chartType.equals("Camera"))           chart = new OpenGLCameraChart(x1, y1, x2, y2);
 		else if(chartType.equals("Timeline"))         chart = new OpenGLTimelineChart(x1, y1, x2, y2);
@@ -145,6 +145,8 @@ public class ChartsController {
 	 */
 	public static void removeChart(PositionedChart chart) {
 
+		if(SettingsController.getBenchmarkedChart() == chart)
+			SettingsController.setBenchmarkedChart(null);
 		ConfigureView.instance.closeIfUsedFor(chart);
 		
 		chart.dispose();

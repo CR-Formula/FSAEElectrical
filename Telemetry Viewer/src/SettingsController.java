@@ -1,5 +1,6 @@
-import java.awt.Color;
 import java.text.SimpleDateFormat;
+import java.util.List;
+
 import javax.swing.SwingUtilities;
 
 /**
@@ -28,16 +29,6 @@ public class SettingsController {
 	public static SimpleDateFormat timestampFormatterSeconds      = new SimpleDateFormat("hh:mm:ss a");
 	public static SimpleDateFormat timestampFormatterMinutes      = new SimpleDateFormat("hh:mm a");
 	
-	// if the various notification levels should be displayed
-	private static boolean hintNotificationVisibility = true;
-	private static boolean warningNotificationVisibility = true;
-	private static boolean failureNotificationVisibility = true;
-	private static boolean verboseNotificationVisibility = false;
-	private static Color hintColor    = Color.GREEN;
-	private static Color warningColor = Color.YELLOW;
-	private static Color failureColor = Color.RED;
-	private static Color verboseColor = Color.CYAN;
-	
 	// if plot tooltips should be drawn
 	private static boolean tooltipVisibility = true;
 	
@@ -50,8 +41,9 @@ public class SettingsController {
 	// if the FPS and period should be drawn
 	private static boolean fpsVisibility = false;
 	
-	// if charts should be benchmarked
-	private static boolean benchmarking = false;
+	// which chart to measure for CPU/GPU times, or null to not measure
+	private static PositionedChart chartForBenchmarks = null;
+	private static boolean awaitingChartForBenchmark = false;
 	
 	/**
 	 * Changes the OpenGLChartsRegion tile column count if it is within the allowed range and would not obscure part of an existing chart.
@@ -309,20 +301,69 @@ public class SettingsController {
 	}
 	
 	/**
-	 * Changes the chart to be benchmarked.
-	 * 
-	 * @param isBenchmarking    True to enable benchmarks, false to disable.
+	 * Call this function to indicate that the a chart needs to be selected for benchmarking.
 	 */
-	public static void setBenchmarking(boolean isBenchmarking) {
+	public static void awaitBenchmarkedChart() {
 		
-		benchmarking = isBenchmarking;
-		SettingsView.instance.showBenchmarksCheckbox.setSelected(isBenchmarking);
+		awaitingChartForBenchmark = true;
 		
 	}
 	
-	public static boolean getBenchmarking() {
+	/**
+	 * @return    True if the user is supposed to click on a chart they want to benchmark.
+	 */
+	public static boolean awaitingBenchmarkedChart() {
 		
-		return benchmarking;
+		return awaitingChartForBenchmark;
+		
+	}
+	
+	/**
+	 * Changes the chart to be benchmarked.
+	 * 
+	 * @param chart    The chart to benchmark, or null to disable benchmarking.
+	 */
+	public static void setBenchmarkedChart(PositionedChart chart) {
+		
+		chartForBenchmarks = chart;
+		awaitingChartForBenchmark = false;
+
+		SettingsView.instance.showBenchmarksCheckbox.setSelected(chart != null);
+		SettingsView.instance.showBenchmarksCheckbox.setEnabled(true);
+		
+	}
+	
+	/**
+	 * Changes the chart to be benchmarked.
+	 * 
+	 * @param index    The index of the chart to benchmark, or -1 to disable benchmarking.
+	 */
+	public static void setBenchmarkedChartByIndex(int index) {
+
+		setBenchmarkedChart(index >= 0 ? ChartsController.getCharts().get(index) : null);
+		
+	}
+	
+	/**
+	 * @return    The chart that is being benchmarked, or null if benchmarking is disabled.
+	 */
+	public static PositionedChart getBenchmarkedChart() {
+		
+		return chartForBenchmarks;
+		
+	}
+	
+	/**
+	 * @return    The index of the chart that is being benchmarked, or -1 if benchmarking is disabled.
+	 */
+	public static int getBenchmarkedChartIndex() {
+
+		List<PositionedChart> charts = ChartsController.getCharts();
+		for(int i = 0; i < charts.size(); i++)
+			if(charts.get(i) == chartForBenchmarks)
+				return i;
+		
+		return -1;
 		
 	}
 	
@@ -347,214 +388,6 @@ public class SettingsController {
 	public static int getAntialiasingLevel() {
 		
 		return antialiasingLevel;
-		
-	}
-	
-	/**
-	 * Changes the hint notifications visibility.
-	 * 
-	 * @param value    True to enable, false to disable.
-	 */
-	public static void setHintNotificationVisibility(boolean isVisible) {
-		
-		hintNotificationVisibility = isVisible;
-		SettingsView.instance.hintNotificationsCheckbox.setSelected(isVisible);
-		if(!isVisible)
-			NotificationsController.getNotifications().removeIf(item -> item.level.equals("hint"));
-		
-	}
-	
-	/**
-	 * @return    True if hint notifications should be displayed.
-	 */
-	public static boolean getHintNotificationVisibility() {
-		
-		return hintNotificationVisibility;
-		
-	}
-	
-	/**
-	 * Changes the hint notifications color.
-	 * 
-	 * @param color    The new color.
-	 */
-	public static void setHintNotificationColor(Color color) {
-		
-		hintColor = color;
-		SettingsView.instance.hintNotificationsColorButton.setForeground(color);
-
-		NotificationsController.getNotifications().forEach(item -> {
-			if(item.level.equals("hint"))
-				item.glColor = new float[] {hintColor.getRed()   / 255f,
-				                            hintColor.getGreen() / 255f,
-				                            hintColor.getBlue()  / 255f,
-				                            0.2f};
-		});
-		
-	}
-	
-	/**
-	 * @return    The background color used for hint notifications.
-	 */
-	public static Color getHintNotificationColor() {
-		
-		return hintColor;
-		
-	}
-	
-	/**
-	 * Changes the warning notifications visibility.
-	 * 
-	 * @param value    True to enable, false to disable.
-	 */
-	public static void setWarningNotificationVisibility(boolean isVisible) {
-		
-		warningNotificationVisibility = isVisible;
-		SettingsView.instance.warningNotificationsCheckbox.setSelected(isVisible);
-		if(!isVisible)
-			NotificationsController.getNotifications().removeIf(item -> item.level.equals("warning"));
-		
-	}
-	
-	/**
-	 * @return    True if warning notifications should be displayed.
-	 */
-	public static boolean getWarningNotificationVisibility() {
-		
-		return warningNotificationVisibility;
-		
-	}
-	
-	/**
-	 * Changes the warning notifications color.
-	 * 
-	 * @param color    The new color.
-	 */
-	public static void setWarningNotificationColor(Color color) {
-		
-		warningColor = color;
-		SettingsView.instance.warningNotificationsColorButton.setForeground(color);
-		
-		NotificationsController.getNotifications().forEach(item -> {
-			if(item.level.equals("warning"))
-				item.glColor = new float[] {warningColor.getRed()   / 255f,
-				                            warningColor.getGreen() / 255f,
-				                            warningColor.getBlue()  / 255f,
-				                            0.2f};
-		});
-		
-	}
-	
-	/**
-	 * @return    The background color used for warning notifications.
-	 */
-	public static Color getWarningNotificationColor() {
-		
-		return warningColor;
-		
-	}
-	
-	/**
-	 * Changes the failure notifications visibility.
-	 * 
-	 * @param value    True to enable, false to disable.
-	 */
-	public static void setFailureNotificationVisibility(boolean isVisible) {
-		
-		failureNotificationVisibility = isVisible;
-		SettingsView.instance.failureNotificationsCheckbox.setSelected(isVisible);
-		if(!isVisible)
-			NotificationsController.getNotifications().removeIf(item -> item.level.equals("failure"));
-		
-	}
-	
-	/**
-	 * @return    True if warning notifications should be displayed.
-	 */
-	public static boolean getFailureNotificationVisibility() {
-		
-		return failureNotificationVisibility;
-		
-	}
-	
-	/**
-	 * Changes the failure notifications color.
-	 * 
-	 * @param color    The new color.
-	 */
-	public static void setFailureNotificationColor(Color color) {
-		
-		failureColor = color;
-		SettingsView.instance.failureNotificationsColorButton.setForeground(color);
-		
-		NotificationsController.getNotifications().forEach(item -> {
-			if(item.level.equals("failure"))
-				item.glColor = new float[] { failureColor.getRed()   / 255f,
-				                             failureColor.getGreen() / 255f,
-				                             failureColor.getBlue()  / 255f,
-				                             0.2f};
-		});
-		
-	}
-	
-	/**
-	 * @return    The background color used for failure notifications.
-	 */
-	public static Color getFailureNotificationColor() {
-		
-		return failureColor;
-		
-	}
-	
-	/**
-	 * Changes the verbose notifications visibility.
-	 * 
-	 * @param value    True to enable, false to disable.
-	 */
-	public static void setVerboseNotificationVisibility(boolean isVisible) {
-		
-		verboseNotificationVisibility = isVisible;
-		SettingsView.instance.verboseNotificationsCheckbox.setSelected(isVisible);
-		if(!isVisible)
-			NotificationsController.getNotifications().removeIf(item -> item.level.equals("verbose"));
-		
-	}
-	
-	/**
-	 * @return    True if verbose notifications should be displayed.
-	 */
-	public static boolean getVerboseNotificationVisibility() {
-		
-		return verboseNotificationVisibility;
-		
-	}
-	
-	/**
-	 * Changes the verbose notifications color.
-	 * 
-	 * @param color    The new color.
-	 */
-	public static void setVerboseNotificationColor(Color color) {
-		
-		verboseColor = color;
-		SettingsView.instance.verboseNotificationsColorButton.setForeground(color);
-
-		NotificationsController.getNotifications().forEach(item -> {
-			if(item.level.equals("verbose"))
-				item.glColor = new float[] {verboseColor.getRed()   / 255f,
-				                            verboseColor.getGreen() / 255f,
-				                            verboseColor.getBlue()  / 255f,
-				                            0.2f};
-		});
-		
-	}
-	
-	/**
-	 * @return    The background color used for verbose notifications.
-	 */
-	public static Color getVerboseNotificationColor() {
-		
-		return verboseColor;
 		
 	}
 	

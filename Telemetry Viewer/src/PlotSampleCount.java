@@ -13,87 +13,133 @@ public class PlotSampleCount extends Plot {
 	FloatBuffer[] buffersY;
 	
 	// for cached mode
-	DrawCallData draw1 = new DrawCallData();
-	DrawCallData draw2 = new DrawCallData();
+	CachedModeDraw draw1 = new CachedModeDraw();
+	CachedModeDraw draw2 = new CachedModeDraw();
 	int[]     fbHandle;
 	int[]     texHandle;
 	boolean   cacheIsValid;
-	List<Dataset> previousNormalDatasets;
-	List<Dataset.Bitfield.State> previousEdgeStates;
-	List<Dataset.Bitfield.State> previousLevelStates;
-	long          previousMinSampleNumber;
-	long          previousMaxSampleNumber;
+	List<Dataset> previousDatasets;
+	int           previousMinSampleNumber;
+	int           previousMaxSampleNumber;
 	float         previousPlotMinY;
 	float         previousPlotMaxY;
-	int           previousPlotWidth;  // pixels
-	int           previousPlotHeight; // pixels
-	long          previousPlotDomain; // sample count
+	int           previousPlotWidth;
+	int           previousPlotHeight;
+	long          previousPlotDomain;
 	float         previousLineWidth;
+	
+	private class CachedModeDraw {
+		
+		boolean enabled;
+		int[] scissorArgs;
+		int xOffset;
+		int sampleCount;
+		FloatBuffer[] buffersY;
+		
+		void enableAndAcquire(List<Dataset> datasets, int firstSampleNumber, int lastSampleNumber, int plotWidth, int plotHeight) {
+			enabled = true;
+			xOffset = (int) (firstSampleNumber % plotDomain);
+			sampleCount = (int) (lastSampleNumber - firstSampleNumber + 1);
+			scissorArgs = calculateScissorArgs(firstSampleNumber, lastSampleNumber, plotWidth, plotHeight);
+			
+			// acquire extra samples before and after, to prevent aliasing
+			xOffset -= calculateSamplesNeededBefore(firstSampleNumber, plotWidth);
+			firstSampleNumber -= calculateSamplesNeededBefore(firstSampleNumber, plotWidth);
+			lastSampleNumber += calculateSamplesNeededAfter(lastSampleNumber, plotWidth);
+			if(firstSampleNumber < 0) {
+				long delta = 0 - firstSampleNumber;
+				firstSampleNumber += delta;
+				xOffset += delta;
+			}
+			if(lastSampleNumber > maxSampleNumber)
+				lastSampleNumber = maxSampleNumber;
+			sampleCount = (int) (lastSampleNumber - firstSampleNumber + 1);
+			
+			// acquire the samples
+			buffersY = new FloatBuffer[datasets.size()];
+			for(int datasetN = 0; datasetN < datasets.size(); datasetN++)
+				if(!datasets.get(datasetN).isBitfield)
+					buffersY[datasetN] = datasets.get(datasetN).getBuffer(firstSampleNumber, lastSampleNumber);
+		}
+		
+		void disable() {
+			enabled = false;
+		}
+		
+	}
 	
 	/**
 	 * Step 1: (Required) Calculate the domain and range of the plot.
 	 * 
-	 * @param endTimestamp      Ignored. This is only used by PlotMilliseconds.
-	 * @param endSampleNumber   Sample number corresponding with the right edge of a time-domain plot. NOTE: this sample might not exist yet!
-	 * @param zoomLevel         Current zoom level. 1.0 = no zoom.
-	 * @param datasets          Normal/edge/level datasets to acquire from.
-	 * @param timestampCache    Place to cache timestamps.
-	 * @param duration          The sample count, before applying the zoom factor.
-	 * @param cachedMode        True to enable the cache.
-	 * @param showTimestamps    Ignored. This is only used by PlotMilliseconds.
+	 * @param lastSampleNumber    The sample to render at the right edge of the plot.
+	 * @param zoomLevel           Current zoom level. 1.0 = no zoom.
+	 * @param datasets            Datasets to acquire from.
+	 * @param bitfieldEdges       Bitfield states to show edge events from.
+	 * @param bitfieldLevels      Bitfield states to show levels from.
+	 * @param duration            The sample count, before applying the zoom factor.
+	 * @param cachedMode          True to enable the cache.
+	 * @param showTimestamps      Ignored. This is only used by PlotMilliseconds.
 	 */
-	@Override void initialize(long endTimestamp, long endSampleNumber, double zoomLevel, DatasetsInterface datasets, StorageTimestamps.Cache timestampsCache, long duration, boolean cachedMode, boolean showTimestamps) {
+	@Override void initialize(int lastSampleNumber, double zoomLevel, List<Dataset> datasets, List<Dataset.Bitfield.State> bitfieldEdges, List<Dataset.Bitfield.State> bitfieldLevels, long duration, boolean cachedMode, boolean showTimestamps) {
 		
 		this.datasets = datasets;
+		this.bitfieldEdges = bitfieldEdges;
+		this.bitfieldLevels = bitfieldLevels;
 		this.cachedMode = cachedMode;
 		xAxisTitle = "Sample Number";
 		
-		// calculate the domain, ensuring it's >= 2
-		plotDomain = Math.round(duration * zoomLevel);
-		if(plotDomain < 2)
-			plotDomain = 2;
-		plotMaxX = endSampleNumber;
-		plotMinX = plotMaxX - plotDomain + 1;
-		
-		// storing the domain as (domain - 1) because (domain - 1) is used for all of the math related to the domain
-		plotDomain--;
-		
-		// exit if there are no samples to display
-		long trueLastSampleNumber = datasets.hasAnyType() ? datasets.connection.getSampleCount() - 1 : -1;
-		if(trueLastSampleNumber < 0 || endSampleNumber < 0) {
+		// exit if there are no samples to acquire
+		if(lastSampleNumber < 1) {
 			maxSampleNumber = -1;
 			minSampleNumber = -1;
 			plotSampleCount = 0;
+			plotMaxX = 0;
+			plotMinX = plotMaxX - (int) (duration * zoomLevel) + 1;
+			plotDomain = plotMaxX - plotMinX;
 			samplesMinY = -1;
 			samplesMaxY =  1;
 			return;
 		}
 		
-		// determine which samples to display
-		maxSampleNumber = Long.min(endSampleNumber, trueLastSampleNumber);
-		minSampleNumber = maxSampleNumber - plotDomain;
+		// determine which samples to acquire
+		maxSampleNumber = lastSampleNumber;
+		minSampleNumber = maxSampleNumber - (int) (duration * zoomLevel) + 1;
 		
-		if(minSampleNumber < plotMinX)
-			minSampleNumber = plotMinX;
+		if(maxSampleNumber - minSampleNumber < 1)
+			minSampleNumber = maxSampleNumber - 1;
+		
+		// calculate the domain
+		plotMaxX = maxSampleNumber;
+		plotMinX = minSampleNumber;
+		plotDomain = plotMaxX - plotMinX;
 		
 		if(minSampleNumber < 0)
 			minSampleNumber = 0;
 		
 		plotSampleCount = maxSampleNumber - minSampleNumber + 1;
 		
-		if(maxSampleNumber < plotMinX) {
-			maxSampleNumber = -1;
-			minSampleNumber = -1;
-			plotSampleCount = 0;
-			samplesMinY = -1;
-			samplesMaxY =  1;
-			return;
+		// calculate the range
+		samplesMinY = Float.MAX_VALUE;
+		samplesMaxY = -Float.MAX_VALUE;
+
+		for(Dataset dataset : datasets) {
+			if(!dataset.isBitfield) {
+				Dataset.MinMax range = dataset.getRange(minSampleNumber, maxSampleNumber);
+				if(range.min < samplesMinY)
+					samplesMinY = range.min;
+				if(range.max > samplesMaxY)
+					samplesMaxY = range.max;
+			}
 		}
 		
-		// get the range
-		float[] range = datasets.getRange((int) minSampleNumber, (int) maxSampleNumber);
-		samplesMinY = range[0];
-		samplesMaxY = range[1];
+		if(samplesMinY == Float.MAX_VALUE && samplesMaxY == -Float.MAX_VALUE) {
+			samplesMinY = -1;
+			samplesMaxY = 1;
+		} else if(samplesMinY == samplesMaxY) {
+			float value = samplesMinY;
+			samplesMinY = value - 0.001f;
+			samplesMaxY = value + 0.001f;
+		}
 		
 	}
 	
@@ -121,43 +167,23 @@ public class PlotSampleCount extends Plot {
 			
 	}
 	
-	/**
-	 * Step 5: Acquire the samples.
-	 * 
-	 * @param plotMinY      Y-axis value at the bottom of the plot.
-	 * @param plotMaxY      Y-axis value at the top of the plot.
-	 * @param plotWidth     Width of the plot region, in pixels.
-	 * @param plotHeight    Height of the plot region, in pixels.
-	 */
 	@Override void acquireSamplesNonCachedMode(float plotMinY, float plotMaxY, int plotWidth, int plotHeight) {
 		
-		events = new BitfieldEvents(true, false, datasets, (int) minSampleNumber, (int) maxSampleNumber);
+		events = new BitfieldEvents(true, false, bitfieldEdges, bitfieldLevels, minSampleNumber, maxSampleNumber);
 		
-		buffersY = new FloatBuffer[datasets.normalsCount()];
-		for(int datasetN = 0; datasetN < datasets.normalsCount(); datasetN++) {
-			Dataset dataset = datasets.getNormal(datasetN);
-			if(!dataset.isBitfield)
-				buffersY[datasetN] = datasets.getSamplesBuffer(dataset, (int) minSampleNumber, (int) maxSampleNumber);
-		}
+		buffersY = new FloatBuffer[datasets.size()];
+		for(int datasetN = 0; datasetN < datasets.size(); datasetN++)
+			if(!datasets.get(datasetN).isBitfield)
+				buffersY[datasetN] = datasets.get(datasetN).getBuffer(minSampleNumber, maxSampleNumber);
 		
 	}
 	
-	/**
-	 * Step 5: Acquire the samples.
-	 * 
-	 * @param plotMinY      Y-axis value at the bottom of the plot.
-	 * @param plotMaxY      Y-axis value at the top of the plot.
-	 * @param plotWidth     Width of the plot region, in pixels.
-	 * @param plotHeight    Height of the plot region, in pixels.
-	 */
 	@Override void acquireSamplesCachedMode(float plotMinY, float plotMaxY, int plotWidth, int plotHeight) {
 		
-		events = new BitfieldEvents(true, false, datasets, (int) minSampleNumber, (int) maxSampleNumber);
+		events = new BitfieldEvents(true, false, bitfieldEdges, bitfieldLevels, minSampleNumber, maxSampleNumber);
 		
 		// check if the cache must be flushed
-		cacheIsValid = datasets.normalDatasets.equals(previousNormalDatasets) &&
-		               datasets.edgeStates.equals(previousEdgeStates) &&
-		               datasets.levelStates.equals(previousLevelStates) &&
+		cacheIsValid = (datasets == previousDatasets) &&
 		               (plotMinY == previousPlotMinY) &&
 		               (plotMaxY == previousPlotMaxY) &&
 		               (plotWidth == previousPlotWidth) &&
@@ -170,58 +196,51 @@ public class PlotSampleCount extends Plot {
 		               (texHandle != null);
 		
 		// of the samples to display, some might already be in the framebuffer, so determine what subset actually needs to be drawn
-		long firstSampleNumber = minSampleNumber;
-		long lastSampleNumber  = maxSampleNumber;
+		int firstSampleNumber = minSampleNumber;
+		int lastSampleNumber  = maxSampleNumber;
 		if(cacheIsValid) {
 			if(firstSampleNumber == previousMinSampleNumber && lastSampleNumber <= previousMaxSampleNumber) {
-				// no change, nothing to draw
+				// nothing to draw
 				firstSampleNumber = lastSampleNumber;
 			} else if(firstSampleNumber > previousMinSampleNumber) {
 				// moving forward in time
 				firstSampleNumber = previousMaxSampleNumber;
 			} else if(firstSampleNumber < previousMinSampleNumber) {
 				// moving backwards in time
-				lastSampleNumber = previousMinSampleNumber + calculateSamplesNeededAtEdge(plotWidth);
-			} else if(firstSampleNumber == previousMinSampleNumber && lastSampleNumber > previousMaxSampleNumber) {
-				// moving forward in time while x=0 is still on screen
-				firstSampleNumber = previousMaxSampleNumber;
+				lastSampleNumber = previousMinSampleNumber + calculateSamplesNeededAfter(previousMinSampleNumber, plotWidth);
 			} else {
-				// moving backwards in time while x=0 is still on screen, nothing to draw
-				firstSampleNumber = lastSampleNumber;
+				// new data but x=0 is still on screen
+				firstSampleNumber = previousMaxSampleNumber;
 			}
 		}
 		
 		// the framebuffer is used as a ring buffer. since the pixels may wrap around from the right edge back to the left edge,
 		// we may need to split the rendering into 2 draw calls (splitting it at the right edge of the framebuffer)
-		long splittingSampleNumber = plotMaxX - (plotMaxX % plotDomain);
+		int fbRightSampleNumber = (int) (plotMaxX - (plotMaxX % (plotSampleCount - 1)));
 
 		if(firstSampleNumber == lastSampleNumber) {
 			
 			// nothing to draw
-			draw1.enabled = false;
-			draw2.enabled = false;
+			draw1.disable();
+			draw2.disable();
 			
-		} else if(lastSampleNumber <= splittingSampleNumber || firstSampleNumber >= splittingSampleNumber) {
+		} else if(lastSampleNumber <= fbRightSampleNumber || firstSampleNumber >= fbRightSampleNumber) {
 			
 			// only 1 draw call required (no need to wrap around the ring buffer)
 			draw1.enableAndAcquire(datasets, firstSampleNumber, lastSampleNumber, plotWidth, plotHeight);
-			draw2.enabled = false;
+			draw2.disable();
 			
 		} else {
 			
-			// to prevent a possible cache flush BETWEEN draw1 and draw2, first ask for the full range so the cache will be flushed if necessary BEFORE we prepare for draw1 and draw2
-			draw1.enableAndAcquire(datasets, firstSampleNumber, lastSampleNumber, plotWidth, plotHeight);
-			
 			// 2 draw calls required because we need to wrap around the ring buffer
-			draw1.enableAndAcquire(datasets, firstSampleNumber, splittingSampleNumber, plotWidth, plotHeight);
-			draw2.enableAndAcquire(datasets, splittingSampleNumber, lastSampleNumber, plotWidth, plotHeight);
+			int midX = fbRightSampleNumber;
+			draw1.enableAndAcquire(datasets, firstSampleNumber, midX, plotWidth, plotHeight);
+			draw2.enableAndAcquire(datasets, midX, lastSampleNumber, plotWidth, plotHeight);
 			
 		}
 		
 		// save current state
-		previousNormalDatasets = datasets.normalDatasets;
-		previousEdgeStates = datasets.edgeStates;
-		previousLevelStates = datasets.levelStates;
+		previousDatasets = datasets;
 		previousPlotMinY = plotMinY;
 		previousPlotMaxY = plotMaxY;
 		previousPlotWidth = plotWidth;
@@ -234,25 +253,25 @@ public class PlotSampleCount extends Plot {
 	}
 	
 	/**
-	 * Calculates the (x,y,w,h) arguments for glScissor() based on what region the samples will occupy on the framebuffer.
+	 * Calculates the (x,y,w,h) arguments for glScissor() based on what region the samples will occupy.
 	 * 
-	 * @param firstSampleNumber    The first sample number (inclusive.)
-	 * @param lastSampleNumber     The last sample number (inclusive.)
-	 * @param plotWidth            Width of the plot region, in pixels.
-	 * @param plotHeight           Height of the plot region, in pixels.
-	 * @return                     An int[4] of {x,y,w,h}
+	 * @param firstX        The first sample number.
+	 * @param lastX         The last sample number.
+	 * @param plotWidth     Width of the plot region, in pixels.
+	 * @param plotHeight    Height of the plot region, in pixels.
+	 * @return              An int[4] of {x,y,w,h}
 	 */
-	private int[] calculateScissorArgs(long firstSampleNumber, long lastSampleNumber, int plotWidth, int plotHeight) {
+	private int[] calculateScissorArgs(long firstX, long lastX, int plotWidth, int plotHeight) {
 		
 		// convert the sample number into a pixel number on the framebuffer, keeping in mind that it's a ring buffer
-		long rbSampleNumber = firstSampleNumber % plotDomain;
-		int rbPixelX = (int) (rbSampleNumber * plotWidth / plotDomain);
+		long ringBufferedX = firstX % plotDomain;
+		int pixelX = (int) (ringBufferedX * plotWidth / plotDomain);
 		
 		// convert the sample count into a pixel count
-		int pixelWidth = (int) Math.ceil((double) (lastSampleNumber - firstSampleNumber) * (double) plotWidth / (double) plotDomain);
+		int pixelWidth = (int) Math.ceil((double) (lastX - firstX) * (double) plotWidth / (double) plotDomain);
 		
 		int[] args = new int[4];
-		args[0] = rbPixelX;
+		args[0] = pixelX;
 		args[1] = 0;
 		args[2] = pixelWidth;
 		args[3] = plotHeight;
@@ -261,31 +280,33 @@ public class PlotSampleCount extends Plot {
 	}
 	
 	/**
-	 * We need to draw slightly more samples than theoretically required because adjacent samples can affect the edges of the glScissor'd region.
+	 * glScissor() is quantized to pixels, so we need to draw slightly more samples than theoretically needed to prevent aliasing at the edges.
 	 * 
-	 * @param plotWidth    Width of the plot region, in pixels.
-	 * @return             Number of extra samples to draw.
+	 * @param sampleNumber    Sample number.
+	 * @param plotWidth       Width of the plot region, in pixels.
+	 * @return                Number of extra samples to draw before x.
 	 */
-	private long calculateSamplesNeededAtEdge(int plotWidth) {
+	private int calculateSamplesNeededBefore(int x, int plotWidth) {
 		
-		double samplesPerPixel = (double) (plotDomain + 1) / (double) plotWidth;
-		long extraSamplesNeeded = (long) Math.ceil(samplesPerPixel * Theme.lineWidth);
+		double samplesPerPixel = (double) plotDomain / (double) plotWidth;
+		int extraSamplesNeeded = (int) Math.ceil(samplesPerPixel * Theme.lineWidth);
 		return extraSamplesNeeded;
 		
 	}
 	
 	/**
-	 * Step 6: Render the plot on screen.
+	 * glScissor() is quantized to pixels, so we need to draw slightly more samples than theoretically needed to prevent aliasing at the edges.
 	 * 
-	 * @param gl             The OpenGL context.
-	 * @param chartMatrix    The current 4x4 matrix.
-	 * @param xPlotLeft      Bottom-left corner location, in pixels.
-	 * @param yPlotBottom    Bottom-left corner location, in pixels.
-	 * @param plotWidth      Width of the plot region, in pixels.
-	 * @param plotHeight     Height of the plot region, in pixels.
-	 * @param plotMinY       Y-axis value at the bottom of the plot.
-	 * @param plotMaxY       Y-axis value at the top of the plot.
+	 * @param sampleNumber    Sample number.
+	 * @param plotWidth       Width of the plot region, in pixels.
+	 * @return                Number of extra samples to draw after x.
 	 */
+	private int calculateSamplesNeededAfter(int x, int plotWidth) {
+		
+		return calculateSamplesNeededBefore(x, plotWidth);
+		
+	}
+	
 	@Override void drawNonCachedMode(GL2ES3 gl, float[] chartMatrix, int xPlotLeft, int yPlotBottom, int plotWidth, int plotHeight, float plotMinY, float plotMaxY) {
 		
 		float plotRange = plotMaxY - plotMinY;
@@ -299,25 +320,25 @@ public class PlotSampleCount extends Plot {
 		// adjust so: x = (x - plotMinX) / domain * plotWidth + xPlotLeft;
 		// adjust so: y = (y - plotMinY) / plotRange * plotHeight + yPlotBottom;
 		// edit: now doing the "x - plotMinX" part before putting data into the buffers, to improve float32 precision when x is very large
-		OpenGL.translateMatrix(plotMatrix,                    xPlotLeft,                  yPlotBottom, 0);
+		OpenGL.translateMatrix(plotMatrix, xPlotLeft,            yPlotBottom,          0);
 		OpenGL.scaleMatrix    (plotMatrix, (float) plotWidth/plotDomain, (float) plotHeight/plotRange, 1);
 		OpenGL.translateMatrix(plotMatrix,                            0,                    -plotMinY, 0);
 		OpenGL.useMatrix(gl, plotMatrix);
 		
 		// draw each dataset
-		if(plotSampleCount >= 2) {
-			for(int i = 0; i < datasets.normalsCount(); i++) {
+		if(!datasets.isEmpty() && plotSampleCount >= 2) {
+			for(int i = 0; i < datasets.size(); i++) {
 				
-				Dataset dataset = datasets.getNormal(i);
-				if(dataset.isBitfield)
+				// do not draw bitfields
+				if(datasets.get(i).isBitfield)
 					continue;
 
-				OpenGL.drawLinesY(gl, GL3.GL_LINE_STRIP, dataset.glColor, buffersY[i], (int) plotSampleCount, (int) (plotMinX >= 0 ? 0 : plotMinX * -1));
+				OpenGL.drawLinesY(gl, GL3.GL_LINE_STRIP, datasets.get(i).glColor, buffersY[i], plotSampleCount, (int) (plotMinX >= 0 ? 0 : plotMinX * -1));
 				
 				// also draw points if there are relatively few samples on screen
 				boolean fewSamplesOnScreen = (plotWidth / (float) plotDomain) > (2 * Theme.pointWidth);
 				if(fewSamplesOnScreen)
-					OpenGL.drawPointsY(gl, dataset.glColor, buffersY[i], (int) plotSampleCount, (int) (plotMinX >= 0 ? 0 : plotMinX * -1));
+					OpenGL.drawPointsY(gl, datasets.get(i).glColor, buffersY[i], plotSampleCount, (int) (plotMinX >= 0 ? 0 : plotMinX * -1));
 				
 			}
 		}
@@ -325,9 +346,9 @@ public class PlotSampleCount extends Plot {
 		OpenGL.useMatrix(gl, chartMatrix);
 		
 		// draw any bitfield changes
-		if(plotSampleCount >= 2) {
-			List<BitfieldEvents.EdgeMarker>  edgeMarkers  = events.getEdgeMarkers ((connection, sampleNumber) -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
-			List<BitfieldEvents.LevelMarker> levelMarkers = events.getLevelMarkers((connection, sampleNumber) -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
+		if(!datasets.isEmpty() && plotSampleCount >= 2) {
+			List<BitfieldEvents.EdgeMarker>  edgeMarkers  = events.getEdgeMarkers (sampleNumber -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
+			List<BitfieldEvents.LevelMarker> levelMarkers = events.getLevelMarkers(sampleNumber -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
 			ChartUtils.drawMarkers(gl, edgeMarkers, levelMarkers, xPlotLeft, yPlotBottom + plotHeight, xPlotLeft + plotWidth, yPlotBottom, -1, -1);
 		}
 
@@ -336,18 +357,6 @@ public class PlotSampleCount extends Plot {
 		
 	}
 	
-	/**
-	 * Step 6: Render the plot on screen.
-	 * 
-	 * @param gl             The OpenGL context.
-	 * @param chartMatrix    The current 4x4 matrix.
-	 * @param xPlotLeft      Bottom-left corner location, in pixels.
-	 * @param yPlotBottom    Bottom-left corner location, in pixels.
-	 * @param plotWidth      Width of the plot region, in pixels.
-	 * @param plotHeight     Height of the plot region, in pixels.
-	 * @param plotMinY       Y-axis value at the bottom of the plot.
-	 * @param plotMaxY       Y-axis value at the top of the plot.
-	 */
 	@Override void drawCachedMode(GL2ES3 gl, float[] chartMatrix, int xPlotLeft, int yPlotBottom, int plotWidth, int plotHeight, float plotMinY, float plotMaxY) {
 		
 		// create the off-screen framebuffer if this is the first draw call
@@ -369,25 +378,10 @@ public class PlotSampleCount extends Plot {
 		if(plotMinX < 0) {
 			// if x<0 is on screen, we need to erase the x<0 region because it may have old data on it
 			gl.glEnable(GL3.GL_SCISSOR_TEST);
-			int[] args = calculateScissorArgs(plotMaxX, plotMaxX - plotMinX, plotWidth, plotHeight);
+			int[] args = calculateScissorArgs(plotMaxX, plotMaxX + plotDomain, plotWidth, plotHeight);
 			gl.glScissor(args[0], args[1], args[2], args[3]);
 			gl.glClearColor(0, 0, 0, 0);
 			gl.glClear(GL3.GL_COLOR_BUFFER_BIT);
-			gl.glDisable(GL3.GL_SCISSOR_TEST);
-		}
-		if(plotMaxX > maxSampleNumber) {
-			// if x>maxSampleNumber is on screen, we need to erase the x>maxSampleNumber region because it may have old data on it
-			gl.glEnable(GL3.GL_SCISSOR_TEST);
-			int[] args = calculateScissorArgs(maxSampleNumber, plotMaxX, plotWidth, plotHeight);
-			gl.glScissor(args[0], args[1], args[2], args[3]);
-			gl.glClearColor(0, 0, 0, 0);
-			gl.glClear(GL3.GL_COLOR_BUFFER_BIT);
-			if(plotMaxX % plotDomain < maxSampleNumber % plotDomain) {
-				args = calculateScissorArgs(plotMaxX - (plotMaxX % plotDomain), plotMaxX, plotWidth, plotHeight);
-				gl.glScissor(args[0], args[1], args[2], args[3]);
-				gl.glClearColor(0, 0, 0, 0);
-				gl.glClear(GL3.GL_COLOR_BUFFER_BIT);
-			}
 			gl.glDisable(GL3.GL_SCISSOR_TEST);
 		}
 		if(draw1.enabled) {
@@ -409,16 +403,16 @@ public class PlotSampleCount extends Plot {
 		// adjust so: y = (y - plotMinY) / plotRange * plotHeight;
 		// edit: now doing the "x - plotMinX" part before putting data into the buffers, to improve float32 precision when x is very large
 		float plotRange = plotMaxY - plotMinY;
-		OpenGL.scaleMatrix    (offscreenMatrix, (float) plotWidth / plotDomain, (float) plotHeight / plotRange, 1);
-		OpenGL.translateMatrix(offscreenMatrix,                              0,                      -plotMinY, 0);
+		OpenGL.scaleMatrix    (offscreenMatrix, (float) plotWidth/plotDomain, (float) plotHeight/plotRange, 1);
+		OpenGL.translateMatrix(offscreenMatrix,                            0,                    -plotMinY, 0);
 		OpenGL.useMatrix(gl, offscreenMatrix);
 		
 		// draw each dataset
-		if(plotSampleCount >= 2) {
-			for(int i = 0; i < datasets.normalsCount(); i++) {
+		if(!datasets.isEmpty() && plotSampleCount >= 2) {
+			for(int i = 0; i < datasets.size(); i++) {
 				
-				Dataset dataset = datasets.getNormal(i);
-				if(dataset.isBitfield)
+				// do not draw bitfields
+				if(datasets.get(i).isBitfield)
 					continue;
 				
 				boolean fewSamplesOnScreen = (plotWidth / (float) plotDomain) > (2 * Theme.pointWidth);
@@ -426,18 +420,18 @@ public class PlotSampleCount extends Plot {
 				if(draw1.enabled) {
 					gl.glEnable(GL3.GL_SCISSOR_TEST);
 					gl.glScissor(draw1.scissorArgs[0], draw1.scissorArgs[1], draw1.scissorArgs[2], draw1.scissorArgs[3]);
-					OpenGL.drawLinesY(gl, GL3.GL_LINE_STRIP, dataset.glColor, draw1.buffersY[i], draw1.sampleCount, draw1.xOffset);
+					OpenGL.drawLinesY(gl, GL3.GL_LINE_STRIP, datasets.get(i).glColor, draw1.buffersY[i], draw1.sampleCount, draw1.xOffset);
 					if(fewSamplesOnScreen)
-						OpenGL.drawPointsY(gl, dataset.glColor, draw1.buffersY[i], draw1.sampleCount, draw1.xOffset);
+						OpenGL.drawPointsY(gl, datasets.get(i).glColor, draw1.buffersY[i], draw1.sampleCount, draw1.xOffset);
 					gl.glDisable(GL3.GL_SCISSOR_TEST);
 				}
 				
 				if(draw2.enabled) {
 					gl.glEnable(GL3.GL_SCISSOR_TEST);
 					gl.glScissor(draw2.scissorArgs[0], draw2.scissorArgs[1], draw2.scissorArgs[2], draw2.scissorArgs[3]);
-					OpenGL.drawLinesY(gl, GL3.GL_LINE_STRIP, dataset.glColor, draw2.buffersY[i], draw2.sampleCount, draw2.xOffset);
+					OpenGL.drawLinesY(gl, GL3.GL_LINE_STRIP, datasets.get(i).glColor, draw2.buffersY[i], draw2.sampleCount, draw2.xOffset);
 					if(fewSamplesOnScreen)
-						OpenGL.drawPointsY(gl, dataset.glColor, draw2.buffersY[i], draw2.sampleCount, draw2.xOffset);
+						OpenGL.drawPointsY(gl, datasets.get(i).glColor, draw2.buffersY[i], draw2.sampleCount, draw2.xOffset);
 					gl.glDisable(GL3.GL_SCISSOR_TEST);
 				}
 				
@@ -459,7 +453,7 @@ public class PlotSampleCount extends Plot {
 		
 		// draw the framebuffer on screen
 		float startX = (float) (plotMaxX % plotDomain) / plotDomain;
-		OpenGL.drawRingbufferTexturedBox(gl, texHandle, xPlotLeft, yPlotBottom, plotWidth, plotHeight, startX+0f);
+		OpenGL.drawRingbufferTexturedBox(gl, texHandle, xPlotLeft, yPlotBottom, plotWidth, plotHeight, startX);
 		
 		// clip to the plot region
 		int[] originalScissorArgs = new int[4];
@@ -467,9 +461,9 @@ public class PlotSampleCount extends Plot {
 		gl.glScissor(originalScissorArgs[0] + (int) xPlotLeft, originalScissorArgs[1] + (int) yPlotBottom, plotWidth, plotHeight);
 		
 		// draw any bitfield changes
-		if(plotSampleCount >= 2) {
-			List<BitfieldEvents.EdgeMarker>  edgeMarkers  = events.getEdgeMarkers ((connection, sampleNumber) -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
-			List<BitfieldEvents.LevelMarker> levelMarkers = events.getLevelMarkers((connection, sampleNumber) -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
+		if(!datasets.isEmpty() && plotSampleCount >= 2) {
+			List<BitfieldEvents.EdgeMarker>  edgeMarkers  = events.getEdgeMarkers (sampleNumber -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
+			List<BitfieldEvents.LevelMarker> levelMarkers = events.getLevelMarkers(sampleNumber -> (sampleNumber - plotMinX) / (float) plotDomain * plotWidth);
 			ChartUtils.drawMarkers(gl, edgeMarkers, levelMarkers, xPlotLeft, yPlotBottom + plotHeight, xPlotLeft + plotWidth, yPlotBottom, -1, -1);
 		}
 
@@ -477,16 +471,16 @@ public class PlotSampleCount extends Plot {
 		gl.glScissor(originalScissorArgs[0], originalScissorArgs[1], originalScissorArgs[2], originalScissorArgs[3]);
 		
 //		// draw the framebuffer without ringbuffer wrapping, 10 pixels above the plot
-//		gl.glDisable(GL3.GL_SCISSOR_TEST);
-//		OpenGL.drawTexturedBox(gl, texHandle, true, xPlotLeft, yPlotBottom + plotHeight + 10, plotWidth, plotHeight, 0, false);
-//		gl.glEnable(GL3.GL_SCISSOR_TEST);
+//		gl.glDisable(GL2.GL_SCISSOR_TEST);
+//		OpenGL.drawTexturedBox(gl, texHandle, xPlotLeft, yPlotBottom + plotHeight + 10, plotWidth, plotHeight, 0);
+//		gl.glEnable(GL2.GL_SCISSOR_TEST);
 		
 	}
 	
 	/**
 	 * Checks if a tooltip should be drawn for the mouse's current location.
 	 * 
-	 * @param mouseX       The mouse's location along the x-axis, in pixels (0 = left edge of the plot.)
+	 * @param mouseX       The mouse's location along the x-axis, in pixels (0 = left edge of the plot)
 	 * @param plotWidth    Width of the plot region, in pixels.
 	 * @return             An object indicating if the tooltip should be drawn, for what sample number, with what label, and at what location on screen.
 	 */
@@ -503,21 +497,8 @@ public class PlotSampleCount extends Plot {
 			sampleNumber = maxSampleNumber;
 		
 		String label = "Sample " + sampleNumber;
-		float pixelX = getPixelXforSampleNumber(sampleNumber, plotWidth);
+		float pixelX = (float) (sampleNumber - plotMinX) / (float) plotDomain * plotWidth;
 		return new TooltipInfo(true, sampleNumber, label, pixelX);
-		
-	}
-	
-	/**
-	 * Gets the horizontal location, relative to the plot, for a sample number.
-	 * 
-	 * @param sampleNumber    The sample number.
-	 * @param plotWidth       Width of the plot region, in pixels.
-	 * @return                Corresponding horizontal location on the plot, in pixels (0 = left edge of the plot.)
-	 */
-	@Override float getPixelXforSampleNumber(long sampleNumber, float plotWidth) {
-		
-		return (float) (sampleNumber - plotMinX) / (float) plotDomain * plotWidth;
 		
 	}
 	
@@ -535,55 +516,6 @@ public class PlotSampleCount extends Plot {
 		
 		texHandle = null;
 		fbHandle = null;
-		
-	}
-	
-	private class DrawCallData {
-		
-		boolean enabled;        // if this object contains samples to draw
-		int[] scissorArgs;      // {x,y,w,h} for glScissor() when drawing
-		int xOffset;            // sample count offset from left edge of the plot
-		int sampleCount;        // number of vertices
-		FloatBuffer[] buffersY; // y-axis values for the vertices (one buffer per dataset.)
-		
-		/**
-		 * Acquires samples and related data so it can be drawn later.
-		 * 
-		 * @param datasets             Datasets and corresponding caches to acquire from.
-		 * @param firstSampleNumber    First sample number (inclusive.)
-		 * @param lastSampleNumber     Last sample number (inclusive.)
-		 * @param plotWidth            Width of the plot region, in pixels.
-		 * @param plotHeight           Height of the plot region, in pixels.
-		 */
-		void enableAndAcquire(DatasetsInterface datasets, long firstSampleNumber, long lastSampleNumber, int plotWidth, int plotHeight) {
-			
-			enabled = true;
-			xOffset = (int) (firstSampleNumber % plotDomain);
-			sampleCount = (int) (lastSampleNumber - firstSampleNumber + 1);
-			scissorArgs = calculateScissorArgs(firstSampleNumber, lastSampleNumber, plotWidth, plotHeight);
-			
-			// acquire extra samples before and after, because adjacent samples affect the edges of this region
-			long extraSamplesNeeded = calculateSamplesNeededAtEdge(plotWidth);
-			xOffset -= extraSamplesNeeded;
-			firstSampleNumber -= extraSamplesNeeded;
-			lastSampleNumber += extraSamplesNeeded;
-			if(firstSampleNumber < 0) {
-				xOffset -= firstSampleNumber;
-				firstSampleNumber = 0;
-			}
-			if(lastSampleNumber > maxSampleNumber)
-				lastSampleNumber = maxSampleNumber;
-			sampleCount = (int) (lastSampleNumber - firstSampleNumber + 1);
-			
-			// acquire the samples
-			buffersY = new FloatBuffer[datasets.normalsCount()];
-			for(int datasetN = 0; datasetN < datasets.normalsCount(); datasetN++) {
-				Dataset dataset = datasets.getNormal(datasetN);
-				if(!dataset.isBitfield)
-					buffersY[datasetN] = datasets.getSamplesBuffer(dataset, (int) firstSampleNumber, (int) lastSampleNumber);
-			}
-			
-		}
 		
 	}
 

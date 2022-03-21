@@ -28,9 +28,6 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	float yPlotTop;
 	float yPlotBottom;
 	float plotHeight;
-	float plotMaxY;
-	float plotMinY;
-	float plotRange;
 	
 	// x-axis title
 	boolean showXaxisTitle;
@@ -79,25 +76,23 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	float manualYmax;
 	
 	Plot plot;
+	boolean sampleCountMode;
 	boolean cachedMode;
 	List<Dataset> allDatasets; // normal and bitfields
-	StorageTimestamps.Cache timestampsCache;
+	
+	// constraints
+	static final int SampleCountDefault = 1000;
+	static final int SampleCountMinimum = 5;
+	static final int SampleCountMaximum = Integer.MAX_VALUE;
 
 	static final float yAxisMinimumDefault = -1.0f;
 	static final float yAxisMaximumDefault =  1.0f;
 	static final float yAxisLowerLimit     = -Float.MAX_VALUE;
 	static final float yAxisUpperLimit     =  Float.MAX_VALUE;
 	
-	// trigger
-	boolean triggerEnabled = false;
-	boolean triggeringPaused = false;
-	int earlierEndSampleNumber = -1;
-	long earlierEndTimestamp = -1;
-	float earlierPlotMaxY = 1;
-	float earlierPlotMinY = -1;
-	
 	// control widgets
-	WidgetDatasets datasetsAndDurationWidget;
+	WidgetDatasets datasetsWidget;
+	WidgetDuration durationWidget;
 	WidgetTextfieldsOptionalMinMax minMaxWidget;
 	WidgetCheckbox showXaxisTitleWidget;
 	WidgetCheckbox showXaxisScaleWidget;
@@ -105,7 +100,6 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	WidgetCheckbox showYaxisScaleWidget;
 	WidgetCheckbox showLegendWidget;
 	WidgetCheckbox cachedWidget;
-	WidgetTrigger triggerWidget;
 	
 	@Override public String toString() {
 		
@@ -114,22 +108,21 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	}
 	
 	/**
-	 * Updates the List of all datasets, and creates new corresponding caches.
+	 * Updates the List of bitfield datasets, which is used by the legend and tooltip code.
 	 */
 	private void updateAllDatasetsList() {
 		
-		allDatasets = new ArrayList<Dataset>(datasets.normalDatasets);
+		allDatasets = new ArrayList<Dataset>(datasets);
 		
-		datasets.edgeStates.forEach(state -> {
-			if(!allDatasets.contains(state.dataset))
-				allDatasets.add(state.dataset);
-		});
-		datasets.levelStates.forEach(state -> {
-			if(!allDatasets.contains(state.dataset))
-				allDatasets.add(state.dataset);
-		});
+		if(bitfieldEdges != null)
+			for(Dataset.Bitfield.State state : bitfieldEdges)
+				if(!allDatasets.contains(state.dataset))
+					allDatasets.add(state.dataset);
 		
-		timestampsCache = allDatasets.isEmpty() ? null : allDatasets.get(0).controller.createTimestampsCache();
+		if(bitfieldLevels != null)
+			for(Dataset.Bitfield.State state : bitfieldLevels)
+				if(!allDatasets.contains(state.dataset))
+					allDatasets.add(state.dataset);
 		
 	}
 	
@@ -140,35 +133,20 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		autoscale = new AutoScale(AutoScale.MODE_EXPONENTIAL, 30, 0.10f);
 		
 		// create the control widgets and event handlers
-		datasetsAndDurationWidget = new WidgetDatasets(newDatasets -> {
-		                                                   boolean previouslyNoDatasets = !datasets.hasNormals();
-		                                                   datasets.setNormals(newDatasets);
-		                                                   updateAllDatasetsList();
-		                                                   if(previouslyNoDatasets && triggerWidget != null)
-		                                                	   triggerWidget.setDefaultChannel(datasets.getNormal(0));
-		                                               },
-		                                               newBitfieldEdges -> {
-		                                                   datasets.setEdges(newBitfieldEdges);
-		                                                   updateAllDatasetsList();
-		                                               },
-		                                               newBitfieldLevels -> {
-		                                                   datasets.setLevels(newBitfieldLevels);
-		                                                   updateAllDatasetsList();
-		                                               },
-		                                               (newDurationType, newDuration) -> {
-		                                                   sampleCountMode  = newDurationType == WidgetDatasets.AxisType.SAMPLE_COUNT;
-		                                                   isTimestampsMode = newDurationType == WidgetDatasets.AxisType.TIMESTAMPS;
-		                                                   duration = (int) (long) newDuration;
-		                                                   plot = sampleCountMode ? new PlotSampleCount() : new PlotMilliseconds();
-		                                                   if(triggerWidget != null)
-		                                                       triggerWidget.resetTrigger(true);
-		                                                   return newDuration;
-		                                               },
-		                                               true,
-		                                               null);
+		datasetsWidget = new WidgetDatasets(newDatasets       -> { datasets       = newDatasets;       updateAllDatasetsList(); },
+		                                    newBitfieldEdges  -> { bitfieldEdges  = newBitfieldEdges;  updateAllDatasetsList(); },
+		                                    newBitfieldLevels -> { bitfieldLevels = newBitfieldLevels; updateAllDatasetsList(); });
+		
+		durationWidget = new WidgetDuration(SampleCountDefault,
+		                                    SampleCountMinimum,
+		                                    SampleCountMaximum,
+		                                    (xAxisType) -> {
+		                                    	sampleCountMode  = xAxisType.equals("Sample Count");
+		                                    	isTimestampsMode = xAxisType.equals("Timestamps");
+		                                    	plot = sampleCountMode ? new PlotSampleCount() : new PlotMilliseconds();
+		                                    });
 		
 		minMaxWidget = new WidgetTextfieldsOptionalMinMax("Y-Axis",
-		                                                  true,
 		                                                  yAxisMinimumDefault,
 		                                                  yAxisMaximumDefault,
 		                                                  yAxisLowerLimit,
@@ -203,73 +181,40 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		                                      autoscale = cachedMode ? new AutoScale(AutoScale.MODE_STICKY,       1, 0.10f) :
 		                                                               new AutoScale(AutoScale.MODE_EXPONENTIAL, 30, 0.10f);
 		                                  });
-		
-		triggerWidget = new WidgetTrigger(this,
-		                                  isEnabled -> triggerEnabled = isEnabled);
 
 		widgets = new Widget[15];
 		
-		widgets[0]  = datasetsAndDurationWidget;
+		widgets[0]  = datasetsWidget;
 		widgets[1]  = null;
-		widgets[2]  = minMaxWidget;
+		widgets[2]  = durationWidget;
 		widgets[3]  = null;
-		widgets[4]  = showXaxisTitleWidget;
-		widgets[5]  = showXaxisScaleWidget;
-		widgets[6]  = null;
-		widgets[7]  = showYaxisTitleWidget;
-		widgets[8]  = showYaxisScaleWidget;
-		widgets[9]  = null;
-		widgets[10] = showLegendWidget;
+		widgets[4]  = minMaxWidget;
+		widgets[5]  = null;
+		widgets[6]  = showXaxisTitleWidget;
+		widgets[7]  = showXaxisScaleWidget;
+		widgets[8]  = null;
+		widgets[9]  = showYaxisTitleWidget;
+		widgets[10] = showYaxisScaleWidget;
 		widgets[11] = null;
-		widgets[12] = cachedWidget;
+		widgets[12] = showLegendWidget;
 		widgets[13] = null;
-		widgets[14] = triggerWidget;
+		widgets[14] = cachedWidget;
 		
 	}
 	
-	@Override public EventHandler drawChart(GL2ES3 gl, float[] chartMatrix, int width, int height, long endTimestamp, int endSampleNumber, double zoomLevel, int mouseX, int mouseY) {
+	@Override 
+	public EventHandler drawChart(GL2ES3 gl, float[] chartMatrix, int width, int height, int lastSampleNumber, double zoomLevel, int mouseX, int mouseY) {
 		
 		EventHandler handler = null;
 		
-		// trigger logic
-		if(triggerEnabled && datasets.hasNormals()) {
-			if(sampleCountMode && triggeringPaused) {
-				endSampleNumber = triggerWidget.checkForTriggerSampleCountMode(earlierEndSampleNumber, zoomLevel, true);
-			} else if(sampleCountMode && !triggeringPaused) {
-				if(!OpenGLChartsView.instance.isPausedView())
-					endSampleNumber = datasets.connection.getSampleCount() - 1;
-				endSampleNumber = triggerWidget.checkForTriggerSampleCountMode(endSampleNumber, zoomLevel, false);
-				earlierEndSampleNumber = endSampleNumber;
-			} else if(!sampleCountMode && triggeringPaused) {
-				endTimestamp = triggerWidget.checkForTriggerMillisecondsMode(earlierEndTimestamp, zoomLevel, true);
-			} else {
-				if(!OpenGLChartsView.instance.isPausedView())
-					endTimestamp = datasets.connection.getTimestamp(datasets.connection.getSampleCount() - 1);
-				endTimestamp = triggerWidget.checkForTriggerMillisecondsMode(endTimestamp, zoomLevel, false);
-				earlierEndTimestamp = endTimestamp;
-			}
-		}
-		
-		boolean haveDatasets = allDatasets != null && !allDatasets.isEmpty();
-		int datasetsCount = haveDatasets ? allDatasets.size() : 0;
-		
-		plot.initialize(endTimestamp, endSampleNumber, zoomLevel, datasets, timestampsCache, duration, cachedMode, isTimestampsMode);
+		plot.initialize(lastSampleNumber, zoomLevel, datasets, bitfieldEdges, bitfieldLevels, sampleCountMode ? durationWidget.getSampleCount() : durationWidget.getMilliseconds(), cachedMode, isTimestampsMode);
 		
 		// calculate the plot range
-		StorageFloats.MinMax requiredRange = plot.getRange();
+		Dataset.MinMax requiredRange = plot.getRange();
 		autoscale.update(requiredRange.min, requiredRange.max);
-		plotMaxY = autoscaleYmax ? autoscale.getMax() : manualYmax;
-		plotMinY = autoscaleYmin ? autoscale.getMin() : manualYmin;
-		if(triggerEnabled) {
-			if(triggeringPaused) {
-				plotMaxY = earlierPlotMaxY;
-				plotMinY = earlierPlotMinY;
-			} else {
-				earlierPlotMaxY = plotMaxY;
-				earlierPlotMinY = plotMinY;
-			}
-		}
-		plotRange = plotMaxY - plotMinY;
+		float plotMaxY = autoscaleYmax ? autoscale.getMax() : manualYmax;
+		float plotMinY = autoscaleYmin ? autoscale.getMin() : manualYmin;
+		float plotRange = plotMaxY - plotMinY;
 		
 		// calculate x and y positions of everything
 		xPlotLeft = Theme.tilePadding;
@@ -278,6 +223,9 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		yPlotTop = height - Theme.tilePadding;
 		yPlotBottom = Theme.tilePadding;
 		plotHeight = yPlotTop - yPlotBottom;
+		
+		boolean haveDatasets = allDatasets != null && !allDatasets.isEmpty();
+		int datasetsCount = haveDatasets ? allDatasets.size() : 0;
 		
 		if(showXaxisTitle) {
 			yXaxisTitleTextBasline = Theme.tilePadding;
@@ -348,7 +296,7 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		if(showYaxisTitle) {
 			xYaxisTitleTextTop = xPlotLeft;
 			xYaxisTitleTextBaseline = xYaxisTitleTextTop + OpenGL.largeTextHeight;
-			yAxisTitle = haveDatasets ? allDatasets.get(0).unit : "";
+			yAxisTitle = haveDatasets ? datasets.get(0).unit : "";
 			yYaxisTitleTextLeft = yPlotBottom + (plotHeight / 2.0f) - (OpenGL.largeTextWidth(gl, yAxisTitle) / 2.0f);
 			
 			xPlotLeft = xYaxisTitleTextBaseline + Theme.tickTextPadding;
@@ -471,98 +419,13 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		
 		// acquire the samples
 		plot.acquireSamples(plotMinY, plotMaxY, (int) plotWidth, (int) plotHeight);
+		sampleCount = sampleCountMode ? durationWidget.getSampleCount() : plot.getPlotSampleCount();
 		
 		// draw the plot
 		plot.draw(gl, chartMatrix, (int) xPlotLeft, (int) yPlotBottom, (int) plotWidth, (int) plotHeight, plotMinY, plotMaxY);
 		
-		// draw the trigger level and trigger point markers
-		if(triggerEnabled) {
-			
-			float scalar = ChartsController.getDisplayScalingFactor();
-			float markerThickness = 3*scalar;
-			float markerLength = 5*scalar;
-			float triggerLevel = triggerWidget.getTriggerLevel();
-			float yTriggerLevel = (triggerLevel - plotMinY) / plotRange * plotHeight + yPlotBottom;
-			
-			int triggeredSampleNumber = triggerWidget.getTriggeredSampleNumber();
-			float triggerPoint = triggeredSampleNumber >= 0 ? plot.getPixelXforSampleNumber(triggeredSampleNumber, plotWidth) : 0;
-			float xTriggerPoint = xPlotLeft + triggerPoint;
-			
-			boolean mouseOver = false;
-			
-			// trigger level marker
-			if(yTriggerLevel >= yPlotBottom && yTriggerLevel <= yPlotTop) {
-				if(mouseX >= xPlotLeft && mouseX <= xPlotLeft + markerLength*1.5 && mouseY >= yTriggerLevel - markerThickness*1.5 && mouseY <= yTriggerLevel + markerThickness*1.5) {
-					mouseOver = true;
-					handler = EventHandler.onPressOrDrag(dragStarted -> triggeringPaused = true,
-					                                     newLocation -> {
-					                                         float newTriggerLevel = (newLocation.y - yPlotBottom) / plotHeight * plotRange + plotMinY;
-					                                         if(newTriggerLevel < plotMinY)
-					                                         	 newTriggerLevel = plotMinY;
-					                                         if(newTriggerLevel > plotMaxY)
-					                                        	 newTriggerLevel = plotMaxY;
-					                                         triggerWidget.setLevel(newTriggerLevel, false);
-					                                     },
-					                                     dragEnded -> triggeringPaused = false,
-					                                     this,
-					                                     Theme.upDownCursor);
-					OpenGL.drawTriangle2D(gl, Theme.plotOutlineColor, xPlotLeft, yTriggerLevel + markerThickness*1.5f,
-					                                                  xPlotLeft + markerLength*1.5f, yTriggerLevel,
-					                                                  xPlotLeft, yTriggerLevel - markerThickness*1.5f);
-				} else {
-					OpenGL.drawTriangle2D(gl, Theme.plotOutlineColor, xPlotLeft, yTriggerLevel + markerThickness,
-					                                                  xPlotLeft + markerLength, yTriggerLevel,
-					                                                  xPlotLeft, yTriggerLevel - markerThickness);
-				}
-			}
-			
-			// trigger point marker
-			if(triggeredSampleNumber >= 0) {
-				if(xTriggerPoint >= xPlotLeft && xTriggerPoint <= xPlotRight) {
-					if(mouseX >= xTriggerPoint - 1.5*markerThickness && mouseX <= xTriggerPoint + 1.5*markerThickness && mouseY >= yPlotTop - 1.5*markerLength && mouseY <= yPlotTop) {
-						mouseOver = true;
-						handler = EventHandler.onPressOrDrag(dragStarted -> triggeringPaused = true,
-						                                     newLocation -> {
-						                                         float newPrePostRatio = (newLocation.x - xPlotLeft) / plotWidth;
-						                                         if(newPrePostRatio < 0)
-						                                        	 newPrePostRatio = 0;
-						                                         if(newPrePostRatio > 1)
-						                                        	 newPrePostRatio = 1;
-						                                         triggerWidget.setPrePostRatio(Math.round(newPrePostRatio * 100), false);
-						                                     },
-						                                     dragEnded -> triggeringPaused = false,
-						                                     this,
-						                                     Theme.leftRigthCursor);
-						OpenGL.drawTriangle2D(gl, Theme.plotOutlineColor, xTriggerPoint - markerThickness*1.5f, yPlotTop,
-						                                                  xTriggerPoint + markerThickness*1.5f, yPlotTop,
-						                                                  xTriggerPoint, yPlotTop - markerLength*1.5f);
-					} else {
-						OpenGL.drawTriangle2D(gl, Theme.plotOutlineColor, xTriggerPoint - markerThickness, yPlotTop,
-						                                                  xTriggerPoint + markerThickness, yPlotTop,
-						                                                  xTriggerPoint, yPlotTop - markerLength);
-					}
-				}
-			}
-			
-			// draw lines to the trigger level and trigger point when the user is interacting with the markers
-			if(mouseOver || triggeringPaused) {
-				float xLeft = xPlotLeft;
-				float xRight = xTriggerPoint > xPlotLeft ? xTriggerPoint : xPlotRight;
-				float yTop = yPlotTop;
-				float yBottom = yTriggerLevel;
-				OpenGL.buffer.rewind();
-				OpenGL.buffer.put(xLeft);   OpenGL.buffer.put(yBottom);  OpenGL.buffer.put(Theme.tickLinesColor);
-				OpenGL.buffer.put(xRight);  OpenGL.buffer.put(yBottom);  OpenGL.buffer.put(Theme.tickLinesColor, 0, 3);  OpenGL.buffer.put(0.2f);
-				OpenGL.buffer.put(xRight);  OpenGL.buffer.put(yTop);     OpenGL.buffer.put(Theme.tickLinesColor);
-				OpenGL.buffer.put(xRight);  OpenGL.buffer.put(yBottom);  OpenGL.buffer.put(Theme.tickLinesColor, 0, 3);  OpenGL.buffer.put(0.2f);
-				OpenGL.buffer.rewind();
-				OpenGL.drawLinesXyrgba(gl, GL3.GL_LINES, OpenGL.buffer, 4);
-			}
-			
-		}
-		
-		// draw the tooltip if the mouse is in the plot region and not over something clickable
-		if(!allDatasets.isEmpty() && SettingsController.getTooltipVisibility() && mouseX >= xPlotLeft && mouseX <= xPlotRight && mouseY >= yPlotBottom && mouseY <= yPlotTop && handler == null) {
+		// draw the tooltip if the mouse is in the plot region
+		if(!allDatasets.isEmpty() && SettingsController.getTooltipVisibility() && mouseX >= xPlotLeft && mouseX <= xPlotRight && mouseY >= yPlotBottom && mouseY <= yPlotTop) {
 			Plot.TooltipInfo tooltip = plot.getTooltip(mouseX - (int) xPlotLeft, plotWidth);
 			if(tooltip.draw) {
 				String[] tooltipLines = tooltip.label.split("\n");
@@ -572,10 +435,9 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 					text[i] = tooltipLines[i];
 					colors[i] = null;
 				}
-				for(int datasetN = 0; datasetN < datasetsCount; datasetN++) {
-					Dataset dataset = allDatasets.get(datasetN);
-					text[datasetN + tooltipLines.length] = datasets.getSampleAsString(dataset, tooltip.sampleNumber);
-					colors[datasetN + tooltipLines.length] = dataset.color;
+				for(int i = 0; i < datasetsCount; i++) {
+					text[i + tooltipLines.length] = allDatasets.get(i).getSampleAsString(tooltip.sampleNumber);
+					colors[i + tooltipLines.length] = allDatasets.get(i).color;
 				}
 				float anchorX = tooltip.pixelX + xPlotLeft;
 				if(anchorX >= 0 && datasetsCount > 1) {
@@ -586,7 +448,7 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 					OpenGL.drawLinesXy(gl, GL3.GL_LINES, Theme.tooltipVerticalBarColor, OpenGL.buffer, 2);
 					ChartUtils.drawTooltip(gl, text, colors, anchorX, mouseY, xPlotLeft, yPlotTop, xPlotRight, yPlotBottom);
 				} else if(anchorX >= 0) {
-					float anchorY = (datasets.getSample(allDatasets.get(0), tooltip.sampleNumber) - plotMinY) / plotRange * plotHeight + yPlotBottom;
+					float anchorY = (allDatasets.get(0).getSample(tooltip.sampleNumber) - plotMinY) / plotRange * plotHeight + yPlotBottom;
 					ChartUtils.drawTooltip(gl, text, colors, anchorX, anchorY, xPlotLeft, yPlotTop, xPlotRight, yPlotBottom);
 				}
 			}
@@ -601,7 +463,6 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	
 	@Override public void disposeGpu(GL2ES3 gl) {
 		
-		super.disposeGpu(gl);
 		plot.freeResources(gl);
 		
 	}

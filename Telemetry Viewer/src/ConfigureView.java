@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -6,11 +7,15 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.JButton;
+import javax.swing.JColorChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -25,13 +30,12 @@ public class ConfigureView extends JPanel {
 	
 	static ConfigureView instance = new ConfigureView();
 	
-	private JPanel widgetsPanel;
-	private JPanel buttonsPanel;
-	private JScrollPane scrollableRegion;
+	private static JPanel widgetsPanel;
+	private static JPanel buttonsPanel;
+	private static JScrollPane scrollableRegion;
 	private boolean testSizeAgain = true;
 	
-	private PositionedChart activeChart = null;
-	private boolean activeChartIsNew = false;
+	private static PositionedChart activeChart = null;
 	
 	/**
 	 * Private constructor to enforce singleton usage.
@@ -41,10 +45,10 @@ public class ConfigureView extends JPanel {
 		super();
 		
 		widgetsPanel = new JPanel();
-		widgetsPanel.setLayout(new MigLayout("hidemode 3, wrap 4, insets" + Theme.padding + " " + Theme.padding / 2 + " " + Theme.padding + " " + Theme.padding + ", gap " + Theme.padding, "[pref][min!][min!][grow]"));
+		widgetsPanel.setLayout(new MigLayout("hidemode 3, wrap 4, insets 0, gap " + Theme.padding, "[pref][min!][min!][grow]"));
+		widgetsPanel.setBorder(new EmptyBorder(Theme.padding, Theme.padding, Theme.padding, Theme.padding));
 		scrollableRegion = new JScrollPane(widgetsPanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollableRegion.setBorder(null);
-		scrollableRegion.getVerticalScrollBar().setUnitIncrement(10);
 		buttonsPanel = new JPanel();
 		buttonsPanel.setLayout(new MigLayout("insets 0", "[33%!][grow][33%!]")); // 3 equal columns
 		buttonsPanel.setBorder(new EmptyBorder(Theme.padding * 2, Theme.padding, Theme.padding, Theme.padding)); // extra padding above
@@ -70,17 +74,6 @@ public class ConfigureView extends JPanel {
 			size.width += scrollableRegion.getVerticalScrollBar().getPreferredSize().width;
 		scrollableRegion.setPreferredSize(size);
 		
-		buttonsPanel.setPreferredSize(null);
-		size = buttonsPanel.getPreferredSize();
-		int maxButtonWidth = 0;
-		for(Component c : buttonsPanel.getComponents()) {
-			int w = c.getPreferredSize().width;
-			if(w > maxButtonWidth)
-				maxButtonWidth = w;
-		}
-		size.width = 3*maxButtonWidth;
-		buttonsPanel.setPreferredSize(size);
-		
 		// due to the event queue, the scroll bar may be about to appear or disappear, but the above if() can't see the future
 		// work around this by triggering another getPreferredSize() at the end of the event queue.
 		if(testSizeAgain)
@@ -99,19 +92,16 @@ public class ConfigureView extends JPanel {
 	public void forExistingChart(PositionedChart chart) {
 		
 		activeChart = chart;
-		activeChartIsNew = false;
 		
 		widgetsPanel.removeAll();
 		buttonsPanel.removeAll();
 
 		for(Widget widget : chart.widgets) {
-			if(widget == null) {
+			if(widget == null)
 				widgetsPanel.add(Box.createVerticalStrut(Theme.padding), "span 4");
-			} else {
-				widget.update();
+			else
 				for(Map.Entry<Component, String> thing : widget.widgets.entrySet())
 					widgetsPanel.add(thing.getKey(), thing.getValue());
-			}
 		}
 		
 		JButton doneButton = new JButton("Done");
@@ -129,61 +119,77 @@ public class ConfigureView extends JPanel {
 	/**
 	 * Updates this panel with configuration widgets for a new chart.
 	 * 
-	 * @param chart    The new chart.
+	 * @param x1    The x-coordinate of a bounding-box corner in the OpenGLChartsRegion grid.
+	 * @param y1    The y-coordinate of a bounding-box corner in the OpenGLChartsRegion grid.
+	 * @param x2    The x-coordinate of the opposite bounding-box corner in the OpenGLChartsRegion grid.
+	 * @param y2    The x-coordinate of the opposite bounding-box corner in the OpenGLChartsRegion grid.
 	 */
-	public void forNewChart(PositionedChart chart) {
+	public void forNewChart(int x1, int y1, int x2, int y2) {
 		
-		activeChart = chart;
-		activeChartIsNew = true;
+		if(DatasetsController.getDatasetsCount() == 0) {
+			JOptionPane.showMessageDialog(null, "Error: The packet's data structure must be defined before adding charts.\nUse the controls at the bottom-right corner of the main window to make a connection and define the data structure.", "Error", JOptionPane.ERROR_MESSAGE);
+			close();
+			return;
+		}
 		
-		ActionListener chartTypeHandler = event -> {
-			// replace the chart if a different chart type was selected
-			JToggleButton clickedButton = (JToggleButton) event.getSource();
-			if(!activeChart.toString().equals(clickedButton.getText())) {
-				int x1 = activeChart.topLeftX;
-				int y1 = activeChart.topLeftY;
-				int x2 = activeChart.bottomRightX;
-				int y2 = activeChart.bottomRightY;
-				ChartsController.removeChart(activeChart);
-				PositionedChart newChart = ChartsController.createAndAddChart(clickedButton.getText(), x1, y1, x2, y2);
-				instance.forNewChart(newChart);
-			}
-		};
+		activeChart = null;
+		
+		widgetsPanel.removeAll();
+		buttonsPanel.removeAll();
 		
 		JPanel chartTypePanel = new JPanel();
+		List<JToggleButton> buttons = new ArrayList<JToggleButton>();
+		
+		ActionListener buttonHandler = event -> {
+			
+			// make all other buttons toggled off
+			JToggleButton clickedButton = buttons.get(buttons.indexOf(event.getSource()));
+			for(JToggleButton button : buttons)
+				if(button != clickedButton)
+					button.setSelected(false);
+				
+			// remove existing chart and widgets, then show the chart type buttons
+			if(activeChart != null)
+				ChartsController.removeChart(activeChart);
+			widgetsPanel.removeAll();
+			widgetsPanel.add(chartTypePanel, "span 4, growx");
+			widgetsPanel.add(Box.createVerticalStrut(Theme.padding * 2), "span 4");
+			
+			// create the chart and show it's widgets
+			activeChart = ChartsController.createAndAddChart(clickedButton.getText(), x1, y1, x2, y2);
+			for(Widget widget : activeChart.widgets) {
+				if(widget == null)
+					widgetsPanel.add(Box.createVerticalStrut(Theme.padding), "span 4");
+				else
+					for(Map.Entry<Component, String> thing : widget.widgets.entrySet())
+						widgetsPanel.add(thing.getKey(), thing.getValue());
+			}
+			
+			scrollableRegion.getVerticalScrollBar().setValue(0);
+			
+			// size the panel as needed
+			instance.setPreferredSize(null);
+			instance.revalidate();
+			instance.repaint();
+				
+		};
+		
 		chartTypePanel.setLayout(new GridLayout(0, 2, Theme.padding, Theme.padding));
 		for(String chartType : ChartsController.getChartTypes()) {
 			JToggleButton button = new JToggleButton(chartType);
-			button.setSelected(button.getText().equals(activeChart.toString()));
-			button.addActionListener(chartTypeHandler);
+			buttons.add(button);
+			button.addActionListener(buttonHandler);
 			chartTypePanel.add(button);
 		}
 		
-		widgetsPanel.removeAll();
-		widgetsPanel.add(chartTypePanel, "span 4, growx");
-		widgetsPanel.add(Box.createVerticalStrut(Theme.padding * 2), "span 4");
-		for(Widget widget : activeChart.widgets) {
-			if(widget == null)
-				widgetsPanel.add(Box.createVerticalStrut(Theme.padding), "span 4");
-			else
-				for(Map.Entry<Component, String> thing : widget.widgets.entrySet())
-					widgetsPanel.add(thing.getKey(), thing.getValue());
-		}
-		
-		buttonsPanel.removeAll();
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.addActionListener(event -> { ChartsController.removeChart(activeChart); close(); });
 		JButton doneButton = new JButton("Done");
 		doneButton.addActionListener(event -> close());
 		buttonsPanel.add(cancelButton, "growx, cell 0 0");
 		buttonsPanel.add(doneButton, "growx, cell 2 0");
-		
-		scrollableRegion.getVerticalScrollBar().setValue(0);
-		
-		// size the panel as needed
-		instance.setPreferredSize(null);
-		instance.revalidate();
-		instance.repaint();
+
+		buttons.get(0).doClick();
 		
 	}
 	
@@ -220,7 +226,11 @@ public class ConfigureView extends JPanel {
 		});
 		
 		colorButton.setForeground(dataset.color);
-		colorButton.addActionListener(event -> colorButton.setForeground(ColorPickerView.getColor(nameTextfield.getText(), colorButton.getForeground(), true)));
+		colorButton.addActionListener(event -> {
+			Color color = JColorChooser.showDialog(this, "Pick a Color for " + nameTextfield.getText(), dataset.color);
+			if(color != null)
+				colorButton.setForeground(color);
+		});
 		
 		unitTextfield.addActionListener(pressEnterToApply);
 		unitTextfield.addFocusListener(new FocusListener() {
@@ -233,31 +243,25 @@ public class ConfigureView extends JPanel {
 			@Override public void keyTyped(KeyEvent ke)    { }
 		});
 		
+		JPanel namePanel = new JPanel(new GridLayout(1, 2, Theme.padding, Theme.padding));
+		namePanel.add(new JLabel("Name: "));
+		namePanel.add(nameTextfield);
+		JPanel colorPanel = new JPanel(new GridLayout(1, 2, Theme.padding, Theme.padding));
+		colorPanel.add(new JLabel("Color: "));
+		colorPanel.add(colorButton);
+		JPanel unitPanel = new JPanel(new GridLayout(1, 2, Theme.padding, Theme.padding));
+		unitPanel.add(new JLabel("Unit: "));
+		unitPanel.add(unitTextfield);
 		widgetsPanel.removeAll();
-		widgetsPanel.add(new JLabel("Name: "));
-		widgetsPanel.add(nameTextfield, "span 3, growx");
-		widgetsPanel.add(new JLabel("Color: "));
-		widgetsPanel.add(colorButton, "span 3, growx");
-		widgetsPanel.add(new JLabel("Unit: "));
-		widgetsPanel.add(unitTextfield, "span 3, growx");
+		widgetsPanel.add(namePanel, "span 4, growx");
+		widgetsPanel.add(colorPanel, "span 4, growx");
+		widgetsPanel.add(unitPanel, "span 4, growx");
 		
 		scrollableRegion.getVerticalScrollBar().setValue(0);
 
 		instance.setPreferredSize(null);
 		instance.revalidate();
 		instance.repaint();
-		
-	}
-	
-	public void redrawIfUsedFor(PositionedChart chart) {
-		
-		if(chart != activeChart || activeChart == null)
-			return;
-		
-		if(activeChartIsNew)
-			forNewChart(chart);
-		else
-			forExistingChart(chart);
 		
 	}
 	

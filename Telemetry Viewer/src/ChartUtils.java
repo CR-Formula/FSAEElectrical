@@ -452,8 +452,6 @@ public class ChartUtils {
 		String text = String.format("%.9f", number);
 		int pointLocation = text.indexOf('.');
 		int stringLength = text.charAt(0) == '-' ? digitCount + 2 : digitCount + 1;
-		if(text.charAt(stringLength - 1) == '.')
-			stringLength--;
 		return text.substring(0, pointLocation < stringLength ? stringLength : pointLocation);
 		
 	}
@@ -467,10 +465,8 @@ public class ChartUtils {
 	 */
 	public static void parseExact(String text, String formatString) {
 		
-		if(!text.equals(formatString)) {
-			String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-			throw new AssertionError(message);
-		}
+		if(!text.equals(formatString))
+			throw new AssertionError("Text does not match the expected value.");
 		
 	}
 	
@@ -496,15 +492,12 @@ public class ChartUtils {
 					return true;
 				else if(token.toLowerCase().equals("false"))
 					return false;
-				else {
-					String message = "Text does not end with a boolean.\nExpected: " + formatString + "\nFound: " + text;
-					throw new AssertionError(message);
-				}
+				else
+					throw new Exception();
 			else
-				throw new Exception();
+				throw new AssertionError("Text does not match the expected value.");
 		} catch(Exception e) {
-			String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-			throw new AssertionError(message);
+			throw new AssertionError("Text does not end with a boolean.");
 		}
 		
 	}
@@ -534,30 +527,28 @@ public class ChartUtils {
 					remainingText += " " + tokens[i];
 				if(remainingText.equals(expectedText))
 					return number;
-				else {
-					String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-					throw new AssertionError(message);
-				}
+				else
+					throw new AssertionError("Text does not match the expected value.");
 			} catch(Exception e) {
-				String message = "Text does not start with an integer.\nExpected: " + formatString + "\nFound: " + text;
-				throw new AssertionError(message);
+				throw new AssertionError("Text does not start with an integer.");
 			}
 			
 		} else  {
 			
 			// ending with %d, so an integer should be at the end of the text
 			try {
-				String expectedText = formatString.substring(0, formatString.length() - 2);
-				if(!text.startsWith(expectedText)) {
-					String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-					throw new AssertionError(message);
-				}
 				String[] tokens = text.split(" ");
 				int number = Integer.parseInt(tokens[tokens.length - 1]);
-				return number;
+				String expectedText = formatString.substring(0, formatString.length() - 2);
+				String remainingText = "";
+				for(int i = 0; i < tokens.length - 1; i++)
+					remainingText += tokens[i] + " ";
+				if(remainingText.equals(expectedText))
+					return number;
+				else
+					throw new AssertionError("Text does not match the expected value.");
 			} catch(Exception e) {
-				String message = "Text does not end with an integer.\nExpected: " + formatString + "\nFound: " + text;
-				throw new AssertionError(message);
+				throw new AssertionError("Text does not end with an integer.");
 			}
 			
 		}
@@ -589,13 +580,10 @@ public class ChartUtils {
 					remainingText += " " + tokens[i];
 				if(remainingText.equals(expectedText))
 					return number;
-				else {
-					String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-					throw new AssertionError(message);
-				}
+				else
+					throw new AssertionError("Text does not match the expected value.");
 			} catch(Exception e) {
-				String message = "Text does not start with a floating point number.\nExpected: " + formatString + "\nFound: " + text;
-				throw new AssertionError(message);
+				throw new AssertionError("Text does not start with a floating point number.");
 			}
 			
 		} else  {
@@ -610,13 +598,10 @@ public class ChartUtils {
 					remainingText += tokens[i] + " ";
 				if(remainingText.equals(expectedText))
 					return number;
-				else {
-					String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-					throw new AssertionError(message);
-				}
+				else
+					throw new AssertionError("Text does not match the expected value.");
 			} catch(Exception e) {
-				String message = "Text does not end with a floating point number.\nExpected: " + formatString + "\nFound: " + text;
-				throw new AssertionError(message);
+				throw new AssertionError("Text does not end with a floating point number.");
 			}
 			
 		}
@@ -643,10 +628,9 @@ public class ChartUtils {
 			if(actualText.equals(expectedText))
 				return token;
 			else
-				throw new Exception();
+				throw new AssertionError("Text does not match the expected value.");
 		} catch(Exception e) {
-			String message = "Text does not match the expected value.\nExpected: " + formatString + "\nFound: " + text;
-			throw new AssertionError(message);
+			throw new AssertionError("Text does not match the expected value.");
 		}
 		
 	}
@@ -792,7 +776,7 @@ public class ChartUtils {
 				occupiedRegions.add(new float[] {xBoxLeft, xBoxRight, yAnchor, yBoxTop});
 				boolean mouseOverMarker = mouseX > xBoxLeft && mouseX < xBoxRight && mouseY > yAnchor && mouseY < yBoxTop;
 				if(mouseOverMarker)
-					handler = EventHandler.onPress(press -> OpenGLChartsView.instance.setPausedView(marker.connection.datasets.getTimestamp(marker.sampleNumber), marker.connection, marker.sampleNumber, true));
+					handler = EventHandler.onPress(press -> OpenGLChartsView.instance.setNonLiveView(marker.sampleNumber));
 				
 				OpenGL.drawQuad2D(gl, Theme.tooltipBackgroundColor, xBoxLeft, yBoxBottom, xBoxRight, yBoxTop);
 				OpenGL.drawTriangle2D(gl, Theme.tooltipBackgroundColor, xAnchor, yAnchor, xAnchorRight, yBoxBottom, xAnchorLeft, yBoxBottom);
@@ -835,7 +819,7 @@ public class ChartUtils {
 				occupiedRegions.add(new float[] {xBoxLeft, xBoxRight, yAnchor, yBoxTop});
 				boolean mouseOverMarker = mouseX > xBoxLeft && mouseX < xBoxRight && mouseY > yAnchor && mouseY < yBoxTop;
 				if(mouseOverMarker)
-					handler = EventHandler.onPress(press -> OpenGLChartsView.instance.setPausedView(marker.connection.datasets.getTimestamp(marker.sampleNumber), marker.connection, marker.sampleNumber, true));
+					handler = EventHandler.onPress(press -> OpenGLChartsView.instance.setNonLiveView(marker.sampleNumber));
 				
 				OpenGL.drawQuad2D(gl, Theme.tooltipBackgroundColor, xBoxLeft, yBoxBottom, xBoxRight, yBoxTop);
 				OpenGL.drawTriangle2D(gl, Theme.tooltipBackgroundColor, xAnchor, yAnchor, xAnchor, yBoxBottom, xAnchorLeft, yBoxBottom);
@@ -879,7 +863,7 @@ public class ChartUtils {
 				occupiedRegions.add(new float[] {xBoxLeft, xBoxRight, yAnchor, yBoxTop});
 				boolean mouseOverMarker = mouseX > xBoxLeft && mouseX < xBoxRight && mouseY > yAnchor && mouseY < yBoxTop;
 				if(mouseOverMarker)
-					handler = EventHandler.onPress(press -> OpenGLChartsView.instance.setPausedView(marker.connection.datasets.getTimestamp(marker.sampleNumber), marker.connection, marker.sampleNumber, true));
+					handler = EventHandler.onPress(press -> OpenGLChartsView.instance.setNonLiveView(marker.sampleNumber));
 				
 				OpenGL.buffer.rewind();
 				OpenGL.buffer.put(xBoxLeft);     OpenGL.buffer.put(yBoxTop);
@@ -919,11 +903,6 @@ public class ChartUtils {
 			float yTop          = yBottom + OpenGL.smallTextHeight + padding;
 			float yTextBaseline = yBottom + padding/2f;
 			
-			if(regionAvailable(occupiedRegions, topLeftX, bottomRightX, yBottom, yTop))
-				occupiedRegions.add(new float[] {topLeftX, bottomRightX, yBottom, yTop});
-			else
-				insufficientSpace = true;
-			
 			// if the mouse is over a level marker, we have to draw its outline after drawing other level markers, to ensure other markers don't overlap the outline
 			boolean drawMouseOverOutline = false;
 			float xOutlineLeft = 0;
@@ -935,8 +914,9 @@ public class ChartUtils {
 				float[] xRange = marker.pixelXranges.get(rangeN);
 				float xLeft  = (xRange[0] < 0) ? topLeftX : xRange[0] + topLeftX;
 				float xRight = xRange[1] + topLeftX;
-				if(yTop <= topLeftY) {
+				if(regionAvailable(occupiedRegions, xLeft, xRight, yBottom, yTop) && yTop <= topLeftY) {
 					
+					occupiedRegions.add(new float[] {xLeft, xRight, yBottom, yTop});
 					boolean mouseOverMarker = mouseX >= xLeft && mouseX <= xRight && mouseY >= yBottom && mouseY <= yTop;
 					OpenGL.drawQuad2D(gl, marker.glColors.get(rangeN), xLeft, yBottom, xRight, yTop);
 					if(mouseOverMarker) {
@@ -957,7 +937,7 @@ public class ChartUtils {
 					
 					if(mouseOverMarker) {
 						int r = rangeN;
-						handler = EventHandler.onPress(event -> OpenGLChartsView.instance.setPausedView(marker.bitfield.dataset.connection.datasets.getTimestamp(marker.ranges.get(r)[0]), marker.bitfield.dataset.connection, marker.ranges.get(r)[0], true));
+						handler = EventHandler.onPress(event -> OpenGLChartsView.instance.setNonLiveView(marker.ranges.get(r)[0]));
 					}
 					
 				} else {
@@ -1396,146 +1376,6 @@ public class ChartUtils {
 			}
 			
 		}
-		
-	}
-	
-	/**
-	 * Converts a String of text to a byte[], optionally appending a CR and/or LF.
-	 * 
-	 * @param textString    Input string.
-	 * @param lf            True to append a \n.
-	 * @param cr            True to append a \r.
-	 * @return              Resulting byte[].
-	 */
-	public static byte[] convertTextStringToBytes(String textString, boolean lf, boolean cr) {
-		
-		if(!cr && !lf) {
-			return textString.getBytes();
-		} else if(cr && lf) {
-			byte[] temp = textString.getBytes();
-			byte[] bytes = new byte[temp.length + 2];
-			System.arraycopy(temp, 0, bytes, 0, temp.length);
-			bytes[bytes.length - 2] = (byte) '\r';
-			bytes[bytes.length - 1] = (byte) '\n';
-			return bytes;
-		} else {
-			byte[] temp = textString.getBytes();
-			byte[] bytes = new byte[temp.length + 1];
-			System.arraycopy(temp, 0, bytes, 0, temp.length);
-			bytes[bytes.length - 1] = (byte) (cr ? '\r' : '\n');
-			return bytes;
-		}
-		
-	}
-	
-	/**
-	 * Converts a String of hex bytes (example: "12 34 AB CD") to a byte[].
-	 * 
-	 * @param hexString    Hex text with spaces between each byte. The spaces are required!
-	 * @return             Corresponding byte[].
-	 */
-	public static byte[] convertHexStringToBytes(String hexString) {
-		
-		if(hexString.length() == 0)
-			return new byte[0];
-		
-		String[] hexBytes = hexString.trim().split(" ");
-		byte[] bytes = new byte[hexBytes.length];
-		for(int i = 0; i < hexBytes.length; i++)
-			bytes[i] = (byte) Integer.parseInt(hexBytes[i], 16);
-		return bytes;
-		
-	}
-	
-	/**
-	 * Converts a String of binary bytes (Example: "00000001 10101010") to a byte[].
-	 * 
-	 * @param binString    Binary text with spaces between each byte. The spaces are required!
-	 * @return             Corresponding byte[].
-	 */
-	public static byte[] convertBinStringToBytes(String binString) {
-		
-		if(binString.length() == 0)
-			return new byte[0];
-		
-		String[] binaryBytes = binString.trim().split(" ");
-		byte[] bytes = new byte[binaryBytes.length];
-		for(int i = 0; i < binaryBytes.length; i++)
-			bytes[i] = (byte) Integer.parseInt(binaryBytes[i], 2);
-		return bytes;
-		
-	}
-	
-	/**
-	 * Converts a byte[] back to a String of text.
-	 * 
-	 * @param bytes         Input byte[].
-	 * @param escapeCRLF    If true, the returned String will contain \r instead of an actual CR, and \n instead of an actual LF.
-	 * @return              Corresponding String.
-	 */
-	public static String convertBytesToTextString(byte[] bytes, boolean escapeCRLF) {
-		
-		if(escapeCRLF)
-			return new String(bytes).replace("\r", "\\r").replace("\n", "\\n");
-		
-		String string = new String(bytes);
-		if(string.endsWith("\n"))
-			string = string.substring(0, string.length() - 1);
-		if(string.endsWith("\r"))
-			string = string.substring(0, string.length() - 1);
-		return string;
-		
-	}
-	
-	/**
-	 * Converts a byte[] back to a String of hex bytes.
-	 * 
-	 * @param bytes    Input byte[].
-	 * @return         Corresponding hex String with spaces between bytes. (Example: "12 34 AB CD")
-	 */
-	public static String convertBytesToHexString(byte[] bytes) {
-		
-		String string = "";
-		for(byte b : bytes)
-			string += String.format("%02X ", b);
-		return string.trim();
-		
-		
-	}
-	
-	/**
-	 * Converts a byte[] back to a String of binary bytes.
-	 * 
-	 * @param bytes    Input byte[].
-	 * @return         Corresponding binary String with spaced between bytes. (Example: "00000001 10101010")
-	 */
-	public static String convertBytesToBinString(byte[] bytes) {
-		
-		String string = "";
-		for(byte b : bytes)
-			string += String.format("%8s", Integer.toBinaryString(Byte.toUnsignedInt(b))).replace(' ', '0') + " ";
-		return string.trim();
-		
-	}
-	
-	/**
-	 * Inserts a space every n characters, to format hex or binary text in a more user-friendly way.
-	 * 
-	 * @param text      Input String with no spaces.
-	 * @param stride    How many characters before each space.
-	 * @return          The padded String. (Example: "0123ABCD" with a stride of 2 becomes "01 23 AB CD")
-	 */
-	public static String padStringWithSpaces(String text, int stride) {
-		
-		String string = "";
-		int count = 0;
-		for(int i = 0; i < text.length(); i++) {
-			string += text.charAt(i);
-			count++;
-			if(count % stride == 0)
-				string += " ";
-		}
-		return string;
 		
 	}
 	

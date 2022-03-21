@@ -85,19 +85,16 @@ public class WidgetHistogramXaxisType extends Widget {
 			@Override public void focusLost(FocusEvent fe)   { sanityCheck(); }
 			@Override public void focusGained(FocusEvent fe) { maxTextfield.selectAll(); }
 		});
-		maxTextfield.addActionListener(event -> sanityCheck());
 		
 		minTextfield.addFocusListener(new FocusListener() {
 			@Override public void focusLost(FocusEvent fe)   { sanityCheck(); }
 			@Override public void focusGained(FocusEvent fe) { minTextfield.selectAll(); }
 		});
-		minTextfield.addActionListener(event -> sanityCheck());
 		
 		centerTextfield.addFocusListener(new FocusListener() {
 			@Override public void focusLost(FocusEvent fe)   { sanityCheck(); }
 			@Override public void focusGained(FocusEvent fe) { centerTextfield.selectAll(); }
 		});
-		centerTextfield.addActionListener(event -> sanityCheck());
 		
 		axisTypeCombobox.addActionListener(event -> sanityCheck());
 		
@@ -224,7 +221,7 @@ public class WidgetHistogramXaxisType extends Widget {
 	 * 
 	 * @param lines    A queue of remaining lines from the layout file.
 	 */
-	@Override public void importState(ConnectionsController.QueueOfLines lines) {
+	@Override public void importState(CommunicationController.QueueOfLines lines) {
 
 		// parse the text
 		boolean xAxisIsCentered = ChartUtils.parseBoolean(lines.remove(), "x-axis is centered = %b");

@@ -4,7 +4,6 @@ import java.util.function.Consumer;
 
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 public class WidgetTextfieldInteger extends Widget {
 	
@@ -39,12 +38,11 @@ public class WidgetTextfieldInteger extends Widget {
 			@Override public void focusLost(FocusEvent fe)   { sanityCheck(); }
 			@Override public void focusGained(FocusEvent fe) { textfield.selectAll(); }
 		});
-		textfield.addActionListener(event -> sanityCheck());
 		
 		widgets.put(new JLabel(label + ": "), "");
 		widgets.put(textfield, "span 3, growx");
 
-		SwingUtilities.invokeLater(() -> sanityCheck()); // invokeLater to ensure the chart has finish constructing before notifying it
+		sanityCheck();
 		
 	}
 	
@@ -78,7 +76,7 @@ public class WidgetTextfieldInteger extends Widget {
 	 * 
 	 * @param lines    A queue of remaining lines from the layout file.
 	 */
-	@Override public void importState(ConnectionsController.QueueOfLines lines) {
+	@Override public void importState(CommunicationController.QueueOfLines lines) {
 
 		// parse the text
 		int number = ChartUtils.parseInteger(lines.remove(), label.trim().toLowerCase() + " = %d");

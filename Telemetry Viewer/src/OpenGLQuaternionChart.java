@@ -46,17 +46,12 @@ public class OpenGLQuaternionChart extends PositionedChart {
 		
 		super(x1, y1, x2, y2);
 		
-		duration = 1;
+		sampleCount = 1;
 		
 		shape = ChartUtils.getShapeFromAsciiStl(getClass().getResourceAsStream("monkey.stl"));
 		
 		// create the control widgets and event handlers
-		datasetsWidget = new WidgetDatasets(newDatasets -> datasets.setNormals(newDatasets),
-		                                    null,
-		                                    null,
-		                                    null,
-		                                    false,
-		                                    new String[] {"Q0", "Q1", "Q2", "Q3"});
+		datasetsWidget = new WidgetDatasets(4, new String[] {"Q0", "Q1", "Q2", "Q3"}, newDatasets -> datasets = newDatasets);
 		
 		showTextLabelWidget = new WidgetCheckbox("Show Text Label",
 		                                         true,
@@ -70,23 +65,17 @@ public class OpenGLQuaternionChart extends PositionedChart {
 		
 	}
 	
-	@Override public EventHandler drawChart(GL2ES3 gl, float[] chartMatrix, int width, int height, long endTimestamp, int endSampleNumber, double zoomLevel, int mouseX, int mouseY) {
+	@Override public EventHandler drawChart(GL2ES3 gl, float[] chartMatrix, int width, int height, int lastSampleNumber, double zoomLevel, int mouseX, int mouseY) {
 		
-		// sanity check
-		if(datasets.normalsCount() != 4)
+		// don't draw if there are no samples
+		if(lastSampleNumber < 1)
 			return null;
-		
-		// determine which sample to use
-		int lastSampleNumber = datasets.connection.getSampleCount() - 1;
-		if(endSampleNumber < lastSampleNumber)
-			lastSampleNumber = endSampleNumber;
 
 		// get the quaternion values
-		float[] q = new float[4];
-		for(int i = 0; i < 4; i++) {
-			Dataset dataset = datasets.getNormal(i);
-			q[i] = lastSampleNumber < 0 ? 0 : datasets.getSample(dataset, lastSampleNumber);
-		}
+		float q0 = datasets.get(0).getSample(lastSampleNumber);
+		float q1 = datasets.get(1).getSample(lastSampleNumber);
+		float q2 = datasets.get(2).getSample(lastSampleNumber);
+		float q3 = datasets.get(3).getSample(lastSampleNumber);
 		
 		// calculate x and y positions of everything
 		xPlotLeft = Theme.tilePadding;
@@ -97,7 +86,7 @@ public class OpenGLQuaternionChart extends PositionedChart {
 		plotHeight = yPlotTop - yPlotBottom;
 
 		if(showTextLabel) {
-			textLabel = String.format("Quaternion (%+1.3f,%+1.3f,%+1.3f,%+1.3f)", q[0], q[1], q[2], q[3]);
+			textLabel = String.format("Quaternion (%+1.3f,%+1.3f,%+1.3f,%+1.3f)", q0, q1, q2, q3);
 			yTextLabelBaseline = Theme.tilePadding;
 			yTextLabelTop = yTextLabelBaseline + OpenGL.largeTextHeight;
 			xTextLabelLeft = (width / 2f) - (OpenGL.largeTextWidth(gl, textLabel) / 2f);
@@ -122,7 +111,7 @@ public class OpenGLQuaternionChart extends PositionedChart {
 		}
 		
 		float[] quatMatrix = new float[16];
-		new Quaternion(q[1], q[2], q[3], q[0]).toMatrix(quatMatrix, 0); // x,y,z,w
+		new Quaternion(q1, q2, q3, q0).toMatrix(quatMatrix, 0); // x,y,z,w
 		
 		// adjust the modelview matrix to map the vertices' local space (-1 to +1) into chart space
 		// x = x * (plotWidth / 2)  + (plotWidth / 2)
@@ -147,7 +136,7 @@ public class OpenGLQuaternionChart extends PositionedChart {
 		
 		// draw the monkey
 		OpenGL.useMatrix(gl, modelMatrix);
-		OpenGL.drawTrianglesXYZUVW(gl, GL3.GL_TRIANGLES, shape.position(0), shape.capacity() / 6);
+		OpenGL.drawTrianglesXYZUVW(gl, GL3.GL_TRIANGLES, shape, shape.capacity() / 6);
 		
 		OpenGL.useMatrix(gl, chartMatrix);
 
