@@ -102,7 +102,7 @@ public class ChartsController {
 		else if(chartType.equals("Frequency Domain")) chart = new OpenGLFrequencyDomainChart(x1, y1, x2, y2);
 		else if(chartType.equals("Histogram"))        chart = new OpenGLHistogramChart(x1, y1, x2, y2);
 		else if(chartType.equals("Dial"))             chart = new OpenGLDialChart(x1, y1, x2, y2);
-		else if(chartType.equals("Dot Plot"))         chart = new OpenGLDotPlot(x1, y1, x2, y2);
+		else if(chartType.equals("Dot Plot"))             chart = new OpenGLDotPlot(x1, y1, x2, y2);
 		else if(chartType.equals("Quaternion"))       chart = new OpenGLQuaternionChart(x1, y1, x2, y2);
 		else if(chartType.equals("Camera"))           chart = new OpenGLCameraChart(x1, y1, x2, y2);
 		else if(chartType.equals("Timeline"))         chart = new OpenGLTimelineChart(x1, y1, x2, y2);

@@ -513,7 +513,7 @@ public class OpenGLHistogramChart extends PositionedChart {
 		if(plotWidth < 1 || plotHeight < 1)
 			return handler;
 		
-		// draw plot background - TODO - 
+		// draw plot background
 		OpenGL.drawQuad2D(gl, Theme.plotBackgroundColor, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
 		
 		// draw the x-axis scale
