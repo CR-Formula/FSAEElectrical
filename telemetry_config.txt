@@ -199,10 +199,10 @@ Checksum:
 	normal datasets = 3
 	bitfield edge states = 
 	bitfield level states = 
-	autoscale dial minimum = true
-	manual dial minimum = -1.0
-	autoscale dial maximum = true
-	manual dial maximum = 1.0
+	autoscale dial minimum = false
+	manual dial minimum = 10.0
+	autoscale dial maximum = false
+	manual dial maximum = 40.0
 	sample count = 1000
 	show dataset label = true
 	show reading label = true

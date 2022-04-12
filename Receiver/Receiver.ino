@@ -6,7 +6,15 @@
 #include<stdlib.h>
 #include <iostream>
 #include <string>
+#include <Math.h>
 
+unsigned int RPMLast;
+  double TPSLast;
+  double FOTLast;
+  double IALast;
+  double LamLast;
+  double AirTLast;
+  double CoolTLast;
 
 //Structure example to receive data
 //Must match the sender structure
@@ -56,11 +64,40 @@ void loop() {
   double Lam = (myData.nums[8] + myData.nums[9] * 256) * 0.01; //Holds Lambda value
   double AirT = (myData.nums[10] + myData.nums[11] * 256) * 0.1; //Holds Air Temp value
   double CoolT = (myData.nums[12] + myData.nums[13] * 256) * 0.1; //Holds Coolent Temp value
+
+  if (RPM > 20000) {
+    RPM = RPMLast;
+  }
+  if (abs(TPSLast - TPS) > 50 && TPSLast > 0) {
+    TPS = TPSLast;
+  }
+  if (abs(FOTLast - FOT) > 10 && FOTLast > 0) {
+    FOT = FOTLast;
+  }
+  if (abs(IALast - IA) > 50 && IALast > 0) {
+    IA = IALast;
+  }
+  if (abs(LamLast - Lam) > 10 && LamLast > 0) {
+    Lam = LamLast;
+  }
+  if (abs(AirTLast - AirT) > 25 && AirTLast > 0) {
+    AirT = AirTLast;
+  }
+  if (abs(CoolTLast - CoolT) > 50 && CoolTLast > 0) {
+    CoolT = CoolTLast;
+  }
   
   //CSV format Serial Print
   Serial.printf("%d, %f, %f, %f, %f, %f, %f\n", RPM, TPS, FOT, IA, Lam, AirT, CoolT);
 
-
+  RPMLast = RPM;
+  TPSLast = TPS;
+  FOTLast = FOT;
+  IALast = IA;
+  LamLast = Lam;
+  AirTLast = AirT;
+  CoolTLast = CoolT;
+  
   //Test code to print the data buffer
   /*int k = 0;
   for (k = 0; k < 14; k++) {
