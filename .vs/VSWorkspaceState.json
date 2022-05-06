@@ -2,8 +2,10 @@
   "ExpandedNodes": [
     "",
     "\\CAN_Filter",
+    "\\GPS_Test",
     "\\Receiver",
     "\\Sender"
   ],
+  "SelectedNode": "\\GPS_Test\\GPS_Test.ino",
   "PreviewInSolutionExplorer": false
 }

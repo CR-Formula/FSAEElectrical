@@ -33,7 +33,6 @@ void setup()
   //Configure the INT input pin
   pinMode(CAN0_INT, INPUT);
   
-  Serial.println("MCP2515 Library Receive Example...");   //---------> Can most likely delete in final revision
 }
 
 /**
