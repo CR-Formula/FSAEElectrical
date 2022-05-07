@@ -25,7 +25,8 @@ public class Theme {
 //	public static float[] tileColor               = new float[] {0.8f, 0.8f, 0.8f, 1.0f};
 //	public static float[] tileColor               = new float[] {84f/255f, 79f/255f, 88f/255f, 1.0f}; // Dark Mode
 //	public static float[] tileShadowColor         = new float[] {47f/255f, 45f/255f, 49f/255f, 1.0f}; // Dark Mode
-	public static float[] tileColor               = new float[] {62f/255f, 63f/255f, 67f/255f, 1.0f}; // Dark Mode V2
+//	public static float[] tileColor               = new float[] {62f/255f, 63f/255f, 67f/255f, 1.0f}; // Dark Mode V2
+	public static float[] tileColor               = new float[] {85f/255f, 85f/255f, 90f/255f, 1.0f}; // Dark Mode V3
 	public static float[] tileShadowColor         = new float[] {56f/255f, 57f/255f, 60f/255f, 1.0f}; // Dark Mode V2
 	public static float[] tileSelectedColor       = new float[] {0.5f, 0.5f, 0.5f, 1.0f};
 	public static float   tilePadding             = 5.0f;
