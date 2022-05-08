@@ -77,10 +77,10 @@ void loop() {
   if (abs(FOTLast - FOT) > 10 && FOTLast > 0) {
     FOT = FOTLast;
   }
-  if (abs(IALast - IA) > 50 && IALast > 0) {
+  if (abs(IALast - IA) > 50 && IALast > 0 || IA > 40) {
     IA = IALast;
   }
-  if (abs(LamLast - Lam) > 10 && LamLast > 0) {
+  if (abs(LamLast - Lam) > 1 && LamLast > 0) {
     Lam = LamLast;
   }
   if (abs(AirTLast - AirT) > 25 && AirTLast > 0) {
