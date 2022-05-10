@@ -22,7 +22,7 @@ typedef struct test_struct {
 
   //Array to store CAN information
   int nums[17]; //Change if added Sensors
-  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool]
+  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool, Lat, Lng, Speed]
   
 } test_struct;
 

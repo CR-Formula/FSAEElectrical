@@ -7,9 +7,9 @@
 #include <iostream>
 
 //MAC_Addresses for the different ESP32 Boards                      //Board Identifiers
-uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x13, 0xDC}; //Short Antenna
+//uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x13, 0xDC}; //Short Antenna --Dead
 //uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04}; //Long Antenna
-//uint8_t broadcastAddress1[] = {0x9C, 0x9C, 0x1F, 0xC7, 0x03, 0x54}; //No Antenna
+uint8_t broadcastAddress1[] = {0x9C, 0x9C, 0x1F, 0xC7, 0x03, 0x54}; //No Antenna
 
 const byte numChars = 32;
 char receivedChars[numChars];
