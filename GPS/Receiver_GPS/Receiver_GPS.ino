@@ -71,7 +71,7 @@ void loop() {
   if (RPM > 20000) {
     RPM = RPMLast;
   }
-  if (abs(TPSLast - TPS) > 50 && TPSLast > 0) {
+  if (abs(TPSLast - TPS) > 90 && TPSLast > 0) {
     TPS = TPSLast;
   }
   if (abs(FOTLast - FOT) > 10 && FOTLast > 0) {

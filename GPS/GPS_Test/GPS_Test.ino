@@ -27,18 +27,18 @@ void setup()
   Serial.println();
 }
 
-void loop()
-{
-
+void loop() {
+  Serial.print("Speed: ");
+  Serial.print(gps.speed.mph());
+  Serial.print("\t");
+  Serial.print("Lat: ");
+  Serial.print(gps.location.lat());
+  Serial.print("\t");
+  Serial.print("Long: ");
+  Serial.println(gps.location.lng());
 }
 
 void displayInfo()
 {
-  Serial.print(F("Location: ")); 
-    Serial.print(gps.location.lat(), 6);
-    Serial.print(F(","));
-    Serial.print(gps.location.lng(), 6);
-
-
-  Serial.println();
+  Serial.println("-------------Interrupt-------------");
 }
