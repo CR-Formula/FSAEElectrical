@@ -4,10 +4,7 @@
     "\\GPS",
     "\\GPS\\CAN_Filter_GPS",
     "\\GPS\\Receiver_GPS",
-    "\\GPS\\Sender_GPS",
-    "\\Receiver",
-    "\\Sender"
+    "\\GPS\\Sender_GPS"
   ],
-  "SelectedNode": "\\GPS\\Sender_GPS\\Sender_GPS.ino",
   "PreviewInSolutionExplorer": false
 }

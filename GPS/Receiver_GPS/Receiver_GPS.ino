@@ -15,14 +15,15 @@ unsigned int RPMLast;
   double LamLast;
   double AirTLast;
   double CoolTLast;
+  double OilPLast;
 
 //Structure example to receive data
 //Must match the sender structure
 typedef struct test_struct {
 
   //Array to store CAN information
-  int nums[17]; //Change if added Sensors
-  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool, Lat, Lng, Speed]
+  int nums[19]; //Change if added Sensors
+  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool, lat, lng, speed, oilp, oilp]
   
 } test_struct;
 
@@ -64,9 +65,10 @@ void loop() {
   double Lam = ((myData.nums[8] + myData.nums[9] * 256) * 0.01) * 0.1; //Holds Lambda value
   double AirT = (myData.nums[10] + myData.nums[11] * 256) * 0.1; //Holds Air Temp value
   double CoolT = (myData.nums[12] + myData.nums[13] * 256) * 0.1; //Holds Coolent Temp value
-  double Lat = myData.nums[14];
-  double Lng = myData.nums[15];
-  double Speed = myData.nums[16];
+  double Lat = myData.nums[14]; //Holds Lat
+  double Lng = myData.nums[15]; //Holds Lng
+  double Speed = myData.nums[16]; //Holds Speed
+  double OilP = (myData.nums[17] + myData.nums[18] * 256) * 0.001; //Holds Oil Pressure Value
   
   if (RPM > 20000) {
     RPM = RPMLast;
@@ -91,7 +93,7 @@ void loop() {
   }
   
   //CSV format Serial Print
-  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d\n", RPM, TPS, FOT, IA, Lam, AirT, CoolT, Lat, Lng, Speed);
+  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f\n", RPM, TPS, FOT, IA, Lam, AirT, CoolT, Lat, Lng, Speed, OilP);
 
   RPMLast = RPM;
   TPSLast = TPS;
@@ -100,6 +102,7 @@ void loop() {
   LamLast = Lam;
   AirTLast = AirT;
   CoolTLast = CoolT;
+  OilPLast = OilP;
   
   //Test code to print the data buffer
   /*int k = 0;

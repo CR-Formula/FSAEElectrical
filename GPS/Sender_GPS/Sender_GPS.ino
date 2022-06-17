@@ -7,9 +7,9 @@
 #include <iostream>
 
 //MAC_Addresses for the different ESP32 Boards                      //Board Identifiers
-//uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x13, 0xDC}; //Short Antenna --Dead
-//uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04}; //Long Antenna
-uint8_t broadcastAddress1[] = {0x9C, 0x9C, 0x1F, 0xC7, 0x03, 0x54}; //No Antenna
+//uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04}; //Long Antenna 
+uint8_t broadcastAddress1[] = {0x9C, 0x9C, 0x1F, 0xC7, 0x03, 0x54}; //Short Antenna
+//uint8_t broadcastAddress1[] = {0x30, 0xC6, 0xF7, 0x20, 0x50, 0x2C}; //ESP CAM 1 (ant board)
 
 const byte numChars = 32;
 char receivedChars[numChars];
@@ -22,8 +22,8 @@ int integerFromPC = 0;
 typedef struct test_struct {
   
   //Array to store CAN information
-  int nums[17]; //Change if added Sensors
-  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool, lat, long, speed]
+  int nums[19]; //Change if added Sensors
+  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool, lat, long, speed, oilp, oilp]
   
 } test_struct;
 test_struct test;
@@ -110,6 +110,10 @@ void loop() {
     test.nums[14] = tempVal[1];
     test.nums[15] = tempVal[2];
     test.nums[16] = tempVal[3];
+  }
+  if (receivedChars[0] == '5') {
+    test.nums[17] = tempVal[1];
+    test.nums[18] = tempVal[2];
   }
 
   

@@ -69,7 +69,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(RxPin), GPSdata, CHANGE);
   
   // Initializes MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
-  if(CAN0.begin(MCP_ANY, CAN_500KBPS, MCP_16MHZ) == CAN_OK)
+  if(CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_16MHZ) == CAN_OK)
     Serial.println("MCP2515 Initialized Successfully!");
   else
     Serial.println("Error Initializing MCP2515...");
@@ -107,8 +107,8 @@ void loop()
       unsigned char newID = 0x2;
       unsigned char data[3];
       data[0] = newID;
-      data[1] = rxBuf[2];
-      data[2] = rxBuf[3];
+      data[1] = rxBuf[4];
+      data[2] = rxBuf[5];
 
       sendTheData(data, 3);
     }
@@ -128,6 +128,15 @@ void loop()
        //Serial.print(rxBuf[4], DEC);
        //Serial.print(rxBuf[5], DEC);
        //delay(50);
+    }
+    if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { //Oil Pressure
+      unsigned char newID = 0x5;
+      unsigned char data[3];
+      data[0] = newID;
+      data[1] = rxBuf[6];
+      data[2] = rxBuf[7];
+
+      sendTheData(data, 3);
     }
   }
 }

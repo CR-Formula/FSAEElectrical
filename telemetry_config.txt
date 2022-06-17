@@ -20,7 +20,7 @@ Communication Settings:
 	packet type = CSV
 	sample rate = 10000
 
-7 Data Structure Locations:
+11 Data Structure Locations:
 
 	location = 0
 	binary processor = null
@@ -78,12 +78,44 @@ Communication Settings:
 	conversion factor a = 1.0
 	conversion factor b = 1.0
 
+	location = 7
+	binary processor = null
+	name = Lat
+	color = 0x009999
+	unit = Deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 8
+	binary processor = null
+	name = Lng
+	color = 0x009999
+	unit = Deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 9
+	binary processor = null
+	name = Speed
+	color = 0x009999
+	unit = mph
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 10
+	binary processor = null
+	name = Oil Pressure
+	color = 0xFF66FF
+	unit = psi
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
 Checksum:
 
 	location = -1
 	checksum processor = null
 
-7 Charts:
+8 Charts:
 
 	chart type = Dial
 	top left x = 0
@@ -169,28 +201,6 @@ Checksum:
 	show legend = true
 	cached mode = false
 
-	chart type = Time Domain
-	top left x = 0
-	top left y = 4
-	bottom right x = 5
-	bottom right y = 5
-	normal datasets = 4
-	bitfield edge states = 
-	bitfield level states = 
-	duration type = Seconds
-	duration = 10.0
-	x-axis = Timestamps
-	autoscale y-axis minimum = true
-	manual y-axis minimum = -1.0
-	autoscale y-axis maximum = true
-	manual y-axis maximum = 1.0
-	show x-axis title = true
-	show x-axis scale = true
-	show y-axis title = true
-	show y-axis scale = true
-	show legend = true
-	cached mode = false
-
 	chart type = Dial
 	top left x = 4
 	top left y = 2
@@ -226,3 +236,47 @@ Checksum:
 	show reading label = true
 	show min/max labels = true
 	show statistics = true
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 4
+	bottom right x = 2
+	bottom right y = 5
+	normal datasets = 4
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Seconds
+	duration = 4.5
+	x-axis = Timestamps
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+
+	chart type = Time Domain
+	top left x = 3
+	top left y = 4
+	bottom right x = 5
+	bottom right y = 5
+	normal datasets = 10
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Seconds
+	duration = 4.5
+	x-axis = Timestamps
+	autoscale y-axis minimum = true
+	manual y-axis minimum = -1.0
+	autoscale y-axis maximum = true
+	manual y-axis maximum = 1.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
