@@ -39,8 +39,9 @@ void sendTheData(unsigned char data[], int n)
 }
 
 /**
- * Read GPS Data and send the data using interrupts
+ * Read in GPS data
  * Is read as its own custom CAN packet
+ * TODO: Need to trigger some kind of event to grab data
  */
 void GPSdata() {
   unsigned char gpsData[4];
@@ -124,10 +125,12 @@ void loop()
 
        //Send new CAN Packet to the sender ESP board
        sendTheData(data, 5);
-       //Code to test values
-       //Serial.print(rxBuf[4], DEC);
-       //Serial.print(rxBuf[5], DEC);
-       //delay(50);
+
+
+       /*//Code to test values
+       Serial.print(rxBuf[4], DEC);
+       Serial.print(rxBuf[5], DEC);
+       delay(50);*/
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { //Oil Pressure
       unsigned char newID = 0x5;
