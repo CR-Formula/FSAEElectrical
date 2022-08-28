@@ -29,6 +29,7 @@ public class Main {
 	 * This just creates and configures the main window.
 	 * 
 	 * @param args    Command line arguments (not currently used.)
+	 * @throws InterruptedException 
 	 */
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {
@@ -55,7 +56,7 @@ public class Main {
 		int height = notificationHeight + settingsViewHeight + controlsViewHeight + (8 * Theme.padding);
 		Dimension size = new Dimension(width, height);
 		window.setSize(size);
-		window.setMinimumSize(size);
+		window.setMinimumSize(new Dimension(width / 8, height / 8));
 		window.setLocationRelativeTo(null);
 		window.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		
@@ -98,7 +99,6 @@ public class Main {
 		} catch (Exception e) {
 			window.setVisible(true);
 		}
-		
 	}
 	
 	/**

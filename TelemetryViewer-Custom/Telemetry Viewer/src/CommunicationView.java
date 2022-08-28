@@ -73,7 +73,6 @@ public class CommunicationView extends JPanel {
 					filepaths[i] = files[i].getAbsolutePath();
 				CommunicationController.importFiles(filepaths);
 			}
-			
 		});
 		
 		// export
