@@ -26,17 +26,17 @@ EasyTransfer ET;
 
 // Holds all calculated Telemetry Data
 typedef struct data_struct {
-  int RPM = 10000;     // Holds RPM value
-  float TPS = 50.5;   // Holds TPS value
-  float FOT = 40.5;   // holds Fuel Open Time value
-  float IA = 38.2;    // Holds Ignition Angle value
-  float Lam = 1.2;   // Holds Lambda value
-  float AirT = 75.3;  // Holds Air Temp value
-  float CoolT = 195.6; // Holds Coolent Temp value
-  float Lat = 0;   // Holds Latitude
-  float Lng = 0;   // Holds Longitude
-  float Speed = 50; // Holds GPS Speed
-  float OilP = 22.3;  // Holds Oil Pressure
+  int RPM;     // Holds RPM value
+  float TPS;   // Holds TPS value
+  float FOT;   // holds Fuel Open Time value
+  float IA;    // Holds Ignition Angle value
+  float Lam;   // Holds Lambda value
+  float AirT;  // Holds Air Temp value
+  float CoolT; // Holds Coolent Temp value
+  float Lat;   // Holds Latitude
+  float Lng;   // Holds Longitude
+  float Speed; // Holds GPS Speed
+  float OilP;  // Holds Oil Pressure
 } data_struct;
 data_struct telemetry;
 
