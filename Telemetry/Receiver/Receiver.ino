@@ -5,34 +5,28 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include <iostream>
-#include <string>
-#include <Math.h>
-
-unsigned int RPMLast;
-  double TPSLast;
-  double FOTLast;
-  double IALast;
-  double LamLast;
-  double AirTLast;
-  double CoolTLast;
-  double OilPLast;
 
 //Structure example to receive data
 //Must match the sender structure
-typedef struct test_struct {
-
-  //Array to store CAN information
-  int nums[19]; //Change if added Sensors
-  //[rpm, rpm, tps, tps, fot, fot, ing, ing, lam, lam, air, air, cool, cool, lat, lng, speed, oilp, oilp]
-  
-} test_struct;
-
-test_struct myData;
+typedef struct data_struct {
+  int RPM;     // Holds RPM value
+  float TPS;   // Holds TPS value
+  float FOT;   // holds Fuel Open Time value
+  float IA;    // Holds Ignition Angle value
+  float Lam;   // Holds Lambda value
+  float AirT;  // Holds Air Temp value
+  float CoolT; // Holds Coolent Temp value
+  float Lat;   // Holds Latitude
+  float Lng;   // Holds Longitude
+  float Speed; // Holds GPS Speed
+  float OilP;  // Holds Oil Pressure
+} data_struct;
+data_struct telemetry;
 
 //When the board recieves data:
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   //Tracks the size of the data structure
-  memcpy(&myData, incomingData, sizeof(myData)); //Memory Allocation for data
+  memcpy(&telemetry, incomingData, sizeof(telemetry)); //Memory Allocation for data
   //Serial.println(len);
 }
  
@@ -51,63 +45,9 @@ void setup() {
 }
  
 void loop() {
-  //Print the data stored in the data structure array
-  int len = sizeof(myData.nums) / sizeof(myData.nums[0]); //Stores the number of elements in the array
-  //variables for the PE3 ECU CAN data
-  //All 2 byte data is stored [LowByte, HighByte]
-  //Num = (HighByte*256 + LowByte) * resolution
-
-
-  unsigned int RPM = (myData.nums[0] + myData.nums[1] * 256) * 1; //Holds RPM value
-  double TPS = (myData.nums[2] + myData.nums[3] * 256) * 0.1; //Holds TPS value
-  double FOT = (myData.nums[4] + myData.nums[5] * 256) * 0.1; //holds Fuel Open Time value
-  double IA = (myData.nums[6] + myData.nums[7] * 256) * 0.1; //Holds Ignition Angle value
-  double Lam = ((myData.nums[8] + myData.nums[9] * 256) * 0.01) * 0.1; //Holds Lambda value
-  double AirT = (myData.nums[10] + myData.nums[11] * 256) * 0.1; //Holds Air Temp value
-  double CoolT = (myData.nums[12] + myData.nums[13] * 256) * 0.1; //Holds Coolent Temp value
-  double Lat = myData.nums[14]; //Holds Lat
-  double Lng = myData.nums[15]; //Holds Lng
-  double Speed = myData.nums[16]; //Holds Speed
-  double OilP = (myData.nums[17] + myData.nums[18] * 256) * 0.001; //Holds Oil Pressure Value
-  
-  if (RPM > 20000) {
-    RPM = RPMLast;
-  }
-  if (abs(TPSLast - TPS) > 90 && TPSLast > 0) {
-    TPS = TPSLast;
-  }
-  if (abs(FOTLast - FOT) > 10 && FOTLast > 0) {
-    FOT = FOTLast;
-  }
-  if (abs(IALast - IA) > 50 && IALast > 0 || IA > 40) {
-    IA = IALast;
-  }
-  if (abs(LamLast - Lam) > 1 && LamLast > 0) {
-    Lam = LamLast;
-  }
-  if (abs(AirTLast - AirT) > 25 && AirTLast > 0) {
-    AirT = AirTLast;
-  }
-  if (abs(CoolTLast - CoolT) > 50 && CoolTLast > 0) {
-    CoolT = CoolTLast;
-  }
-  
   //CSV format Serial Print
-  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f\n", RPM, TPS, FOT, IA, Lam, AirT, CoolT, Lat, Lng, Speed, OilP);
-
-  RPMLast = RPM;
-  TPSLast = TPS;
-  FOTLast = FOT;
-  IALast = IA;
-  LamLast = Lam;
-  AirTLast = AirT;
-  CoolTLast = CoolT;
-  OilPLast = OilP;
+  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP);
   
-  //Test code to print the data buffer
-  /*int k = 0;
-  for (k = 0; k < 14; k++) {
-    Serial.printf("%d, ", myData.nums[k]);
-  }
-  Serial.printf("\n");*/
+  //delay for stability
+  delay(1);
 }
