@@ -14,13 +14,15 @@ EasyTransfer ET;
 // uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04}; //Long Antenna
 // uint8_t broadcastAddress1[] = {0x9C, 0x9C, 0x1F, 0xC7, 0x03, 0x54}; //Short Antenna
 // uint8_t broadcastAddress1[] = {0x30, 0xC6, 0xF7, 0x20, 0x50, 0x2C}; //ESP CAM 1 (ant board)
-uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0xB4, 0x50}; // White Tape Devkit
-// uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0x94, 0x5C}; //No White Tape Devkit
+//uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0xB4, 0x50}; // White Tape Devkit AB
+// uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0x94, 0x5C}; //No White Tape Devkit AB
+//uint8_t broadcastAddress1[] = {0x08, 0x3A, 0xF2, 0xB7, 0x70, 0xD0}; // Blue Tape Devkit
+uint8_t broadcastAddress1[] = {0x40, 0x91, 0x51, 0xAC, 0x2E, 0x54}; // No Tape Devkit
 
 // Data Structure to store variables to be sent
 // struct must match receiver
 typedef struct data_struct {
-  int RPM;     // Holds RPM value
+  float RPM;     // Holds RPM value
   float TPS;   // Holds TPS value
   float FOT;   // holds Fuel Open Time value
   float IA;    // Holds Ignition Angle value
@@ -31,6 +33,7 @@ typedef struct data_struct {
   float Lng;   // Holds Longitude
   float Speed; // Holds GPS Speed
   float OilP;  // Holds Oil Pressure
+  float FLTemp; //Holds Front Left Brake Temp
 } data_struct;
 data_struct telemetry;
 
@@ -43,7 +46,7 @@ void setup() {
   Serial.begin(115200);
   Serial2.begin(115200);
   WiFi.mode(WIFI_STA);
-  ET.begin(details(telemetry), &Serial);
+  ET.begin(details(telemetry), &Serial2);
 
   // Checks for ESP connection
   if (esp_now_init() != ESP_OK) {
@@ -67,18 +70,17 @@ void setup() {
 
 void loop() {
   // get data from CAN bus
-  if (ET.receiveData()) {
-    // sends the specified data
-    esp_err_t result = esp_now_send(0, (uint8_t *)&telemetry, sizeof(telemetry));
+  ET.receiveData();
+  // sends the specified data
+  esp_err_t result = esp_now_send(0, (uint8_t *)&telemetry, sizeof(telemetry));
 
-    // Tests that the data was sent successfully and either prints an Error or the Data that was sent
-    if (result == ESP_OK) {
-      Serial.print("Telemetry: ");
-      Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP);
-    }
-    else {
-      Serial.println("ERROR: problem sending the data");
-    }
+  // Tests that the data was sent successfully and either prints an Error or the Data that was sent
+  if (result == ESP_OK) {
+    Serial.print("Telemetry: ");
+    Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp);
+  }
+  else {
+    Serial.println("ERROR: problem sending the data");
   }
   //delay for stability
   delay(1);

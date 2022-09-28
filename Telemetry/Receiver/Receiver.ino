@@ -9,7 +9,7 @@
 //Structure example to receive data
 //Must match the sender structure
 typedef struct data_struct {
-  int RPM;     // Holds RPM value
+  float RPM;     // Holds RPM value
   float TPS;   // Holds TPS value
   float FOT;   // holds Fuel Open Time value
   float IA;    // Holds Ignition Angle value
@@ -20,6 +20,7 @@ typedef struct data_struct {
   float Lng;   // Holds Longitude
   float Speed; // Holds GPS Speed
   float OilP;  // Holds Oil Pressure
+  float FLTemp; //Holds Front Left Brake Temp
 } data_struct;
 data_struct telemetry;
 
@@ -46,7 +47,7 @@ void setup() {
  
 void loop() {
   //CSV format Serial Print
-  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP);
+  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp);
   
   //delay for stability
   delay(1);
