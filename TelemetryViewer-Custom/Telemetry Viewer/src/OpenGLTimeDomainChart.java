@@ -363,7 +363,7 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 			isRed = false;
 		} else {
 			if (isRed)
-				OpenGL.drawQuad2D(gl, new float[]{1f,0f,0f,1f}, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
+				OpenGL.drawQuad2D(gl, new float[]{1f,0f,0f,0.75f}, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
 			else 
 				OpenGL.drawQuad2D(gl, Theme.plotBackgroundColor, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
 			if (diff > 500) {
