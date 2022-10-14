@@ -1,4 +1,4 @@
-/* 2021 Iowa State Formula SAE Electrical Subsystem*/
+/*Iowa State Formula SAE Electrical Subsystem*/
 
 #include <esp_now.h>
 #include <WiFi.h>
@@ -21,6 +21,9 @@ typedef struct data_struct {
   float Speed; // Holds GPS Speed
   float OilP;  // Holds Oil Pressure
   float FLTemp; //Holds Front Left Brake Temp
+  float FRTemp; //Holds Front Right Brake Temp
+  float RLTemp; //Holds Rear Left Brake Temp
+  float RRTemp; //Holds Rear Right Brake Temp
 } data_struct;
 data_struct telemetry;
 
@@ -47,8 +50,7 @@ void setup() {
  
 void loop() {
   //CSV format Serial Print
-  Serial.printf("%d, %f, %f, %f, %f, %f, %f, %f, %f, %d, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp);
-  
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp,telemetry.RRTemp);
   //delay for stability
   delay(1);
 }
