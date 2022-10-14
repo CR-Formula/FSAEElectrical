@@ -1,5 +1,7 @@
 import java.awt.Color;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import com.jogamp.opengl.GL2ES3;
@@ -100,6 +102,11 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	WidgetCheckbox showYaxisScaleWidget;
 	WidgetCheckbox showLegendWidget;
 	WidgetCheckbox cachedWidget;
+	WidgetCheckbox displayOverHeatingWidget;
+	
+	private boolean displayOverheating;
+	private boolean isRed;
+	private Date lastFrame;
 	
 	@Override public String toString() {
 		
@@ -181,8 +188,12 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		                                      autoscale = cachedMode ? new AutoScale(AutoScale.MODE_STICKY,       1, 0.10f) :
 		                                                               new AutoScale(AutoScale.MODE_EXPONENTIAL, 30, 0.10f);
 		                                  });
+		
+		displayOverHeatingWidget = new WidgetCheckbox("Display Overheating",
+                false,
+                newDisplayOverheating -> displayOverheating = newDisplayOverheating);
 
-		widgets = new Widget[15];
+		widgets = new Widget[16];
 		
 		widgets[0]  = datasetsWidget;
 		widgets[1]  = null;
@@ -199,12 +210,18 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		widgets[12] = showLegendWidget;
 		widgets[13] = null;
 		widgets[14] = cachedWidget;
+		widgets[15] = displayOverHeatingWidget;
+		
+		isRed = false;
 		
 	}
 	
 	@Override public EventHandler drawChart(GL2ES3 gl, float[] chartMatrix, int width, int height, int lastSampleNumber, double zoomLevel, int mouseX, int mouseY) {
 		
 		EventHandler handler = null;
+		
+		if (lastFrame == null)
+			lastFrame = Date.from(Instant.now());
 		
 		plot.initialize(lastSampleNumber, zoomLevel, datasets, bitfieldEdges, bitfieldLevels, sampleCountMode ? durationWidget.getSampleCount() : durationWidget.getMilliseconds(), cachedMode, isTimestampsMode);
 		
@@ -339,7 +356,24 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		plotHeight = yPlotTop - yPlotBottom;
 		
 		// draw plot background
-		OpenGL.drawQuad2D(gl, Theme.plotBackgroundColor, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
+		Date currFrame = Date.from(Instant.now());
+		long diff = Math.abs(currFrame.getTime() - lastFrame.getTime());
+		if (!displayOverheating || !haveDatasets || allDatasets.get(0).getSample(lastSampleNumber) < 220) {
+			OpenGL.drawQuad2D(gl, Theme.plotBackgroundColor, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
+			isRed = false;
+		} else {
+			if (isRed)
+				OpenGL.drawQuad2D(gl, new float[]{1f,0f,0f,0.75f}, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
+			else 
+				OpenGL.drawQuad2D(gl, Theme.plotBackgroundColor, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
+			if (diff > 500) {
+				if (isRed)
+					isRed = false;
+				else 
+					isRed = true;
+				lastFrame = Date.from(Instant.now());
+			}
+		}
 		
 		// draw the x-axis scale
 		if(showXaxisScale) {
