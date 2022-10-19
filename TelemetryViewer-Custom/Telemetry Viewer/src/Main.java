@@ -99,6 +99,16 @@ public class Main {
 		} catch (Exception e) {
 			window.setVisible(true);
 		}
+		String OS = System.getProperty("os.name");
+		if (OS.indexOf("Windows") == -1) {
+			File[] files = new File[2];
+			files[0] = new File("telemetry_config.txt");
+			files[1] = new File("Logs/2022 Michigan June/Autocross.csv");
+			String[] filepaths = new String[files.length];
+			for(int i = 0; i < files.length; i++)
+				filepaths[i] = files[i].getAbsolutePath();
+			CommunicationController.importFiles(filepaths);
+		}
 	}
 	
 	/**
