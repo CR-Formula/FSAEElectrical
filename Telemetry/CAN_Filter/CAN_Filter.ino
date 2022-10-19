@@ -1,4 +1,4 @@
-/*2021-22 Iowa State Formula SAE Electrical Subsystem*/
+/*Iowa State Formula SAE Electrical Subsystem*/
 
 #include <mcp_can.h>        //TODO: Need this library for the time being -- may change with the MEGA switch
 //#include <SPI.h>            //TODO: May not need this Library
@@ -6,6 +6,7 @@
 //#include <SoftwareSerial.h> //TODO: Need to transfer GPS to I2C
 #include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
+#include <Wire.h>
 
 // Stores the CAN Packet ID
 long unsigned int rxId;
@@ -14,16 +15,20 @@ unsigned char len = 0;
 unsigned char rxBuf[8];
 // Stores the CAN packet serial message
 char msgString[128];
-static const int RxPin = 3;
+static const int RxPin = 3; //TODO: Unused pin definitions
 static const int TxPin = 4;
 
-// Sets INT to pin 2
+// Sets INT to pin 2 -- MEGA -- pin 2
 #define CAN0_INT 2
-// Sets CS to pin 10
+// Sets CS to pin 10  -- MEGA -- pin 53
 MCP_CAN CAN0(10);
 
-//Object for brake temp sensor
-Adafruit_MLX90614 FLB = Adafruit_MLX90614();
+//Object for brake temp sensors
+Adafruit_MLX90614 FLB = Adafruit_MLX90614(); //Front Left Brake Temp
+Adafruit_MLX90614 FRB = Adafruit_MLX90614(); //Front Right Brake Temp
+Adafruit_MLX90614 RLB = Adafruit_MLX90614(); //Rear Left Brake Temp
+Adafruit_MLX90614 RRB = Adafruit_MLX90614(); //Rear Right Brake Temp
+
 
 // Create EasyTransfer Object
 EasyTransfer ET;
@@ -41,7 +46,10 @@ typedef struct data_struct {
   float Lng;   // Holds Longitude
   float Speed; // Holds GPS Speed
   float OilP;  // Holds Oil Pressure
-  float FLTemp; //Holds Front Right Brake Temp
+  float FLTemp; //Holds Front Left Brake Temp
+  float FRTemp; //Holds Front Right Brake Temp
+  float RLTemp; //Holds Rear Left Brake Temp
+  float RRTemp; //Holds Rear Right Brake Temp
 } data_struct;
 data_struct telemetry;
 
@@ -57,8 +65,9 @@ float OilPLast;
 
 void setup() {
   Serial.begin(115200);
+  Wire.begin();
 
-  // Initializes MCP2515 running at 16MHz with a baudrate of 500kb/s and the masks and filters disabled.
+  // Initializes MCP2515 running at 16MHz with a baudrate of 250kb/s and the masks and filters disabled.
   if (CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_16MHZ) == CAN_OK)
     Serial.println("MCP2515 Initialized Successfully!");
   else
@@ -74,7 +83,10 @@ void setup() {
   ET.begin(details(telemetry), &Serial);
 
   //initalize brake temp sensors
-  FLB.begin();
+  FLB.begin(0x5A, &Wire);
+  FRB.begin(0x5B, &Wire);
+  RLB.begin(0x5C, &Wire);
+  RRB.begin(0x5D, &Wire);
 }
 
 void loop() {
@@ -84,10 +96,10 @@ void loop() {
   //Num = (LowByte + HighByte * 256) * resolution
   if (!digitalRead(CAN0_INT))
   {
-    // Read Data to data buffer array
+    // Read Id, length, and message data
     CAN0.readMsgBuf(&rxId, &len, rxBuf);
 
-    // check for specific CAN ID. pull need data, and repackage the data
+    // check for specific CAN ID. pull needed data, and repackage the data
     // Change if added Sensors
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF048) {
       telemetry.RPM = (rxBuf[0] + rxBuf[1] * 256); //RPM
@@ -112,8 +124,11 @@ void loop() {
     }
   }
 
+  //Function calls to read brake temp sensor values
   telemetry.FLTemp = FLB.readObjectTempC();
-  Serial.println(telemetry.FLTemp);
+  telemetry.FRTemp = FRB.readObjectTempC();
+  telemetry.RLTemp = RLB.readObjectTempC();
+  telemetry.RRTemp = RRB.readObjectTempC();
 
   //Filters out extraneous values for each CAN Value
     if (telemetry.RPM > 20000) {
@@ -139,7 +154,7 @@ void loop() {
     }
 
     // Send the data over Serial using EasyTransfer
-    ET.sendData();
+    ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal
 
     //delay for stability
     delay(5);
