@@ -208,7 +208,7 @@ public class OpenGLWheelSpeed extends PositionedChart {
 		float xSprocketCord;
 		float ySprocketCord = 0;
 		
-		int wheelRadius =  (plotWidth) < (plotHeight) ? (int) plotWidth / 6 : (int) plotHeight / 4;
+		int wheelRadius =  (plotWidth) < (plotHeight) ? (int) plotWidth / 6 : (int) plotHeight / 5;
 		
 		
 		// Wheel width	  = 15in
@@ -219,22 +219,8 @@ public class OpenGLWheelSpeed extends PositionedChart {
 		xRightWheelCord = xPlotLeft + (plotWidth / 2) + (wheelRadius * 1.8f);
 		
 		if (showReadingLabel) {
-			String dataUnit;
-			if (datasets.get(0).unit.equals("Volts"))
-				dataUnit = "MPH";
-			else 
-				dataUnit = datasets.get(0).unit;
 			yWheelCord = yPlotTop - (plotHeight / 4);
 			ySprocketCord = yPlotBottom + (plotHeight / 4);
-			float leftWidth = OpenGL.smallTextWidth(gl, leftWheel + " " + dataUnit);
-			float rightWidth = OpenGL.smallTextWidth(gl, rightWheel + " " + dataUnit);
-			OpenGL.drawSmallText(gl, leftWheel + " " + dataUnit, (int) (xLeftWheelCord - (leftWidth / 2)), (int) (yPlotBottom + (wheelRadius) * (3.0/2.0)), 0);
-			OpenGL.drawSmallText(gl, rightWheel + " " + dataUnit, (int) (xRightWheelCord - (rightWidth / 2)), (int) (yPlotBottom + (wheelRadius) * (3.0/2.0)), 0);
-			if (showSprocket) {
-				float sprocketWidth = OpenGL.smallTextWidth(gl, sprocket + " " + dataUnit);
-				OpenGL.drawSmallText(gl, sprocket + " " + dataUnit, (int) (xPlotLeft + (plotWidth / 2) - (sprocketWidth / 2)), (int) (yPlotBottom + (plotHeight / 2)), 0);
-			}
-			
 		} else {
 			yWheelCord = yPlotBottom + (plotHeight / 2);
 		}
@@ -263,7 +249,7 @@ public class OpenGLWheelSpeed extends PositionedChart {
 			drawInCircleLines(gl, xLeftWheelCord, yWheelCord, wheelRadius / 2, spokeCount, theta, lastSpotL);
 			OpenGL.buffer.rewind();
 			drawInCircleLines(gl, xRightWheelCord, yWheelCord, wheelRadius / 2, spokeCount, theta, lastSpotR);
-			
+			// Use pythagroeon theroum to find length of that piece
 			if (showSprocket) {
 				float spocketMovement = (sprocket / rpNano) * diff * 100000000;
 				lastSpotS += Math.abs((float) (spocketMovement * Math.PI / 180.0f));

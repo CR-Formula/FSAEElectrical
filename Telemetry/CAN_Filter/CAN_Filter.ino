@@ -1,7 +1,7 @@
 /*Iowa State Formula SAE Electrical Subsystem*/
 
 #include <mcp_can.h>        //TODO: Need this library for the time being -- may change with the MEGA switch
-//#include <SPI.h>            //TODO: May not need this Library
+#include <SPI.h>
 //#include <TinyGPSPlus.h>    //TODO: See Below
 //#include <SoftwareSerial.h> //TODO: Need to transfer GPS to I2C
 #include <EasyTransfer.h>
@@ -18,10 +18,12 @@ char msgString[128];
 static const int RxPin = 3; //TODO: Unused pin definitions
 static const int TxPin = 4;
 
-// Sets INT to pin 2 -- MEGA -- pin 2
+// Sets INT to pin 2
 #define CAN0_INT 2
-// Sets CS to pin 10  -- MEGA -- pin 53
-MCP_CAN CAN0(10);
+// Sets CS
+//MCP_CAN CAN0(10); //Uno
+MCP_CAN CAN0(53); //Mega
+
 
 //Object for brake temp sensors
 Adafruit_MLX90614 FLB = Adafruit_MLX90614(); //Front Left Brake Temp
@@ -158,6 +160,10 @@ void loop() {
 
     //delay for stability
     delay(5);
+
+    Serial.println();
+    Serial.println(telemetry.TPS);
+    Serial.println();
 
     //Save last correct values
     RPMLast = telemetry.RPM;
