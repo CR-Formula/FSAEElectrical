@@ -156,6 +156,7 @@ Checksum:
 	show y-axis scale = true
 	show legend = true
 	cached mode = false
+	display overheating = false
 
 	chart type = Time Domain
 	top left x = 4
@@ -178,6 +179,7 @@ Checksum:
 	show y-axis scale = true
 	show legend = true
 	cached mode = false
+	display overheating = false
 
 	chart type = Time Domain
 	top left x = 2
@@ -200,6 +202,7 @@ Checksum:
 	show y-axis scale = true
 	show legend = true
 	cached mode = false
+	display overheating = false
 
 	chart type = Dial
 	top left x = 4
@@ -258,6 +261,7 @@ Checksum:
 	show y-axis scale = true
 	show legend = true
 	cached mode = false
+	display overheating = false
 
 	chart type = Time Domain
 	top left x = 3
@@ -280,3 +284,4 @@ Checksum:
 	show y-axis scale = true
 	show legend = true
 	cached mode = false
+	display overheating = false
