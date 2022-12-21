@@ -7,6 +7,9 @@
 #include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
 #include <Wire.h>
+#include <NexText.h>
+#include <NexNumber.h>
+#include <NexProgressBar.h>
 
 // Stores the CAN Packet ID
 long unsigned int rxId;
@@ -65,8 +68,31 @@ float AirTLast;
 float CoolTLast;
 float OilPLast;
 
+//Nextion display objects
+NexNumber rpm = NexNumber(0, 1, "rpm");
+NexNumber oilPress = NexNumber(0, 1, "oilPress");
+NexNumber lap = NexNumber(0, 1, "lap");
+NexNumber waterTemp = NexNumber(0, 1, "waterTemp");
+NexText gear = NexText(0, 1, "gear");
+NexText lastLap = NexText(0, 1, "lastLap");
+NexText bestLap = NextText(0, 1, "bestLap")
+NexProgressBar rpmBar = NexProgressBar(0, 1, "rpmBar");
+
+//Function to update Nextion display
+void Nextion_CMD() {
+    rpm.setValue(telemetry.RPM);
+    oilPress.setValue(telemetry.OilP);
+    //lap.setValue() //TODO: Create lap time variable
+    waterTemp.setValue(telemetry.CoolT);
+    gear.setText("N"); //TODO: Need to create gear calculations
+    //lastLap.setText("0:00.0");
+    //bestLap.setText("0:00.0");
+    rpmBar.setValue((telemetry.RPM/15500)*100);
+}
+
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200); //Serial Port 1 for ESP
+  nexSerial.begin(115200); //Serial Port 2 for Nextion Dash
   Wire.begin();
 
   // Initializes MCP2515 running at 16MHz with a baudrate of 250kb/s and the masks and filters disabled.
@@ -174,4 +200,6 @@ void loop() {
     AirTLast = telemetry.AirT;
     CoolTLast = telemetry.CoolT;
     OilPLast = telemetry.OilP;
+
+    Nextion_CMD();
 }
