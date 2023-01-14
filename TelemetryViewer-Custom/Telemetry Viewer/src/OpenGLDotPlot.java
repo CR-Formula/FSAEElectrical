@@ -307,6 +307,10 @@ public class OpenGLDotPlot extends PositionedChart {
 				(int) plotWidth, (int) plotHeight);
 
 		// draw the points
+		// Remove the damn ArrayList already and just upgrade to a Buffer - Allows more points and removed lag
+		// ArrayList adds to runtime and decreases stability. Create a "Remove Outlier" function which can remove 
+		// Outside of realistic values. Function will determine speed necessary to move from point 'A' to 'B', if
+		// speed is too high then point is removed.
 		float realX = xPlotLeft;
 		float realY = yPlotBottom;
 		OpenGL.buffer.rewind();
@@ -484,6 +488,32 @@ public class OpenGLDotPlot extends PositionedChart {
 			float y2 = y + (float) Math.sin(angle + increment) * radius;
 
 			OpenGL.drawTriangle2D(gl, color, x, y, x1, y1, x2, y2);
+		}
+	}
+	
+	/* Creating a Matrix drawing system
+	 * Remove the redundent ArrayList<Point>
+	 * Steps of utilizing Matrix vs ArrayList
+	 * Add to Matrix - Never remove
+	 * Hardware controls draw amount and necessary information
+	 * Refresh Matrix before & after drawing statements
+	 * 
+	 * Post Programming tasks
+	 * Complete runtime tests
+	 * Figure out max amounts of points avaliable on the graph
+	 */
+	public void drawDots(GL2ES3 gl) {
+		boolean haveDatasets = true;
+		int datasetsCount = 10;
+		int trueMinX = 0;
+		int trueMinY = 0;
+		int trueMaxX = 10;
+		int trueMaxY = 10;
+		int realX = 5;
+		int realY = 5;
+		
+		if (haveDatasets) {
+			
 		}
 	}
 
