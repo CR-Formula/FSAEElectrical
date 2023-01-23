@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import com.jogamp.common.nio.Buffers;
@@ -9,12 +10,13 @@ import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2ES3;
 import com.jogamp.opengl.GL3;
 
-public class OpenGLDotPlot extends PositionedChart {
+public class OpenGLDotPlotMatrix extends PositionedChart {
 
 	Samples[] samples;
 
 	int[][] bins; // [datasetN][binN]
 	int binCount;
+	int sampleCount;
 
 	// plot region
 	float xPlotLeft;
@@ -128,12 +130,12 @@ public class OpenGLDotPlot extends PositionedChart {
 	boolean showTextLabel;
 
 	// My points
-	private ArrayList<Float> xCord;
-	private ArrayList<Float> yCord;
-	private ArrayList<Float> speed;
+	private Dataset xCord;
+	private Dataset yCord;
+	private Dataset speed;
 	private boolean firstTimeStartUp;
 
-	public OpenGLDotPlot(int x1, int y1, int x2, int y2) {
+	public OpenGLDotPlotMatrix(int x1, int y1, int x2, int y2) {
 		super(x1, y1, x2, y2);
 
 		autoscalePower = new AutoScale(AutoScale.MODE_STICKY, 30, 0.20f);
@@ -161,10 +163,7 @@ public class OpenGLDotPlot extends PositionedChart {
 		widgets[2] = sampleCountWidget;
 		widgets[3] = showXaxisScaleWidget;
 		widgets[4] = showYaxisScaleWidget;
-
-		xCord = new ArrayList<>();
-		yCord = new ArrayList<>();
-		speed = new ArrayList<>();
+		
 		firstTimeStartUp = true;
 	}
 
@@ -179,6 +178,12 @@ public class OpenGLDotPlot extends PositionedChart {
 
 		EventHandler handler = null;
 
+//		float xCord = datasets.get(0).getSample(lastSampleNumber);
+//		float yCord = datasets.get(1).getSample(lastSampleNumber);
+//		float rpm = datasets.get(2).getSample(lastSampleNumber);
+
+////		 Power (HP) = Torque (lb.in) x Speed (RPM) / 63,025
+//		float speed = torque * rpm / 63025;
 
 		// Just to make it not crash
 		sampleCount = Math.min(sampleCount, lastSampleNumber);
@@ -199,7 +204,9 @@ public class OpenGLDotPlot extends PositionedChart {
 			startIndex = endIndex - minDomain;
 		if (startIndex < 0)
 			startIndex = 0;
-		sampleCount = Math.min(endIndex - startIndex + 1, sampleCount);
+		int datasetsCount = endIndex - startIndex + 1;
+		
+		datasetsCount = Math.min(datasetsCount, lastSampleNumber);
 
 		if (sampleCount - 1 < minDomain)
 			return handler;
@@ -208,48 +215,39 @@ public class OpenGLDotPlot extends PositionedChart {
 
 		if (haveDatasets) {
 			if (!firstTimeStartUp) {
-				xCord.add(datasets.get(0).getSample(endIndex));
-				yCord.add(datasets.get(1).getSample(endIndex));
-				speed.add(datasets.get(2).getSample(endIndex));
-				if (checkCollisions() && sampleCount == xCord.size()) {
-					xCord.remove(0);
-					yCord.remove(0);
-					speed.remove(0);
-				}
-			} else {
-				for (int i = startIndex; i < endIndex; i++) {
-					xCord.add(datasets.get(0).getSample(i));
-					yCord.add(datasets.get(1).getSample(i));
-					speed.add(datasets.get(2).getSample(i));
-				}
-				firstTimeStartUp = false;
+				xCord = datasets.get(0);
+				yCord = datasets.get(1);
+				speed = datasets.get(2);
+//				if (checkCollisions() && sampleCount == xCord.size()) { // Update to new check collision system
+//					xCord.remove(0);
+//					yCord.remove(0);
+//					speed.remove(0);
+//				}
 			}
 		}
-		while (xCord.size() > sampleCount) 
-		{
-			xCord.remove(0);
-			yCord.remove(0);
-			speed.remove(0);
-		}
-
-		int datasetsCount = Math.min(xCord.size(), Math.min(yCord.size(), speed.size()));
+//		while (xCord.size() > sampleCount) 
+//		{
+//			xCord.remove(0);
+//			yCord.remove(0);
+//			speed.remove(0);
+//		}
 
 		float trueMinX = 0.0f;
 		float trueMaxX = 0.0f;
-		for (float x : xCord) {
-			if (x < trueMinX)
-				trueMinX = x;
-			else if (x > trueMaxX)
-				trueMaxX = x;
-		}
-
 		float trueMinY = 0.0f;
 		float trueMaxY = 0.0f;
-		for (float y : yCord) {
-			if (y < trueMinY)
-				trueMinY = y;
-			else if (y > trueMaxY)
-				trueMaxY = y;
+		for (int i = 0; i < sampleCount; i++) {
+			int index = Math.max(datasetsCount - (sampleCount - i), 0);
+			float xSample = xCord.getSample(index);
+			float ySample = yCord.getSample(index);
+			if (xSample < trueMinX)
+				trueMinX = xSample;
+			else if (xSample > trueMaxX)
+				trueMaxX = xSample;
+			if (ySample < trueMinY)
+				trueMinY = ySample;
+			else if (ySample > trueMaxY)
+				trueMaxY = ySample;
 		}
 
 		float xDifference = (trueMaxX - trueMinX) * (1f / 10f);
@@ -275,21 +273,23 @@ public class OpenGLDotPlot extends PositionedChart {
 			plotHeight = yPlotTop - yPlotBottom;
 		}
 		float smallTextMaxWidth = 0;
-		if (showYaxisScale) {
-			xYaxisTickTextBaseline = xPlotLeft;
-			for (float y : yCord) {
-				DecimalFormat df = new DecimalFormat("#.00");
-				float textWidth = OpenGL.smallTextWidth(gl, Float.valueOf(df.format(y)) + "");
-				if (textWidth + 1 > smallTextMaxWidth)
-					smallTextMaxWidth = textWidth;
-			}
-			xYaxisTickTextTop = xYaxisTickTextBaseline + smallTextMaxWidth;
-			xYaxisTickBottom = xYaxisTickTextTop + Theme.tickTextPadding;
-			xYaxisTickTop = xYaxisTickBottom + Theme.tickLength;
-
-			xPlotLeft = xYaxisTickTop;
-			plotWidth = xPlotRight - xPlotLeft;
-		}
+//		if (showYaxisScale) {
+//			xYaxisTickTextBaseline = xPlotLeft;
+//			for (int i = 0; i < sampleCount; i++) {
+//				int index = Math.max(datasetsCount - (sampleCount - i), 0);
+//				float ySample = yCord.getSample(index);
+//				DecimalFormat df = new DecimalFormat("#.00");
+//				float textWidth = OpenGL.smallTextWidth(gl, Float.valueOf(df.format(y)) + "");
+//				if (textWidth + 1 > smallTextMaxWidth)
+//					smallTextMaxWidth = textWidth;
+//			}
+//			xYaxisTickTextTop = xYaxisTickTextBaseline + smallTextMaxWidth;
+//			xYaxisTickBottom = xYaxisTickTextTop + Theme.tickTextPadding;
+//			xYaxisTickTop = xYaxisTickBottom + Theme.tickLength;
+//
+//			xPlotLeft = xYaxisTickTop;
+//			plotWidth = xPlotRight - xPlotLeft;
+//		}
 
 		// clip to the plot region
 		int[] originalScissorArgs = new int[4];
@@ -305,16 +305,39 @@ public class OpenGLDotPlot extends PositionedChart {
 		// ArrayList adds to runtime and decreases stability. Create a "Remove Outlier" function which can remove 
 		// Outside of realistic values. Function will determine speed necessary to move from point 'A' to 'B', if
 		// speed is too high then point is removed.
-		if (haveDatasets) {
-			for (int datasetN = 0; datasetN < datasetsCount; datasetN++) {
-				float[] color = new float[] { 1f, 0f, 0f, speed.get(datasetN) / Math.max(topSpeed, 1) };
-				float xValue = (xCord.get(datasetN) - trueMinX) / (trueMaxX - trueMinX) * plotWidth + xPlotLeft;
-				float yValue = (yCord.get(datasetN) - trueMinY) / (trueMaxY - trueMinY) * plotHeight
-						+ yPlotBottom;
 
-				drawCircle(gl, color, xValue, yValue, 10);
+		// HERE - CTRL + F
+		OpenGL.buffer.rewind();
+		if (haveDatasets) {
+			float[] color;
+			for (int datasetN = 0; datasetN < sampleCount; datasetN++) {
+				if (datasetN < 0)
+					datasetN = 0;
+				boolean err = false;
+				if (err)
+					color = new float[] { 1f, 0f, 1f, 1f};
+				else
+					color = new float[] { 1f, 0f, 0f, speed.getSample(datasetN) / topSpeed };
+				float xValue = (xCord.getSample(datasetN) - trueMinX) / (trueMaxX - trueMinX) * plotWidth + xPlotLeft;
+				float yValue = (yCord.getSample(datasetN) - trueMinY) / (trueMaxY - trueMinY) * plotHeight
+						+ yPlotBottom;
+//				createCircle(gl, color, xValue, yValue, 10);
+				double increment = 2 * Math.PI / 50;
+				int radius = 10;
+				for (double angle = 0; angle < 2 * Math.PI; angle += increment) {
+					float x1 = xValue + (float) Math.cos(angle) * radius;
+					float y1 = yValue + (float) Math.sin(angle) * radius;
+					float x2 = xValue + (float) Math.cos(angle + increment) * radius;
+					float y2 = yValue + (float) Math.sin(angle + increment) * radius;
+
+//					OpenGL.buffer.put(xValue);  OpenGL.buffer.put(yValue);  OpenGL.buffer.put(color);
+//					OpenGL.buffer.put(x1); 		OpenGL.buffer.put(y1); 		OpenGL.buffer.put(color);
+//					OpenGL.buffer.put(x2); 		OpenGL.buffer.put(y2); 		OpenGL.buffer.put(color);
+				}
+//				OpenGL.drawTrianglesXYRGBA(gl, GL3.GL_TRIANGLES, OpenGL.buffer, 30);
 			}
 		}
+		OpenGL.buffer.rewind();
 
 		// stop clipping to the plot region
 		gl.glScissor(originalScissorArgs[0], originalScissorArgs[1], originalScissorArgs[2], originalScissorArgs[3]);
@@ -394,62 +417,63 @@ public class OpenGLDotPlot extends PositionedChart {
 		return handler;
 	}
 
-	private boolean checkCollisions()
-	{
-		float trueMinX = 0.0f;
-		float trueMaxX = 0.0f;
-		for (float x1 : xCord) {
-			if (x1 < trueMinX)
-				trueMinX = x1;
-			else if (x1 > trueMaxX)
-				trueMaxX = x1;
-		}
+//	private boolean checkCollisions()
+//	{
+//		float trueMinX = 0.0f;
+//		float trueMaxX = 0.0f;
+//		for (float x1 : xCord) {
+//			if (x1 < trueMinX)
+//				trueMinX = x1;
+//			else if (x1 > trueMaxX)
+//				trueMaxX = x1;
+//		}
+//
+//		float trueMinY = 0.0f;
+//		float trueMaxY = 0.0f;
+//		for (float y1 : yCord) {
+//			if (y1 < trueMinY)
+//				trueMinY = y1;
+//			else if (y1 > trueMaxY)
+//				trueMaxY = y1;
+//		}
+//
+//		float xDifference = (trueMaxX - trueMinX) * (1f / 10f);
+//		float yDifference = (trueMaxY - trueMinY) * (1f / 10f);
+//
+//		trueMaxX += xDifference;
+//		trueMinX -= xDifference;
+//		trueMaxY += yDifference;
+//		trueMinY -= yDifference;
+//		
+//		float xValue1 = (xCord.getSampleSample(xCord.size() - 1) - trueMinX) / (trueMaxX - trueMinX) * plotWidth + xPlotLeft;
+//		float yValue1 = (yCord.getSample(xCord.size() - 1) - trueMinY) / (trueMaxY - trueMinY) * plotHeight;
+//		float xValue2 = (xCord.getSampleSample(xCord.size() - 2) - trueMinX) / (trueMaxX - trueMinX) * plotWidth + xPlotLeft;
+//		float yValue2 = (yCord.getSample(xCord.size() - 2) - trueMinY) / (trueMaxY - trueMinY) * plotHeight;
+//		
+//		float xDist = Math.abs(xValue1 - xValue2);
+//		float yDist = Math.abs(yValue1 - yValue2);
+//		float dist = (float) Math.pow(Math.pow(xDist, 2) + Math.pow(yDist, 2), 2);
+//
+//		if (dist > 9f)
+//			return true;
+//		xCord.remove(xCord.size() - 1);
+//		yCord.remove(yCord.size() - 1);
+//		speed.remove(speed.size() - 1);
+//		return false;
+//	}
 
-		float trueMinY = 0.0f;
-		float trueMaxY = 0.0f;
-		for (float y1 : yCord) {
-			if (y1 < trueMinY)
-				trueMinY = y1;
-			else if (y1 > trueMaxY)
-				trueMaxY = y1;
-		}
-
-		float xDifference = (trueMaxX - trueMinX) * (1f / 10f);
-		float yDifference = (trueMaxY - trueMinY) * (1f / 10f);
-
-		trueMaxX += xDifference;
-		trueMinX -= xDifference;
-		trueMaxY += yDifference;
-		trueMinY -= yDifference;
-		
-		float xValue1 = (xCord.get(xCord.size() - 1) - trueMinX) / (trueMaxX - trueMinX) * plotWidth + xPlotLeft;
-		float yValue1 = (yCord.get(xCord.size() - 1) - trueMinY) / (trueMaxY - trueMinY) * plotHeight;
-		float xValue2 = (xCord.get(xCord.size() - 2) - trueMinX) / (trueMaxX - trueMinX) * plotWidth + xPlotLeft;
-		float yValue2 = (yCord.get(xCord.size() - 2) - trueMinY) / (trueMaxY - trueMinY) * plotHeight;
-		
-		float xDist = Math.abs(xValue1 - xValue2);
-		float yDist = Math.abs(yValue1 - yValue2);
-		float dist = (float) Math.pow(Math.pow(xDist, 2) + Math.pow(yDist, 2), 2);
-
-		if (dist > 9f)
-			return true;
-		xCord.remove(xCord.size() - 1);
-		yCord.remove(yCord.size() - 1);
-		speed.remove(speed.size() - 1);
-		return false;
-	}
-
-	public static void drawCircle(GL2ES3 gl, float[] color, float x, float y, int radius) {
+	public static void createCircle(GL2ES3 gl, float[] color, float x, float y, int radius) {
 		double increment = 2 * Math.PI / 50;
 
-		// Draw a bunch of triangles
 		for (double angle = 0; angle < 2 * Math.PI; angle += increment) {
 			float x1 = x + (float) Math.cos(angle) * radius;
 			float y1 = y + (float) Math.sin(angle) * radius;
 			float x2 = x + (float) Math.cos(angle + increment) * radius;
 			float y2 = y + (float) Math.sin(angle + increment) * radius;
 
-			OpenGL.drawTriangle2D(gl, color, x, y, x1, y1, x2, y2);
+			OpenGL.buffer.put(x);  OpenGL.buffer.put(y);  OpenGL.buffer.put(color);
+			OpenGL.buffer.put(x1); OpenGL.buffer.put(y1); OpenGL.buffer.put(color);
+			OpenGL.buffer.put(x2); OpenGL.buffer.put(y2); OpenGL.buffer.put(color);
 		}
 	}
 	
@@ -467,6 +491,6 @@ public class OpenGLDotPlot extends PositionedChart {
 
 	@Override
 	public String toString() {
-		return "Dot Plot";
+		return "Dot Plot Matrix";
 	}
 }

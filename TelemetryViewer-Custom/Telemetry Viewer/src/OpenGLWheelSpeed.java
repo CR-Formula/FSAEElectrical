@@ -185,7 +185,7 @@ public class OpenGLWheelSpeed extends PositionedChart {
 			startIndex = endIndex - minDomain;
 		if (startIndex < 0)
 			startIndex = 0;
-		int sampleCount = endIndex - startIndex + 1;
+		sampleCount = endIndex - startIndex + 1;
 		
 		boolean haveDatasets = datasets != null && !datasets.isEmpty();
 		

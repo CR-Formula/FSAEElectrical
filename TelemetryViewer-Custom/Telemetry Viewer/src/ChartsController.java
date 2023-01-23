@@ -84,7 +84,7 @@ public class ChartsController {
 			"Camera",
 			"Timeline"
 		};
-		
+//		"Dot Plot Matrix",
 	}
 	
 	/**
@@ -112,6 +112,7 @@ public class ChartsController {
 		else if(chartType.equals("Quaternion"))       chart = new OpenGLQuaternionChart(x1, y1, x2, y2);
 		else if(chartType.equals("Camera"))           chart = new OpenGLCameraChart(x1, y1, x2, y2);
 		else if(chartType.equals("Timeline"))         chart = new OpenGLTimelineChart(x1, y1, x2, y2);
+//		else if(chartType.equals("Dot Plot Matrix"))  chart = new OpenGLDotPlotMatrix(x1, y1, x2, y2);
 		
 		if(chart != null)
 			ChartsController.addChart(chart);
