@@ -76,9 +76,10 @@ public class OpenGLDotPlot extends PositionedChart {
 	float manualMaxY; // relative frequency unless only frequency is shown
 
 	// constraints
-	static final int SampleCountDefault = 1000;
+	static final int SampleCountDefault = 500;
 	static final int SampleCountMinimum = 5;
 	static final int SampleCountMaximum = Integer.MAX_VALUE;
+	int sampleCount;
 
 	static final int BinCountDefault = 60;
 	static final int BinCountMinimum = 2;
@@ -106,8 +107,6 @@ public class OpenGLDotPlot extends PositionedChart {
 
 	static final int lowerSpeedLimit = -1;
 	static final int upperSpeedLimit = Integer.MAX_VALUE;
-
-	static final int sampleCountDefault = 50;
 
 	// control widgets
 	WidgetDatasets datasetsWidget;
@@ -145,7 +144,7 @@ public class OpenGLDotPlot extends PositionedChart {
 		topSpeedWidget = new WidgetTextfieldInteger("Top Speed", maxSpeedWidgetDefault, lowerSpeedLimit,
 				upperSpeedLimit, newTopSpeed -> topSpeed = newTopSpeed);
 
-		sampleCountWidget = new WidgetTextfieldInteger("Sample Count", sampleCountDefault, lowerSpeedLimit,
+		sampleCountWidget = new WidgetTextfieldInteger("Sample Count", SampleCountDefault, lowerSpeedLimit,
 				upperSpeedLimit, newTopSpeed -> sampleCount = newTopSpeed);
 
 		showXaxisScaleWidget = new WidgetCheckbox("Show X-Axis Scale", true,
@@ -394,7 +393,7 @@ public class OpenGLDotPlot extends PositionedChart {
 		return handler;
 	}
 
-	private boolean checkCollisions()
+	private boolean checkCollisions() // ReWrite
 	{
 		float trueMinX = 0.0f;
 		float trueMaxX = 0.0f;
@@ -440,7 +439,7 @@ public class OpenGLDotPlot extends PositionedChart {
 	}
 
 	public static void drawCircle(GL2ES3 gl, float[] color, float x, float y, int radius) {
-		double increment = 2 * Math.PI / 50;
+		double increment = 2 * Math.PI / 10;
 
 		// Draw a bunch of triangles
 		for (double angle = 0; angle < 2 * Math.PI; angle += increment) {
