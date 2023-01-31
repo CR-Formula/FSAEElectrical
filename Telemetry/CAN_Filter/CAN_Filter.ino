@@ -7,9 +7,6 @@
 #include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
 #include <Wire.h>
-#include <NexText.h>
-#include <NexNumber.h>
-#include <NexProgressBar.h>
 
 // Stores the CAN Packet ID
 long unsigned int rxId;
@@ -68,32 +65,17 @@ float AirTLast;
 float CoolTLast;
 float OilPLast;
 
-//Nextion display objects
-NexNumber rpm = NexNumber(0, 1, "rpm");
-NexNumber oilPress = NexNumber(0, 1, "oilPress");
-NexNumber lap = NexNumber(0, 1, "lap");
-NexNumber waterTemp = NexNumber(0, 1, "waterTemp");
-NexText gear = NexText(0, 1, "gear");
-NexText lastLap = NexText(0, 1, "lastLap");
-NexText bestLap = NextText(0, 1, "bestLap")
-NexProgressBar rpmBar = NexProgressBar(0, 1, "rpmBar");
-
 //Function to update Nextion display
 void Nextion_CMD() {
-    rpm.setValue(telemetry.RPM);
-    oilPress.setValue(telemetry.OilP);
-    //lap.setValue() //TODO: Create lap time variable
-    waterTemp.setValue(telemetry.CoolT);
-    gear.setText("N"); //TODO: Need to create gear calculations
-    //lastLap.setText("0:00.0");
-    //bestLap.setText("0:00.0");
-    rpmBar.setValue((telemetry.RPM/15500)*100);
+    Serial1.write(0xff);
+    Serial1.write(0xff);
+    Serial1.write(0xff);
 }
 
 void setup() {
-  Serial.begin(115200); //Serial Port 1 for ESP
-  nexSerial.begin(115200); //Serial Port 2 for Nextion Dash
-  Wire.begin();
+  Serial.begin(115200); //Serial Port 0 for ESP
+  Serial1.begin(115200); //Serial port 1 for Nextion
+  Wire.begin(); //I2C for Sensors
 
   // Initializes MCP2515 running at 16MHz with a baudrate of 250kb/s and the masks and filters disabled.
   if (CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_16MHZ) == CAN_OK)
@@ -184,12 +166,30 @@ void loop() {
     // Send the data over Serial using EasyTransfer
     ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal
 
+    //Send dash Values
+    Serial1.print("rpm.val=");
+    Serial1.print(telemetry.RPM);
+    Nextion_CMD();
+    Serial1.print("waterTemp.val=");
+    Serial1.print(telemetry.CoolT);
+    Nextion_CMD();
+    Serial1.print("oilPress.val=");
+    Serial1.print(telemetry.OilP);
+    Nextion_CMD();
+    int rpmBar = telemetry.rpm / 160;
+    Serial1.print("rpmBar.val=");
+    Serial1.print(rpmBar);
+    Nextion_CMD();
+    //TODO: Add gear and Laptimes
+
+
     //delay for stability
     delay(5);
 
-    Serial.println();
+    //Test CAN Data
+    /*Serial.println();
     Serial.println(telemetry.TPS);
-    Serial.println();
+    Serial.println();*/
 
     //Save last correct values
     RPMLast = telemetry.RPM;
@@ -201,5 +201,5 @@ void loop() {
     CoolTLast = telemetry.CoolT;
     OilPLast = telemetry.OilP;
 
-    Nextion_CMD();
+    //Nextion_CMD();
 }
