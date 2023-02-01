@@ -182,6 +182,9 @@ void loop() {
     Nextion_CMD();
     //TODO: Add gear and Laptimes
 
+    //Send value for shift lights
+    int shift_lights = telemetry.RPM(255)/15500;
+    digitalWrite(5, shift_lights); //send to pin 5
 
     //delay for stability
     delay(5);
