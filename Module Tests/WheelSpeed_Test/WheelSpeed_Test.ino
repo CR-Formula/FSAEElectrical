@@ -1,29 +1,33 @@
+/**
+ * @brief Code to track RPM of a wheel
+ * Speed calculations will change depending on tire and nummber of teeth
+ * Code only tracks one sensor
+ * 
+ */
 int sensorPin = 2;
-int filter = 5; //Change this to increase/decrease accuracy
-float startTime = micros();
+int cutoff = 100; //Check number of rotations every 100 milliseconds
 int rpm = 0;
 int count = 0;
+long startTime = millis();
+long endTime;
 
 void setup() {
   Serial.begin(115200);
   pinMode(2, INPUT);
-  Serial.println("Wheelspeed test code, Please connect sensor to pin 2");
   attachInterrupt(digitalPinToInterrupt(sensorPin), wheelSpeed, RISING);
-
+  Serial.println("Wheelspeed test code, Please connect sensor to pin 2");
 }
 
 void loop() {
-  Serial.println(rpm);
-  delay(500); //should still interrupt in the delay, if not you can remove
+  endTime = millis();
+  if (endTime - startTime >= cutoff || startTime > endTime) { //checks if the correct amount of time has passed or if the timer overflowed
+    int time = endTime - startTime; //store time passed
+    rpm = count / time; //calculate rpm of the wheel
+    count = 0; //reset count
+    Serial.println(rpm); //print rpm
+  }
 }
 
 void wheelSpeed() {
-  count++;
-
-  if (count >= filter) {
-    float endTime = micros();
-    float timePassed = (endTime - startTime) / 1000000.0;
-    int rpm = count / timePassed * 60;
-    startTime = micros();
-  }
+  count++; //add to wheelspeed count
 }
