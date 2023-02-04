@@ -124,7 +124,7 @@ void loop() {
       telemetry.AirT = (rxBuf[2] + rxBuf[3] * 256) * 0.1; //Air Temp
       telemetry.CoolT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; //Coolant Temp
 
-      /*//Code to test values
+      /*//Code to test bit CAN values
       Serial.print(rxBuf[4], DEC);
       Serial.print(rxBuf[5], DEC);
       delay(50);*/
@@ -164,7 +164,7 @@ void loop() {
     }
 
     // Send the data over Serial using EasyTransfer
-    ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal
+    ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
     //Send dash Values
     Serial1.print("rpm.val=");
@@ -176,23 +176,27 @@ void loop() {
     Serial1.print("oilPress.val=");
     Serial1.print(telemetry.OilP);
     Nextion_CMD();
-    int rpmBar = telemetry.rpm / 160;
+    int rpmBar = telemetry.RPM / 160;
     Serial1.print("rpmBar.val=");
     Serial1.print(rpmBar);
     Nextion_CMD();
     //TODO: Add gear and Laptimes
 
     //Send value for shift lights
-    int shift_lights = telemetry.RPM(255)/15500;
+    int shift_lights = (telemetry.RPM * 255) / 15500;
     digitalWrite(5, shift_lights); //send to pin 5
 
     //delay for stability
     delay(5);
 
-    //Test CAN Data
-    /*Serial.println();
+    //Sample Test Data
+    Serial.println();
     Serial.println(telemetry.TPS);
-    Serial.println();*/
+    Serial.println(telemetry.FRTemp);
+    Serial.println(rpmBar);
+    Serial.println(shift_lights);
+    Serial.println();
+
 
     //Save last correct values
     RPMLast = telemetry.RPM;
@@ -203,6 +207,4 @@ void loop() {
     AirTLast = telemetry.AirT;
     CoolTLast = telemetry.CoolT;
     OilPLast = telemetry.OilP;
-
-    //Nextion_CMD();
 }
