@@ -167,14 +167,18 @@ void loop() {
     ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
     //Send dash Values
+    char message[];
     Serial1.print("rpm.val=");
-    Serial1.print(telemetry.RPM);
+    sprintf(message, "%f\"", telemetry.RPM);
+    Serial1.print(message);
     Nextion_CMD();
     Serial1.print("waterTemp.val=");
-    Serial1.print(telemetry.CoolT);
+    sprintf(message, "%f\"", telemetry.CoolT);
+    Serial1.print(message);
     Nextion_CMD();
     Serial1.print("oilPress.val=");
-    Serial1.print(telemetry.OilP);
+    sprintf(message, "%f\"", telemetry.OilP);
+    Serial1.print(message);
     Nextion_CMD();
     int rpmBar = telemetry.RPM / 160;
     Serial1.print("rpmBar.val=");
