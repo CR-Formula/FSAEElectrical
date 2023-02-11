@@ -166,15 +166,15 @@ void loop() {
 
     //Send dash values as text objects
     char message[32];
-    sprintf(message, "%f\"", telemetry.RPM);
+    sprintf(message, "%d\"", (int)telemetry.RPM);
     Serial2.print("rpm.txt=\"");
     Serial2.print(message);
     Nextion_CMD();
-    sprintf(message, "%f\"", telemetry.CoolT);
+    sprintf(message, "%d\"", (int)telemetry.CoolT);
     Serial2.print("waterTemp.txt=\"");
     Serial2.print(message);
     Nextion_CMD();
-    sprintf(message, "%f\"", telemetry.OilP);
+    sprintf(message, "%d\"", (int)telemetry.OilP);
     Serial2.print("oilPress.txt=\"");
     Serial2.print(message);
     Nextion_CMD();
