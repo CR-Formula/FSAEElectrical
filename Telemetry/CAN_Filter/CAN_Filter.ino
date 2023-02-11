@@ -1,9 +1,7 @@
 /*Iowa State Formula SAE Electrical Subsystem*/
 
-#include <mcp_can.h>        //TODO: Need this library for the time being -- may change with the MEGA switch
+#include <mcp_can.h>
 #include <SPI.h>
-//#include <TinyGPSPlus.h>    //TODO: See Below
-//#include <SoftwareSerial.h> //TODO: Need to transfer GPS to I2C
 #include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
 #include <Wire.h>
@@ -15,7 +13,7 @@ unsigned char len = 0;
 unsigned char rxBuf[8];
 // Stores the CAN packet serial message
 char msgString[128];
-static const int RxPin = 3; //TODO: Unused pin definitions
+static const int RxPin = 3;
 static const int TxPin = 4;
 
 // Sets INT to pin 2
@@ -25,7 +23,7 @@ static const int TxPin = 4;
 MCP_CAN CAN0(53); //Mega
 
 
-//Object for brake temp sensors
+//Objects for brake temp sensors
 Adafruit_MLX90614 FLB = Adafruit_MLX90614(); //Front Left Brake Temp
 Adafruit_MLX90614 FRB = Adafruit_MLX90614(); //Front Right Brake Temp
 Adafruit_MLX90614 RLB = Adafruit_MLX90614(); //Rear Left Brake Temp
@@ -166,18 +164,18 @@ void loop() {
     // Send the data over Serial using EasyTransfer
     ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
-    //Send dash Values
+    //Send dash values as text objects
     char message[];
-    Serial1.print("rpm.val=");
     sprintf(message, "%f\"", telemetry.RPM);
+    Serial1.print("rpm.txt=\"");
     Serial1.print(message);
     Nextion_CMD();
-    Serial1.print("waterTemp.val=");
     sprintf(message, "%f\"", telemetry.CoolT);
+    Serial1.print("waterTemp.txt=\"");
     Serial1.print(message);
     Nextion_CMD();
-    Serial1.print("oilPress.val=");
     sprintf(message, "%f\"", telemetry.OilP);
+    Serial1.print("oilPress.txt=\"");
     Serial1.print(message);
     Nextion_CMD();
     int rpmBar = telemetry.RPM / 160;
@@ -187,13 +185,14 @@ void loop() {
     //TODO: Add gear and Laptimes
 
     //Send value for shift lights
+    //TODO: Need to calculate smaller range
     int shift_lights = (telemetry.RPM * 255) / 15500;
     digitalWrite(5, shift_lights); //send to pin 5
 
     //delay for stability
     delay(5);
 
-    //Sample Test Data
+    //Sample Data for testing
     Serial.println();
     Serial.println(telemetry.TPS);
     Serial.println(telemetry.FRTemp);
@@ -202,7 +201,7 @@ void loop() {
     Serial.println();
 
 
-    //Save last correct values
+    //Save last filtered values
     RPMLast = telemetry.RPM;
     TPSLast = telemetry.TPS;
     FOTLast = telemetry.FOT;
