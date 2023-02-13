@@ -102,9 +102,15 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 	WidgetCheckbox showYaxisScaleWidget;
 	WidgetCheckbox showLegendWidget;
 	WidgetCheckbox cachedWidget;
-	WidgetCheckbox displayOverHeatingWidget;
+	WidgetCheckbox overMaxWarningWidget;
+	WidgetTextfieldInteger maxAmountWidget;
 	
-	private boolean displayOverheating;
+	static final int lowerMaxAmount = Integer.MIN_VALUE;
+	static final int upperMaxAmount = Integer.MAX_VALUE;
+	static final int defaultMaxAmount = 220;
+	private int maxAmount;
+	
+	private boolean overMaxWarning;
 	private boolean isRed;
 	private Date lastFrame;
 	
@@ -189,11 +195,14 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		                                                               new AutoScale(AutoScale.MODE_EXPONENTIAL, 30, 0.10f);
 		                                  });
 		
-		displayOverHeatingWidget = new WidgetCheckbox("Display Overheating",
+		overMaxWarningWidget = new WidgetCheckbox("Over Max Warning",
                 false,
-                newDisplayOverheating -> displayOverheating = newDisplayOverheating);
+                newoverMaxWarning -> overMaxWarning = newoverMaxWarning);
+		
+		maxAmountWidget = new WidgetTextfieldInteger("Max Amount", defaultMaxAmount, lowerMaxAmount,
+				upperMaxAmount, newMaxAmount -> maxAmount = newMaxAmount);
 
-		widgets = new Widget[16];
+		widgets = new Widget[17];
 		
 		widgets[0]  = datasetsWidget;
 		widgets[1]  = null;
@@ -210,7 +219,8 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		widgets[12] = showLegendWidget;
 		widgets[13] = null;
 		widgets[14] = cachedWidget;
-		widgets[15] = displayOverHeatingWidget;
+		widgets[15] = overMaxWarningWidget;
+		widgets[16] = maxAmountWidget;
 		
 		isRed = false;
 		
@@ -358,7 +368,7 @@ public class OpenGLTimeDomainChart extends PositionedChart {
 		// draw plot background
 		Date currFrame = Date.from(Instant.now());
 		long diff = Math.abs(currFrame.getTime() - lastFrame.getTime());
-		if (!displayOverheating || !haveDatasets || allDatasets.get(0).getSample(lastSampleNumber) < 220) {
+		if (!overMaxWarning || !haveDatasets || allDatasets.get(0).getSample(lastSampleNumber) < maxAmount) {
 			OpenGL.drawQuad2D(gl, Theme.plotBackgroundColor, xPlotLeft, yPlotBottom, xPlotRight, yPlotTop);
 			isRed = false;
 		} else {
