@@ -187,7 +187,7 @@ void loop() {
     //Send value for shift lights
     //Shift light range from 8525 - 15500
     if (telemetry.rpm > 7750) {
-      int shiftlights ((telemetry.rpm - 7750) * 80) / 7750;
+      int shiftlights = ((telemetry.rpm - 7750) * 80) / 7750;
       digitalWrite(5, shiftlights);
     }
 
