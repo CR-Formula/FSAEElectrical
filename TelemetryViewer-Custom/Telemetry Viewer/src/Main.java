@@ -21,7 +21,7 @@ import javax.swing.UIManager;
 
 public class Main {
 
-	static JFrame window = new JFrame("Telemetry Viewer v0.7");
+	static JFrame window = new JFrame("Telemetry Viewer Iowa State");
 	static LogitechSmoothScrolling mouse = new LogitechSmoothScrolling();
 	
 	/**
