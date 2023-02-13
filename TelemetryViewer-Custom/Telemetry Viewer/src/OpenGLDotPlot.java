@@ -451,18 +451,6 @@ public class OpenGLDotPlot extends PositionedChart {
 			OpenGL.drawTriangle2D(gl, color, x, y, x1, y1, x2, y2);
 		}
 	}
-	
-	/* Creating a Matrix drawing system
-	 * Remove the redundent ArrayList<Point>
-	 * Steps of utilizing Matrix vs ArrayList
-	 * Add to Matrix - Never remove
-	 * Hardware controls draw amount and necessary information
-	 * Refresh Matrix before & after drawing statements
-	 * 
-	 * Post Programming tasks
-	 * Complete runtime tests
-	 * Figure out max amounts of points avaliable on the graph
-	 */
 
 	@Override
 	public String toString() {
