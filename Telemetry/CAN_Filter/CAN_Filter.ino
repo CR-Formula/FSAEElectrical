@@ -65,14 +65,14 @@ float OilPLast;
 
 //Function to update Nextion display
 void Nextion_CMD() {
-    Serial1.write(0xff);
-    Serial1.write(0xff);
-    Serial1.write(0xff);
+    Serial2.write(0xff);
+    Serial2.write(0xff);
+    Serial2.write(0xff);
 }
 
 void setup() {
   Serial.begin(115200); //Serial Port 0 for ESP
-  Serial1.begin(115200); //Serial port 1 for Nextion
+  Serial2.begin(115200); //Serial port 2 for Nextion
   Wire.begin(); //I2C for Sensors
 
   // Initializes MCP2515 running at 16MHz with a baudrate of 250kb/s and the masks and filters disabled.
@@ -165,29 +165,31 @@ void loop() {
     ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
     //Send dash values as text objects
-    char message[];
-    sprintf(message, "%f\"", telemetry.RPM);
-    Serial1.print("rpm.txt=\"");
-    Serial1.print(message);
+    char message[32];
+    sprintf(message, "%d\"", (int)telemetry.RPM);
+    Serial2.print("rpm.txt=\"");
+    Serial2.print(message);
     Nextion_CMD();
-    sprintf(message, "%f\"", telemetry.CoolT);
-    Serial1.print("waterTemp.txt=\"");
-    Serial1.print(message);
+    sprintf(message, "%d\"", (int)telemetry.CoolT);
+    Serial2.print("waterTemp.txt=\"");
+    Serial2.print(message);
     Nextion_CMD();
-    sprintf(message, "%f\"", telemetry.OilP);
-    Serial1.print("oilPress.txt=\"");
-    Serial1.print(message);
+    sprintf(message, "%d\"", (int)telemetry.OilP);
+    Serial2.print("oilPress.txt=\"");
+    Serial2.print(message);
     Nextion_CMD();
     int rpmBar = telemetry.RPM / 160;
-    Serial1.print("rpmBar.val=");
-    Serial1.print(rpmBar);
+    Serial2.print("rpmBar.val=");
+    Serial2.print(rpmBar);
     Nextion_CMD();
     //TODO: Add gear and Laptimes
 
     //Send value for shift lights
-    //TODO: Need to calculate smaller range
-    int shift_lights = (telemetry.RPM * 255) / 15500;
-    digitalWrite(5, shift_lights); //send to pin 5
+    //Shift light range from 8525 - 15500
+    if (telemetry.rpm > 7750) {
+      int shiftlights ((telemetry.rpm - 7750) * 80) / 7750;
+      digitalWrite(5, shiftlights);
+    }
 
     //delay for stability
     delay(5);
