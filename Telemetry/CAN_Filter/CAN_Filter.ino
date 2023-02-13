@@ -185,9 +185,11 @@ void loop() {
     //TODO: Add gear and Laptimes
 
     //Send value for shift lights
-    //TODO: Need to calculate smaller range
-    int shift_lights = (telemetry.RPM * 255) / 15500;
-    digitalWrite(5, shift_lights); //send to pin 5
+    //Shift light range from 8525 - 15500
+    if (telemetry.rpm > 7750) {
+      int shiftlights ((telemetry.rpm - 7750) * 80) / 7750;
+      digitalWrite(5, shiftlights);
+    }
 
     //delay for stability
     delay(5);
