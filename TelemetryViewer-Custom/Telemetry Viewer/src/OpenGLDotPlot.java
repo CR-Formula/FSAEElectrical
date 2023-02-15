@@ -299,11 +299,7 @@ public class OpenGLDotPlot extends PositionedChart {
 		gl.glScissor(originalScissorArgs[0] + (int) xPlotLeft, originalScissorArgs[1] + (int) yPlotBottom,
 				(int) plotWidth, (int) plotHeight);
 
-		// draw the points
-		// Remove the damn ArrayList already and just upgrade to a Buffer - Allows more points and removed lag
-		// ArrayList adds to runtime and decreases stability. Create a "Remove Outlier" function which can remove 
-		// Outside of realistic values. Function will determine speed necessary to move from point 'A' to 'B', if
-		// speed is too high then point is removed.
+		// Drawing the points
 		if (haveDatasets) {
 			for (int datasetN = 0; datasetN < datasetsCount; datasetN++) {
 				float[] color = new float[] { 1f, 0f, 0f, speed.get(datasetN) / Math.max(topSpeed, 1) };
