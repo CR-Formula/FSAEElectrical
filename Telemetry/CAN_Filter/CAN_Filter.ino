@@ -46,10 +46,10 @@ typedef struct data_struct {
   float Lng;        // Holds Longitude
   float Speed;      // Holds GPS Speed
   float OilP;       // Holds Oil Pressure
-  float FLTemp;     //Holds Front Left Brake Temp
-  float FRTemp;     //Holds Front Right Brake Temp
-  float RLTemp;     //Holds Rear Left Brake Temp
-  float RRTemp;     //Holds Rear Right Brake Temp
+  float FLTemp;     // Holds Front Left Brake Temp
+  float FRTemp;     // Holds Front Right Brake Temp
+  float RLTemp;     // Holds Rear Left Brake Temp
+  float RRTemp;     // Holds Rear Right Brake Temp
 } data_struct;
 data_struct telemetry;
 
