@@ -19,15 +19,15 @@ static const int TxPin = 4;
 // Sets INT to pin 2
 #define CAN0_INT 2
 // Sets CS
-//MCP_CAN CAN0(10); //Uno
-MCP_CAN CAN0(53); //Mega
+// MCP_CAN CAN0(10); // Uno
+MCP_CAN CAN0(53); // Mega
 
 
 //Objects for brake temp sensors
-Adafruit_MLX90614 FLB = Adafruit_MLX90614(); //Front Left Brake Temp
-Adafruit_MLX90614 FRB = Adafruit_MLX90614(); //Front Right Brake Temp
-Adafruit_MLX90614 RLB = Adafruit_MLX90614(); //Rear Left Brake Temp
-Adafruit_MLX90614 RRB = Adafruit_MLX90614(); //Rear Right Brake Temp
+Adafruit_MLX90614 FLB = Adafruit_MLX90614(); // Front Left Brake Temp
+Adafruit_MLX90614 FRB = Adafruit_MLX90614(); // Front Right Brake Temp
+Adafruit_MLX90614 RLB = Adafruit_MLX90614(); // Rear Left Brake Temp
+Adafruit_MLX90614 RRB = Adafruit_MLX90614(); // Rear Right Brake Temp
 
 
 // Create EasyTransfer Object
@@ -35,21 +35,21 @@ EasyTransfer ET;
 
 // Holds all calculated Telemetry Data
 typedef struct data_struct {
-  float RPM;     // Holds RPM value
-  float TPS;   // Holds TPS value
-  float FOT;   // holds Fuel Open Time value
-  float IA;    // Holds Ignition Angle value
-  float Lam;   // Holds Lambda value
-  float AirT;  // Holds Air Temp value
-  float CoolT; // Holds Coolent Temp value
-  float Lat;   // Holds Latitude
-  float Lng;   // Holds Longitude
-  float Speed; // Holds GPS Speed
-  float OilP;  // Holds Oil Pressure
-  float FLTemp; //Holds Front Left Brake Temp
-  float FRTemp; //Holds Front Right Brake Temp
-  float RLTemp; //Holds Rear Left Brake Temp
-  float RRTemp; //Holds Rear Right Brake Temp
+  float RPM;        // Holds RPM value
+  float TPS;        // Holds TPS value
+  float FOT;        // holds Fuel Open Time value
+  float IA;         // Holds Ignition Angle value
+  float Lam;        // Holds Lambda value
+  float AirT;       // Holds Air Temp value
+  float CoolT;      // Holds Coolent Temp value
+  float Lat;        // Holds Latitude
+  float Lng;        // Holds Longitude
+  float Speed;      // Holds GPS Speed
+  float OilP;       // Holds Oil Pressure
+  float FLTemp;     //Holds Front Left Brake Temp
+  float FRTemp;     //Holds Front Right Brake Temp
+  float RLTemp;     //Holds Rear Left Brake Temp
+  float RRTemp;     //Holds Rear Right Brake Temp
 } data_struct;
 data_struct telemetry;
 
@@ -63,7 +63,7 @@ float AirTLast;
 float CoolTLast;
 float OilPLast;
 
-//Function to update Nextion display
+// Function to update Nextion display
 void Nextion_CMD() {
     Serial2.write(0xff);
     Serial2.write(0xff);
@@ -71,9 +71,9 @@ void Nextion_CMD() {
 }
 
 void setup() {
-  Serial.begin(115200); //Serial Port 0 for ESP
-  Serial2.begin(115200); //Serial port 2 for Nextion
-  Wire.begin(); //I2C for Sensors
+  Serial.begin(115200); // Serial Port 0 for ESP
+  Serial2.begin(115200); // Serial port 2 for Nextion
+  Wire.begin(); // I2C for Sensors
 
   // Initializes MCP2515 running at 16MHz with a baudrate of 250kb/s and the masks and filters disabled.
   if (CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_16MHZ) == CAN_OK)
@@ -90,7 +90,7 @@ void setup() {
   // Start EasyTransfer
   ET.begin(details(telemetry), &Serial);
 
-  //initalize brake temp sensors
+  // initalize brake temp sensors
   FLB.begin(0x5A, &Wire);
   FRB.begin(0x5B, &Wire);
   RLB.begin(0x5C, &Wire);
@@ -99,9 +99,9 @@ void setup() {
 
 void loop() {
   // Checks for CAN0_INT pin to be low, then reads the recieve buffer
-  //variables for the PE3 ECU CAN data
-  //All 2 byte data is stored [LowByte, HighByte]
-  //Num = (LowByte + HighByte * 256) * resolution
+  // variables for the PE3 ECU CAN data
+  // All 2 byte data is stored [LowByte, HighByte]
+  // Num = (LowByte + HighByte * 256) * resolution
   if (!digitalRead(CAN0_INT))
   {
     // Read Id, length, and message data
@@ -132,13 +132,13 @@ void loop() {
     }
   }
 
-  //Function calls to read brake temp sensor values
+  // Function calls to read brake temp sensor values
   telemetry.FLTemp = FLB.readObjectTempC();
   telemetry.FRTemp = FRB.readObjectTempC();
   telemetry.RLTemp = RLB.readObjectTempC();
   telemetry.RRTemp = RRB.readObjectTempC();
 
-  //Filters out extraneous values for each CAN Value
+  // Filters out extraneous values for each CAN Value
     if (telemetry.RPM > 20000) {
       telemetry.RPM = RPMLast;
     }
@@ -164,7 +164,7 @@ void loop() {
     // Send the data over Serial using EasyTransfer
     ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
-    //Send dash values as text objects
+    // Send dash values as text objects
     char message[32];
     sprintf(message, "%d\"", (int)telemetry.RPM);
     Serial2.print("rpm.txt=\"");
@@ -182,19 +182,19 @@ void loop() {
     Serial2.print("rpmBar.val=");
     Serial2.print(rpmBar);
     Nextion_CMD();
-    //TODO: Add gear and Laptimes
+    // TODO: Add gear and Laptimes
 
-    //Send value for shift lights
-    //Shift light range from 8525 - 15500
+    // Send value for shift lights
+    // Shift light range from 8525 - 15500
     if (telemetry.rpm > 7750) {
       int shiftlights = ((telemetry.rpm - 7750) * 80) / 7750;
       digitalWrite(5, shiftlights);
     }
 
-    //delay for stability
+    // delay for stability
     delay(5);
 
-    //Sample Data for testing
+    // Sample Data for testing
     Serial.println();
     Serial.println(telemetry.TPS);
     Serial.println(telemetry.FRTemp);
@@ -203,7 +203,7 @@ void loop() {
     Serial.println();
 
 
-    //Save last filtered values
+    // Save last filtered values
     RPMLast = telemetry.RPM;
     TPSLast = telemetry.TPS;
     FOTLast = telemetry.FOT;
