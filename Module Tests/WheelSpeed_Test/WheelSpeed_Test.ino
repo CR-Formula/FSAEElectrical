@@ -1,8 +1,14 @@
+// Speed = (Tire circumference / # of teeth per revolution) / time between teeth
+
+
 const int interruptPin = 2;
-int count = 0;
 long startTime = millis();
-int cutoff = 1000;
-double rpm = 0;
+long endTime;
+long timeDif = 0; // Holds time difference in ms
+long mph = 0;
+const long tireSize = 47.124; // Tire size in in
+const int teeth = 23;
+float seconds; // Difference in seconds
 
 void setup() {
   Serial.begin(115200);
@@ -12,20 +18,21 @@ void setup() {
 
 void loop() {
   // Serial.print("Count: ");
-  // Serial.println(count);
-  long endTime = millis();
+  Serial.print("MPH: ");
+  Serial.println(mph);
+  Serial.print("timeDif: ");
+  Serial.println(timeDif);
+  // Serial.print("Hours: ");
+  // Serial.println(seconds);
   // Serial.println(startTime);
   // Serial.println(endTime);
-
-  if (endTime - startTime > cutoff) {
-    rpm = ((double)count * 60.0) / (endTime - startTime);
-    Serial.print("RPM: ");
-    Serial.println(rpm);
-    startTime = millis();
-    count = 0;
-  }
 }
 
 void event() {
-  count++;
+  endTime = millis();
+  timeDif = endTime - startTime;
+  startTime = millis();
+  seconds = timeDif / (float)1000;
+  mph = (tireSize / teeth) / seconds; // Speed in in/s
+  mph = mph / 17.6;
 }
