@@ -63,13 +63,7 @@ float AirTLast;
 float CoolTLast;
 float OilPLast;
 
-// Function to update Nextion display
-void Nextion_CMD() {
-    Serial2.write(0xff);
-    Serial2.write(0xff);
-    Serial2.write(0xff);
-}
-
+// Function to initialize sensors, connections, and serial ports
 void setup() {
   Serial.begin(115200); // Serial Port 0 for ESP
   Serial2.begin(115200); // Serial port 2 for Nextion
@@ -97,23 +91,8 @@ void setup() {
   RRB.begin(0x5D, &Wire);
 }
 
+// Function to read in CAN data from the ECU
 void CAN_Data() {
-
-}
-
-void Brake_Temp() {
-
-}
-
-void Telemetry_Filter() {
-
-}
-
-void Send_Dash() { // Send Dash and Shift Lights
-
-}
-
-void loop() {
   // Checks for CAN0_INT pin to be low, then reads the recieve buffer
   // variables for the PE3 ECU CAN data
   // All 2 byte data is stored [LowByte, HighByte]
@@ -126,39 +105,45 @@ void loop() {
     // check for specific CAN ID. pull needed data, and repackage the data
     // Change if added Sensors
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF048) {
-      telemetry.RPM = (rxBuf[0] + rxBuf[1] * 256); //RPM
-      telemetry.TPS = (rxBuf[2] + rxBuf[3] * 256) * 0.1; //Throttle Position Sensor
-      telemetry.FOT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; //Fuel Open Time
-      telemetry.IA = (rxBuf[6] + rxBuf[7] * 256) * 0.1; //Igition Angle
+      telemetry.RPM = (rxBuf[0] + rxBuf[1] * 256); // RPM
+      telemetry.TPS = (rxBuf[2] + rxBuf[3] * 256) * 0.1; // Throttle Position Sensor
+      telemetry.FOT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Fuel Open Time
+      telemetry.IA = (rxBuf[6] + rxBuf[7] * 256) * 0.1; // Igition Angle
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF148) {
-      telemetry.Lam = (rxBuf[4] + rxBuf[5] * 256) * 0.01; //Lambda
+      telemetry.Lam = (rxBuf[4] + rxBuf[5] * 256) * 0.01; // Lambda
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF548) {
-      telemetry.AirT = (rxBuf[2] + rxBuf[3] * 256) * 0.1; //Air Temp
-      telemetry.CoolT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; //Coolant Temp
-
-      /*//Code to test bit CAN values
-      Serial.print(rxBuf[4], DEC);
-      Serial.print(rxBuf[5], DEC);
-      delay(50);*/
+      telemetry.AirT = (rxBuf[2] + rxBuf[3] * 256) * 0.1; // Air Temp
+      telemetry.CoolT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Coolant Temp
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { 
-      telemetry.OilP = (rxBuf[6] + rxBuf[7] * 256) * 0.001; //Oil Pressure
+      telemetry.OilP = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFFC48) {
-      //Wheel speed
+      double wheel1 = (rxbuf[4] + rxBuf[5] * 256) * 0.1; // Non driven wheel speed 1 (ft/s)
+      double wheel2 = (rxBuf[6] + rxBuf[7] * 256) * 0.1; // Non driven wheel speed 2 (ft/s)
+      if (wheel1 > wheel2) { // Take the higher of the two wheel speeds
+        telemetry.Speed = wheel1 / 1.467;
+      }
+      else {
+        telemetry.Speed = wheel2 / 1.467;
+      }
     }
   }
+}
 
-  // Function calls to read brake temp sensor values
+// Function calls to read brake temp sensor values
+void Brake_Temp() {
   telemetry.FLTemp = FLB.readObjectTempC();
   telemetry.FRTemp = FRB.readObjectTempC();
   telemetry.RLTemp = RLB.readObjectTempC();
   telemetry.RRTemp = RRB.readObjectTempC();
+}
 
-  // Filters out extraneous values for each CAN Value
-    if (telemetry.RPM > 20000) {
+// Function to filter out extraneous values
+void Telemetry_Filter() {
+  if (telemetry.RPM > 20000) {
       telemetry.RPM = RPMLast;
     }
     if (abs(TPSLast - telemetry.TPS) > 90 && TPSLast > 0) {
@@ -180,55 +165,76 @@ void loop() {
       telemetry.CoolT = CoolTLast;
     }
 
-    // Send the data over Serial using EasyTransfer
-    ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+  // Save last filtered values
+  RPMLast = telemetry.RPM;
+  TPSLast = telemetry.TPS;
+  FOTLast = telemetry.FOT;
+  IALast = telemetry.IA;
+  LamLast = telemetry.Lam;
+  AirTLast = telemetry.AirT;
+  CoolTLast = telemetry.CoolT;
+  OilPLast = telemetry.OilP;
+}
 
-    // Send dash values as text objects
-    char message[32];
-    sprintf(message, "%d\"", (int)telemetry.RPM);
-    Serial2.print("rpm.txt=\"");
-    Serial2.print(message);
-    Nextion_CMD();
-    sprintf(message, "%d\"", (int)telemetry.CoolT);
-    Serial2.print("waterTemp.txt=\"");
-    Serial2.print(message);
-    Nextion_CMD();
-    sprintf(message, "%d\"", (int)telemetry.OilP);
-    Serial2.print("oilPress.txt=\"");
-    Serial2.print(message);
-    Nextion_CMD();
-    int rpmBar = telemetry.RPM / 160;
-    Serial2.print("rpmBar.val=");
-    Serial2.print(rpmBar);
-    Nextion_CMD();
-    // TODO: Add gear and Laptimes
+// write function to update Nextion display
+void Nextion_CMD() {
+    Serial2.write(0xff);
+    Serial2.write(0xff);
+    Serial2.write(0xff);
+}
 
-    // Send value for shift lights
-    // Shift light range from 8525 - 15500
-    if (telemetry.rpm > 7750) {
-      int shiftlights = ((telemetry.rpm - 7750) * 80) / 7750;
-      digitalWrite(5, shiftlights);
-    }
+// Function to send values to updated the dash display and shift lights
+void Send_Dash() {
+  // Send dash values as text objects
+  char message[32];
+  sprintf(message, "%d\"", (int)telemetry.RPM);
+  Serial2.print("rpm.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.CoolT);
+  Serial2.print("waterTemp.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.OilP);
+  Serial2.print("oilPress.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+  int rpmBar = telemetry.RPM / 160;
+  Serial2.print("rpmBar.val=");
+  Serial2.print(rpmBar);
+  Nextion_CMD();
+  // TODO: Add gear and Laptimes
 
-    // delay for stability
-    delay(5);
+  // Send value for shift lights
+  // Shift light range from 8525 - 15500
+  if (telemetry.rpm > 7750) {
+    int shiftlights = ((telemetry.rpm - 7750) * 80) / 7750;
+    digitalWrite(5, shiftlights);
+  }
+}
 
-    // Sample Data for testing
-    Serial.println();
-    Serial.println(telemetry.TPS);
-    Serial.println(telemetry.FRTemp);
-    Serial.println(rpmBar);
-    Serial.println(shift_lights);
-    Serial.println();
+// Function to print test data to validate connections
+void Print_Test_Data() {
+  Serial.println();
+  Serial.println(telemetry.TPS);
+  Serial.println(telemetry.FRTemp);
+  Serial.println(shift_lights);
+  Serial.println(telemetry.FRTemp);
+  Serial.println();
+}
 
+void loop() {
+  // function calls for each sensor/module
+  CAN_Data();
+  Brake_Temp();
+  Telemetry_Filter();
+  Send_Dash();
 
-    // Save last filtered values
-    RPMLast = telemetry.RPM;
-    TPSLast = telemetry.TPS;
-    FOTLast = telemetry.FOT;
-    IALast = telemetry.IA;
-    LamLast = telemetry.Lam;
-    AirTLast = telemetry.AirT;
-    CoolTLast = telemetry.CoolT;
-    OilPLast = telemetry.OilP;
+  // Send the data over Serial using EasyTransfer library
+  ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+
+  // delay for stability
+  delay(5);
+
+  //Print_Test_Data();
 }
