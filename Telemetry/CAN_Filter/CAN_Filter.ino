@@ -97,6 +97,22 @@ void setup() {
   RRB.begin(0x5D, &Wire);
 }
 
+void CAN_Data() {
+
+}
+
+void Brake_Temp() {
+
+}
+
+void Telemetry_Filter() {
+
+}
+
+void Send_Dash() { // Send Dash and Shift Lights
+
+}
+
 void loop() {
   // Checks for CAN0_INT pin to be low, then reads the recieve buffer
   // variables for the PE3 ECU CAN data
@@ -129,6 +145,9 @@ void loop() {
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { 
       telemetry.OilP = (rxBuf[6] + rxBuf[7] * 256) * 0.001; //Oil Pressure
+    }
+    if ((rxId & 0x1FFFFFFF) == 0x0CFFFC48) {
+      //Wheel speed
     }
   }
 
