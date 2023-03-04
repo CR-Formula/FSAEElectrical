@@ -121,7 +121,7 @@ void CAN_Data() {
       telemetry.OilP = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFFC48) {
-      double wheel1 = (rxbuf[4] + rxBuf[5] * 256) * 0.1; // Non driven wheel speed 1 (ft/s)
+      double wheel1 = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Non driven wheel speed 1 (ft/s)
       double wheel2 = (rxBuf[6] + rxBuf[7] * 256) * 0.1; // Non driven wheel speed 2 (ft/s)
       if (wheel1 > wheel2) { // Take the higher of the two wheel speeds
         telemetry.Speed = wheel1 / 1.467;
@@ -207,8 +207,8 @@ void Send_Dash() {
 
   // Send value for shift lights
   // Shift light range from 8525 - 15500
-  if (telemetry.rpm > 7750) {
-    int shiftlights = ((telemetry.rpm - 7750) * 80) / 7750;
+  if (telemetry.RPM > 7750) {
+    int shiftlights = ((telemetry.RPM - 7750) * 80) / 7750;
     digitalWrite(5, shiftlights);
   }
 }
@@ -218,7 +218,6 @@ void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
   Serial.println(telemetry.FRTemp);
-  Serial.println(shift_lights);
   Serial.println(telemetry.FRTemp);
   Serial.println();
 }

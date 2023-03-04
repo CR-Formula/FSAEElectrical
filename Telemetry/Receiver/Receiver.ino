@@ -30,7 +30,7 @@ data_struct telemetry;
 // When the board recieves data:
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   // Tracks the size of the data structure
-  memcpy(&telemetry, incomingData, sizeof(telemetry)); //Memory Allocation for data
+  memcpy(&telemetry, incomingData, sizeof(telemetry)); // Memory Allocation for data
 }
  
 void setup() {
