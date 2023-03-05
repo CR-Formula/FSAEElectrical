@@ -50,6 +50,12 @@ typedef struct data_struct {
   float FRTemp;     // Holds Front Right Brake Temp
   float RLTemp;     // Holds Rear Left Brake Temp
   float RRTemp;     // Holds Rear Right Brake Temp
+  float FRPot;      // Holds Front Right suspension damper
+  float FLPot;      // Holds Front Left suspension damper
+  float RRPot;      // Holds Rear Right suspension damper
+  float RLPot;      // Holds Rear Left suspension damper
+  float BrakeFront; // Holds Front Brake Pressure
+  float BrakeRear;  // Holds Rear Brake Pressure
 } data_struct;
 data_struct telemetry;
 

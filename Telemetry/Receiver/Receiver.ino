@@ -24,6 +24,12 @@ typedef struct data_struct {
   float FRTemp;     // Holds Front Right Brake Temp
   float RLTemp;     // Holds Rear Left Brake Temp
   float RRTemp;     // Holds Rear Right Brake Temp
+  float FRPot;      // Holds Front Right suspension damper
+  float FLPot;      // Holds Front Left suspension damper
+  float RRPot;      // Holds Rear Right suspension damper
+  float RLPot;      // Holds Rear Left suspension damper
+  float BrakeFront; // Holds Front Brake Pressure
+  float BrakeRear;  // Holds Rear Brake Pressure
 } data_struct;
 data_struct telemetry;
 
@@ -50,7 +56,10 @@ void setup() {
  
 void loop() {
   // CSV format Serial Print
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp,telemetry.RRTemp);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f,", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f,", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f\n", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
+
   // delay for stability
   delay(1);
 }
