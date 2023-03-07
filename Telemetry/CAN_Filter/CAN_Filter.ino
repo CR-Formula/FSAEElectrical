@@ -219,6 +219,30 @@ void Send_Dash() {
   }
 }
 
+// Read in analog Suspention Damper Potentiometers
+void Suspension_Pot() {
+  // Values are 0-1023 and map to 0-50mm
+  int FLPot = analogRead(A0);
+  int FRPot = analogRead(A1);
+  int RLPot = analogRead(A2);
+  int RRPot = analogRead(A3);
+
+  telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
+  telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
+  telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
+  telemetry.RRPot = ((double)RRPot * 50.0) / 1023.0;
+}
+
+// Read in analog break pressure values
+void Brake_Pressure() {
+  int FrontPres = analogRead(A4);
+  int RearPres = analogRead(A5);
+
+  // TODO: will need to change range mapping once we select the pressure sensors
+  telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
+  telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
+}
+
 // Function to print test data to validate connections
 void Print_Test_Data() {
   Serial.println();
@@ -233,6 +257,8 @@ void loop() {
   CAN_Data();
   Brake_Temp();
   Telemetry_Filter();
+  Suspension_Pot();
+  Brake_Pressure();
   Send_Dash();
 
   // Send the data over Serial using EasyTransfer library
