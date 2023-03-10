@@ -37,7 +37,7 @@ EasyTransfer ET;
 typedef struct data_struct {
   float RPM;        // Holds RPM value
   float TPS;        // Holds TPS value
-  float FOT;        // holds Fuel Open Time value
+  float FOT;        // Holds Fuel Open Time value
   float IA;         // Holds Ignition Angle value
   float Lam;        // Holds Lambda value
   float AirT;       // Holds Air Temp value
@@ -227,6 +227,7 @@ void Suspension_Pot() {
   int RLPot = analogRead(A2);
   int RRPot = analogRead(A3);
 
+  // TODO: will need to change range mapping once we select the pressure sensors
   telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
   telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
   telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
@@ -262,10 +263,10 @@ void loop() {
   Send_Dash();
 
   // Send the data over Serial using EasyTransfer library
-  ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+  ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
   // delay for stability
   delay(5);
 
-  //Print_Test_Data();
+  // Print_Test_Data();
 }
