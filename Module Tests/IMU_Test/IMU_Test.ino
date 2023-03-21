@@ -1,100 +1,233 @@
-/************************************************************
-https://github.com/sparkfun/SparkFun_MPU9250_DMP_Arduino_Library
-*************************************************************/
-#include <SparkFunMPU9250-DMP.h>
+/****************************************************************
+ * Example1_Basics.ino
+ * ICM 20948 Arduino Library Demo
+ * Use the default configuration to stream 9-axis IMU data
+ * Owen Lyke @ SparkFun Electronics
+ * Original Creation Date: April 17 2019
+ *
+ * Please see License.md for the license information.
+ *
+ * Distributed as-is; no warranty is given.
+ ***************************************************************/
+#include "ICM_20948.h" // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
 
-MPU9250_DMP imu;
+//#define USE_SPI       // Uncomment this to use SPI
 
-void setup() 
+#define SERIAL_PORT Serial
+
+#define SPI_PORT SPI // Your desired SPI port.       Used only when "USE_SPI" is defined
+#define CS_PIN 2     // Which pin you connect CS to. Used only when "USE_SPI" is defined
+
+#define WIRE_PORT Wire // Your desired Wire port.      Used when "USE_SPI" is not defined
+// The value of the last bit of the I2C address.
+// On the SparkFun 9DoF IMU breakout the default is 1, and when the ADR jumper is closed the value becomes 0
+#define AD0_VAL 1
+
+#ifdef USE_SPI
+ICM_20948_SPI myICM; // If using SPI create an ICM_20948_SPI object
+#else
+ICM_20948_I2C myICM; // Otherwise create an ICM_20948_I2C object
+#endif
+
+void setup()
 {
-  Serial.begin(115200);
 
-  // Call imu.begin() to verify communication with and
-  // initialize the MPU-9250 to it's default values.
-  // Most functions return an error code - INV_SUCCESS (0)
-  // indicates the IMU was present and successfully set up
-  if (imu.begin() != INV_SUCCESS)
+  SERIAL_PORT.begin(115200);
+  while (!SERIAL_PORT)
   {
-    while (1)
+  };
+
+#ifdef USE_SPI
+  SPI_PORT.begin();
+#else
+  WIRE_PORT.begin();
+  WIRE_PORT.setClock(400000);
+#endif
+
+  //myICM.enableDebugging(); // Uncomment this line to enable helpful debug messages on Serial
+
+  bool initialized = false;
+  while (!initialized)
+  {
+
+#ifdef USE_SPI
+    myICM.begin(CS_PIN, SPI_PORT);
+#else
+    myICM.begin(WIRE_PORT, AD0_VAL);
+#endif
+
+    SERIAL_PORT.print(F("Initialization of the sensor returned: "));
+    SERIAL_PORT.println(myICM.statusString());
+    if (myICM.status != ICM_20948_Stat_Ok)
     {
-      Serial.println("Unable to communicate with MPU-9250");
-      Serial.println("Check connections, and try again.");
-      Serial.println();
-      delay(5000);
+      SERIAL_PORT.println("Trying again...");
+      delay(500);
+    }
+    else
+    {
+      initialized = true;
     }
   }
-
-  // Use setSensors to turn on or off MPU-9250 sensors.
-  // Any of the following defines can be combined:
-  // INV_XYZ_GYRO, INV_XYZ_ACCEL, INV_XYZ_COMPASS,
-  // INV_X_GYRO, INV_Y_GYRO, or INV_Z_GYRO
-  // Enable all sensors:
-  imu.setSensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);
-
-  // Use setGyroFSR() and setAccelFSR() to configure the
-  // gyroscope and accelerometer full scale ranges.
-  // Gyro options are +/- 250, 500, 1000, or 2000 dps
-  imu.setGyroFSR(2000); // Set gyro to 2000 dps
-  // Accel options are +/- 2, 4, 8, or 16 g
-  imu.setAccelFSR(2); // Set accel to +/-2g
-  // Note: the MPU-9250's magnetometer FSR is set at 
-  // +/- 4912 uT (micro-tesla's)
-
-  // setLPF() can be used to set the digital low-pass filter
-  // of the accelerometer and gyroscope.
-  // Can be any of the following: 188, 98, 42, 20, 10, 5
-  // (values are in Hz).
-  imu.setLPF(5); // Set LPF corner frequency to 5Hz
-
-  // The sample rate of the accel/gyro can be set using
-  // setSampleRate. Acceptable values range from 4Hz to 1kHz
-  imu.setSampleRate(10); // Set sample rate to 10Hz
-
-  // Likewise, the compass (magnetometer) sample rate can be
-  // set using the setCompassSampleRate() function.
-  // This value can range between: 1-100Hz
-  imu.setCompassSampleRate(10); // Set mag rate to 10Hz
 }
 
-void loop() 
+void loop()
 {
-  // dataReady() checks to see if new accel/gyro data
-  // is available. It will return a boolean true or false
-  // (New magnetometer data cannot be checked, as the library
-  //  runs that sensor in single-conversion mode.)
-  if ( imu.dataReady() )
+
+  if (myICM.dataReady())
   {
-    // Call update() to update the imu objects sensor data.
-    // You can specify which sensors to update by combining
-    // UPDATE_ACCEL, UPDATE_GYRO, UPDATE_COMPASS, and/or
-    // UPDATE_TEMPERATURE.
-    // (The update function defaults to accel, gyro, compass,
-    //  so you don't have to specify these values.)
-    imu.update(UPDATE_ACCEL | UPDATE_GYRO);
-    printIMUData();
+    myICM.getAGMT();         // The values are only updated when you call 'getAGMT'
+                             //    printRawAGMT( myICM.agmt );     // Uncomment this to see the raw values, taken directly from the agmt structure
+    printScaledAGMT(&myICM); // This function takes into account the scale settings from when the measurement was made to calculate the values with units
+    delay(30);
+  }
+  else
+  {
+    SERIAL_PORT.println("Waiting for data");
+    delay(500);
   }
 }
 
-void printIMUData(void)
-{  
-  // After calling update() the ax, ay, az, gx, gy, gz, mx,
-  // my, mz, time, and/or temerature class variables are all
-  // updated. Access them by placing the object. in front:
+// Below here are some helper functions to print the data nicely!
 
-  // Use the calcAccel, calcGyro, and calcMag functions to
-  // convert the raw sensor readings (signed 16-bit values)
-  // to their respective units.
-  float accelX = imu.calcAccel(imu.ax);
-  float accelY = imu.calcAccel(imu.ay);
-  float accelZ = imu.calcAccel(imu.az);
-  float gyroX = imu.calcGyro(imu.gx);
-  float gyroY = imu.calcGyro(imu.gy);
-  float gyroZ = imu.calcGyro(imu.gz);
-  
-  Serial.println("Accel: " + String(accelX) + ", " +
-              String(accelY) + ", " + String(accelZ) + " g");
-  Serial.println("Gyro: " + String(gyroX) + ", " +
-              String(gyroY) + ", " + String(gyroZ) + " dps");
-  Serial.println("Time: " + String(imu.time) + " ms");
-  Serial.println();
+void printPaddedInt16b(int16_t val)
+{
+  if (val > 0)
+  {
+    SERIAL_PORT.print(" ");
+    if (val < 10000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (val < 1000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (val < 100)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (val < 10)
+    {
+      SERIAL_PORT.print("0");
+    }
+  }
+  else
+  {
+    SERIAL_PORT.print("-");
+    if (abs(val) < 10000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (abs(val) < 1000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (abs(val) < 100)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (abs(val) < 10)
+    {
+      SERIAL_PORT.print("0");
+    }
+  }
+  SERIAL_PORT.print(abs(val));
+}
+
+void printRawAGMT(ICM_20948_AGMT_t agmt)
+{
+  SERIAL_PORT.print("RAW. Acc [ ");
+  printPaddedInt16b(agmt.acc.axes.x);
+  SERIAL_PORT.print(", ");
+  printPaddedInt16b(agmt.acc.axes.y);
+  SERIAL_PORT.print(", ");
+  printPaddedInt16b(agmt.acc.axes.z);
+  SERIAL_PORT.print(" ], Gyr [ ");
+  printPaddedInt16b(agmt.gyr.axes.x);
+  SERIAL_PORT.print(", ");
+  printPaddedInt16b(agmt.gyr.axes.y);
+  SERIAL_PORT.print(", ");
+  printPaddedInt16b(agmt.gyr.axes.z);
+  SERIAL_PORT.print(" ], Mag [ ");
+  printPaddedInt16b(agmt.mag.axes.x);
+  SERIAL_PORT.print(", ");
+  printPaddedInt16b(agmt.mag.axes.y);
+  SERIAL_PORT.print(", ");
+  printPaddedInt16b(agmt.mag.axes.z);
+  SERIAL_PORT.print(" ], Tmp [ ");
+  printPaddedInt16b(agmt.tmp.val);
+  SERIAL_PORT.print(" ]");
+  SERIAL_PORT.println();
+}
+
+void printFormattedFloat(float val, uint8_t leading, uint8_t decimals)
+{
+  float aval = abs(val);
+  if (val < 0)
+  {
+    SERIAL_PORT.print("-");
+  }
+  else
+  {
+    SERIAL_PORT.print(" ");
+  }
+  for (uint8_t indi = 0; indi < leading; indi++)
+  {
+    uint32_t tenpow = 0;
+    if (indi < (leading - 1))
+    {
+      tenpow = 1;
+    }
+    for (uint8_t c = 0; c < (leading - 1 - indi); c++)
+    {
+      tenpow *= 10;
+    }
+    if (aval < tenpow)
+    {
+      SERIAL_PORT.print("0");
+    }
+    else
+    {
+      break;
+    }
+  }
+  if (val < 0)
+  {
+    SERIAL_PORT.print(-val, decimals);
+  }
+  else
+  {
+    SERIAL_PORT.print(val, decimals);
+  }
+}
+
+#ifdef USE_SPI
+void printScaledAGMT(ICM_20948_SPI *sensor)
+{
+#else
+void printScaledAGMT(ICM_20948_I2C *sensor)
+{
+#endif
+  SERIAL_PORT.print("Scaled. Acc (mg) [ ");
+  printFormattedFloat(sensor->accX(), 5, 2);
+  SERIAL_PORT.print(", ");
+  printFormattedFloat(sensor->accY(), 5, 2);
+  SERIAL_PORT.print(", ");
+  printFormattedFloat(sensor->accZ(), 5, 2);
+  SERIAL_PORT.print(" ], Gyr (DPS) [ ");
+  printFormattedFloat(sensor->gyrX(), 5, 2);
+  SERIAL_PORT.print(", ");
+  printFormattedFloat(sensor->gyrY(), 5, 2);
+  SERIAL_PORT.print(", ");
+  printFormattedFloat(sensor->gyrZ(), 5, 2);
+  SERIAL_PORT.print(" ], Mag (uT) [ ");
+  printFormattedFloat(sensor->magX(), 5, 2);
+  SERIAL_PORT.print(", ");
+  printFormattedFloat(sensor->magY(), 5, 2);
+  SERIAL_PORT.print(", ");
+  printFormattedFloat(sensor->magZ(), 5, 2);
+  SERIAL_PORT.print(" ], Tmp (C) [ ");
+  printFormattedFloat(sensor->temp(), 5, 2);
+  SERIAL_PORT.print(" ]");
+  SERIAL_PORT.println();
 }
