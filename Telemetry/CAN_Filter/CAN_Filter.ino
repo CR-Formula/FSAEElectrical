@@ -37,7 +37,7 @@ EasyTransfer ET;
 typedef struct data_struct {
   float RPM;        // Holds RPM value
   float TPS;        // Holds TPS value
-  float FOT;        // holds Fuel Open Time value
+  float FOT;        // Holds Fuel Open Time value
   float IA;         // Holds Ignition Angle value
   float Lam;        // Holds Lambda value
   float AirT;       // Holds Air Temp value
@@ -50,6 +50,12 @@ typedef struct data_struct {
   float FRTemp;     // Holds Front Right Brake Temp
   float RLTemp;     // Holds Rear Left Brake Temp
   float RRTemp;     // Holds Rear Right Brake Temp
+  float FRPot;      // Holds Front Right suspension damper
+  float FLPot;      // Holds Front Left suspension damper
+  float RRPot;      // Holds Rear Right suspension damper
+  float RLPot;      // Holds Rear Left suspension damper
+  float BrakeFront; // Holds Front Brake Pressure
+  float BrakeRear;  // Holds Rear Brake Pressure
 } data_struct;
 data_struct telemetry;
 
@@ -213,6 +219,31 @@ void Send_Dash() {
   }
 }
 
+// Read in analog Suspention Damper Potentiometers
+void Suspension_Pot() {
+  // Values are 0-1023 and map to 0-50mm
+  int FLPot = analogRead(A0);
+  int FRPot = analogRead(A1);
+  int RLPot = analogRead(A2);
+  int RRPot = analogRead(A3);
+
+  // TODO: will need to change range mapping once we select the pressure sensors
+  telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
+  telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
+  telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
+  telemetry.RRPot = ((double)RRPot * 50.0) / 1023.0;
+}
+
+// Read in analog break pressure values
+void Brake_Pressure() {
+  int FrontPres = analogRead(A4);
+  int RearPres = analogRead(A5);
+
+  // TODO: will need to change range mapping once we select the pressure sensors
+  telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
+  telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
+}
+
 // Function to print test data to validate connections
 void Print_Test_Data() {
   Serial.println();
@@ -227,13 +258,15 @@ void loop() {
   CAN_Data();
   Brake_Temp();
   Telemetry_Filter();
+  Suspension_Pot();
+  Brake_Pressure();
   Send_Dash();
 
   // Send the data over Serial using EasyTransfer library
-  ET.sendData(); //Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+  ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
   // delay for stability
   delay(5);
 
-  //Print_Test_Data();
+  // Print_Test_Data();
 }
