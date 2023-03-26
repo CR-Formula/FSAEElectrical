@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
+#include <ICM_20948.h>
 #include <Wire.h>
 
 // Stores the CAN Packet ID
@@ -22,6 +23,8 @@ static const int TxPin = 4;
 // MCP_CAN CAN0(10); // Uno
 MCP_CAN CAN0(53); // Mega
 
+// Create Object for Accel/Gyro
+ICM_20948_I2C myICM;
 
 //Objects for brake temp sensors
 Adafruit_MLX90614 FLB = Adafruit_MLX90614(); // Front Left Brake Temp
@@ -56,6 +59,12 @@ typedef struct data_struct {
   float RLPot;      // Holds Rear Left suspension damper
   float BrakeFront; // Holds Front Brake Pressure
   float BrakeRear;  // Holds Rear Brake Pressure
+  float AccX;       // Holds Acclerometer X Axis
+  float AccY;       // Holds Acclerometer Y Axis
+  float AccZ;       // Holds Acclerometer Z Axis
+  float GyrX;       // Holds Gyroscope X Axis
+  float GyrY;       // Holds Gyroscope Y Axis
+  float GyrZ;       // Holds Gyroscope Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -95,6 +104,9 @@ void setup() {
   FRB.begin(0x5B, &Wire);
   RLB.begin(0x5C, &Wire);
   RRB.begin(0x5D, &Wire);
+
+  // Initialize ICM
+  myICM.begin(Wire);
 }
 
 // Function to read in CAN data from the ECU
@@ -253,12 +265,28 @@ void Print_Test_Data() {
   Serial.println();
 }
 
+// Function that collects ICM Data from the Accel/Gyro
+void ICM_Data(ICM_20948_I2C *sensor) {
+  myICM.getAGMT();
+
+  // Accelerometer Values
+  telemetry.AccX = sensor->accX();
+  telemetry.AccY = sensor->accY();
+  telemetry.AccZ = sensor->accZ();
+
+  // Gyroscope Values
+  telemetry.GyrX = sensor->gyrX();
+  telemetry.GyrY = sensor->gyrY();
+  telemetry.GyrZ = sensor->gyrZ();
+}
+
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
   Brake_Temp();
   Telemetry_Filter();
   Suspension_Pot();
+  ICM_Data(&myICM);
   Brake_Pressure();
   Send_Dash();
 
