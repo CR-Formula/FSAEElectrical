@@ -11,7 +11,7 @@
 typedef struct data_struct {
   float RPM;        // Holds RPM value
   float TPS;        // Holds TPS value
-  float FOT;        // holds Fuel Open Time value
+  float FOT;        // Holds Fuel Open Time value
   float IA;         // Holds Ignition Angle value
   float Lam;        // Holds Lambda value
   float AirT;       // Holds Air Temp value
@@ -30,6 +30,12 @@ typedef struct data_struct {
   float RLPot;      // Holds Rear Left suspension damper
   float BrakeFront; // Holds Front Brake Pressure
   float BrakeRear;  // Holds Rear Brake Pressure
+  float AccX;       // Holds Acclerometer X Axis
+  float AccY;       // Holds Acclerometer Y Axis
+  float AccZ;       // Holds Acclerometer Z Axis
+  float GyrX;       // Holds Gyroscope X Axis
+  float GyrY;       // Holds Gyroscope Y Axis
+  float GyrZ;       // Holds Gyroscope Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -56,9 +62,10 @@ void setup() {
  
 void loop() {
   // CSV format Serial Print
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f,", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f,", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f\n", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
+  Serial.printf("%f, %f, %f, %f, %f, %f\n", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
 
   // delay for stability
   delay(1);
