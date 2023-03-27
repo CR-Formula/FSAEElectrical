@@ -21,33 +21,34 @@ uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0x94, 0x5C};  // No White
 // Data Structure to store variables to be sent
 // struct must match receiver
 typedef struct data_struct {
-  float RPM;        // Holds RPM value
-  float TPS;        // Holds TPS value
-  float FOT;        // Holds Fuel Open Time value
-  float IA;         // Holds Ignition Angle value
-  float Lam;        // Holds Lambda value
-  float AirT;       // Holds Air Temp value
-  float CoolT;      // Holds Coolent Temp value
-  float Lat;        // Holds Latitude
-  float Lng;        // Holds Longitude
-  float Speed;      // Holds GPS Speed
-  float OilP;       // Holds Oil Pressure
-  float FLTemp;     // Holds Front Left Brake Temp
-  float FRTemp;     // Holds Front Right Brake Temp
-  float RLTemp;     // Holds Rear Left Brake Temp
-  float RRTemp;     // Holds Rear Right Brake Temp
-  float FRPot;      // Holds Front Right suspension damper
-  float FLPot;      // Holds Front Left suspension damper
-  float RRPot;      // Holds Rear Right suspension damper
-  float RLPot;      // Holds Rear Left suspension damper
-  float BrakeFront; // Holds Front Brake Pressure
-  float BrakeRear;  // Holds Rear Brake Pressure
-  float AccX;       // Holds Acclerometer X Axis
-  float AccY;       // Holds Acclerometer Y Axis
-  float AccZ;       // Holds Acclerometer Z Axis
-  float GyrX;       // Holds Gyroscope X Axis
-  float GyrY;       // Holds Gyroscope Y Axis
-  float GyrZ;       // Holds Gyroscope Z Axis
+  float RPM;        // RPM value
+  float TPS;        // TPS value
+  float FOT;        // Fuel Open Time value
+  float IA;         // Ignition Angle value
+  float Lam;        // Lambda value
+  float AirT;       // Air Temp value
+  float CoolT;      // Coolent Temp value
+  float Lat;        // Latitude
+  float Lng;        // Longitude
+  float Speed;      // GPS Speed
+  float OilP;       // Oil Pressure
+  float FuelP;      // Fuel Pressure
+  float FLTemp;     // Front Left Brake Temp
+  float FRTemp;     // Front Right Brake Temp
+  float RLTemp;     // Rear Left Brake Temp
+  float RRTemp;     // Rear Right Brake Temp
+  float FRPot;      // Front Right suspension damper
+  float FLPot;      // Front Left suspension damper
+  float RRPot;      // Rear Right suspension damper
+  float RLPot;      // Rear Left suspension damper
+  float BrakeFront; // Front Brake Pressure
+  float BrakeRear;  // Rear Brake Pressure
+  float AccX;       // Acclerometer X Axis
+  float AccY;       // Acclerometer Y Axis
+  float AccZ;       // Acclerometer Z Axis
+  float GyrX;       // Gyroscope X Axis
+  float GyrY;       // Gyroscope Y Axis
+  float GyrZ;       // Gyroscope Z Axis
 } data_struct;
 data_struct telemetry;
 

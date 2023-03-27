@@ -9,33 +9,34 @@
 // Structure example to receive data
 // Must match the sender structure
 typedef struct data_struct {
-  float RPM;        // Holds RPM value
-  float TPS;        // Holds TPS value
-  float FOT;        // Holds Fuel Open Time value
-  float IA;         // Holds Ignition Angle value
-  float Lam;        // Holds Lambda value
-  float AirT;       // Holds Air Temp value
-  float CoolT;      // Holds Coolent Temp value
-  float Lat;        // Holds Latitude
-  float Lng;        // Holds Longitude
-  float Speed;      // Holds GPS Speed
-  float OilP;       // Holds Oil Pressure
-  float FLTemp;     // Holds Front Left Brake Temp
-  float FRTemp;     // Holds Front Right Brake Temp
-  float RLTemp;     // Holds Rear Left Brake Temp
-  float RRTemp;     // Holds Rear Right Brake Temp
-  float FRPot;      // Holds Front Right suspension damper
-  float FLPot;      // Holds Front Left suspension damper
-  float RRPot;      // Holds Rear Right suspension damper
-  float RLPot;      // Holds Rear Left suspension damper
-  float BrakeFront; // Holds Front Brake Pressure
-  float BrakeRear;  // Holds Rear Brake Pressure
-  float AccX;       // Holds Acclerometer X Axis
-  float AccY;       // Holds Acclerometer Y Axis
-  float AccZ;       // Holds Acclerometer Z Axis
-  float GyrX;       // Holds Gyroscope X Axis
-  float GyrY;       // Holds Gyroscope Y Axis
-  float GyrZ;       // Holds Gyroscope Z Axis
+  float RPM;        // RPM value
+  float TPS;        // TPS value
+  float FOT;        // Fuel Open Time value
+  float IA;         // Ignition Angle value
+  float Lam;        // Lambda value
+  float AirT;       // Air Temp value
+  float CoolT;      // Coolent Temp value
+  float Lat;        // Latitude
+  float Lng;        // Longitude
+  float Speed;      // GPS Speed
+  float OilP;       // Oil Pressure
+  float FuelP;      // Fuel Pressure
+  float FLTemp;     // Front Left Brake Temp
+  float FRTemp;     // Front Right Brake Temp
+  float RLTemp;     // Rear Left Brake Temp
+  float RRTemp;     // Rear Right Brake Temp
+  float FRPot;      // Front Right suspension damper
+  float FLPot;      // Front Left suspension damper
+  float RRPot;      // Rear Right suspension damper
+  float RLPot;      // Rear Left suspension damper
+  float BrakeFront; // Front Brake Pressure
+  float BrakeRear;  // Rear Brake Pressure
+  float AccX;       // Acclerometer X Axis
+  float AccY;       // Acclerometer Y Axis
+  float AccZ;       // Acclerometer Z Axis
+  float GyrX;       // Gyroscope X Axis
+  float GyrY;       // Gyroscope Y Axis
+  float GyrZ;       // Gyroscope Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -63,7 +64,7 @@ void setup() {
 void loop() {
   // CSV format Serial Print
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
   Serial.printf("%f, %f, %f, %f, %f, %f\n", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
 
