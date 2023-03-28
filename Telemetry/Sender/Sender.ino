@@ -92,8 +92,7 @@ void loop() {
   // Tests that the data was sent successfully and either prints an Error or the Data that was sent
   if (result == ESP_OK) {
     // Print out the data for debug
-    Serial.print("Telem: ");
-    Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp,telemetry.RRTemp);
+    Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.TPS, telemetry.FRTemp, telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
   }
   else {
     Serial.println("ERROR: problem sending the data");
