@@ -101,7 +101,7 @@ public class Main {
 		}
 		
 		String OS = System.getProperty("os.name").toLowerCase();
-		if (args.length > 0 && args[0] == "notPi4") {
+		if (args.length > 0 && args[0].toLowerCase().equals("notpi4")) {
 			NotificationsController.showHintUntil(OS, () -> false, true);
 		}
 		if (args.length > 0 && args[0] == "notPi4") {
