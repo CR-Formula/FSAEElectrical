@@ -101,6 +101,7 @@ public class Main {
 		}
 		
 		String OS = System.getProperty("os.name").toLowerCase();
+		NotificationsController.showHintUntil(OS, () -> false, true);
 		if (OS.indexOf("windows") == -1) {
 			File[] files = new File[2];
 			files[0] = new File("telemetry_config.txt");
