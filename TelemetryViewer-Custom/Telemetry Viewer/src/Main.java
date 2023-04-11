@@ -101,16 +101,18 @@ public class Main {
 		}
 		
 		String OS = System.getProperty("os.name").toLowerCase();
-		NotificationsController.showHintUntil(OS, () -> false, true);
-//		if (OS.indexOf("windows") == -1) {
-//			File[] files = new File[2];
-//			files[0] = new File("telemetry_config.txt");
-//			files[1] = new File("Logs/2022 Michigan June/Autocross.csv");
-//			String[] filepaths = new String[files.length];
-//			for(int i = 0; i < files.length; i++)
-//				filepaths[i] = files[i].getAbsolutePath();
-//			CommunicationController.importFiles(filepaths);
-//		}
+		if (args.length > 0 && args[0] == "notPi4") {
+			NotificationsController.showHintUntil(OS, () -> false, true);
+		}
+		if (args.length > 0 && args[0] == "notPi4") {
+			File[] files = new File[2];
+			files[0] = new File("/home/notpi4/FSAEElectrical/telemetry_config.txt");
+			files[1] = new File("/home/notpi4/FSAEElectrical/Logs/2022 Michigan June/Autocross.csv");
+			String[] filepaths = new String[files.length];
+			for(int i = 0; i < files.length; i++)
+				filepaths[i] = files[i].getAbsolutePath();
+			CommunicationController.importFiles(filepaths);
+		}
 	}
 	
 	/**
