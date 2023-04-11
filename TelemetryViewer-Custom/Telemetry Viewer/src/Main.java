@@ -99,12 +99,9 @@ public class Main {
 		} catch (Exception e) {
 			window.setVisible(true);
 		}
-		
-		String OS = System.getProperty("os.name").toLowerCase();
+
+
 		if (args.length > 0 && args[0].toLowerCase().equals("notpi4")) {
-			NotificationsController.showHintUntil(OS, () -> false, true);
-		}
-		if (args.length > 0 && args[0] == "notPi4") {
 			File[] files = new File[2];
 			files[0] = new File("/home/notpi4/FSAEElectrical/telemetry_config.txt");
 			files[1] = new File("/home/notpi4/FSAEElectrical/Logs/2022 Michigan June/Autocross.csv");
