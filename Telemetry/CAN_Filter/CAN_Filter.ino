@@ -241,7 +241,8 @@ void Suspension_Pot() {
   int RLPot = analogRead(A2);
   int RRPot = analogRead(A3);
 
-  // TODO: will need to change range mapping once we select the pressure sensors
+  // AiM 50mm Suspension Pots
+  // Prints in mm
   telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
   telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
   telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
@@ -253,9 +254,10 @@ void Brake_Pressure() {
   int FrontPres = analogRead(A4);
   int RearPres = analogRead(A5);
 
-  // TODO: will need to change range mapping once we select the pressure sensors
-  telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
-  telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
+  // .5V - 4.5V --> 0 Bar - 100 Bar
+  // Print in PSI
+  telemetry.BrakeFront = (((double)FrontPres * 100.0) / 1023.0) * 14.504;
+  telemetry.BrakeRear = (((double)RearPres * 100.0) / 1023.0) * 14.504;
 }
 
 // Function to print test data to validate connections

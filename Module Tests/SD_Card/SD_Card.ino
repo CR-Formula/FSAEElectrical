@@ -1,7 +1,39 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = 10;  
+const int chipSelect = 10; 
+
+typedef struct data_struct {
+  float RPM;        // RPM value
+  float TPS;        // TPS value
+  float FOT;        // Fuel Open Time value
+  float IA;         // Ignition Angle value
+  float Lam;        // Lambda value
+  float AirT;       // Air Temp value
+  float CoolT;      // Coolent Temp value
+  float Lat;        // Latitude
+  float Lng;        // Longitude
+  float Speed;      // GPS Speed
+  float OilP;       // Oil Pressure
+  float FuelP;      // Fuel Pressure
+  float FLTemp;     // Front Left Brake Temp
+  float FRTemp;     // Front Right Brake Temp
+  float RLTemp;     // Rear Left Brake Temp
+  float RRTemp;     // Rear Right Brake Temp
+  float FRPot;      // Front Right suspension damper
+  float FLPot;      // Front Left suspension damper
+  float RRPot;      // Rear Right suspension damper
+  float RLPot;      // Rear Left suspension damper
+  float BrakeFront; // Front Brake Pressure
+  float BrakeRear;  // Rear Brake Pressure
+  float AccX;       // Acclerometer X Axis
+  float AccY;       // Acclerometer Y Axis
+  float AccZ;       // Acclerometer Z Axis
+  float GyrX;       // Gyroscope X Axis
+  float GyrY;       // Gyroscope Y Axis
+  float GyrZ;       // Gyroscope Z Axis
+} data_struct;
+data_struct telemetry;
 
 void setup()
 {
@@ -33,40 +65,17 @@ void loop()
   File dataFile = SD.open("datalog.txt", FILE_WRITE);
 
   // if the file is available, write to it:
-  if (dataFile)   {  
-    int timeStamp = millis();
-    //write to uSD card
-    dataFile.print(timeStamp);
-    dataFile.print(" ms");
-    dataFile.print(", ");
-    //output also on Serial monitor for debugging
-    Serial.print(timeStamp);
-    Serial.print(",");
-
-    // read three sensors on A0, A1, and A2 while appending to the string:
-    for (int analogPin = 0; analogPin < 3; analogPin++) 
-    {
-      int sensorVal = analogRead(analogPin);
-      //write analog sensor data to uSD card
-      dataFile.print(" Analog Pin A");
-      dataFile.print(analogPin);
-      dataFile.print(" = ");
-      dataFile.print(sensorVal);
-      //output also on Serial monitor for debugging
-      Serial.print(" Analog Pin A");
-      Serial.print(analogPin);
-      Serial.print(" = ");
-      Serial.print(sensorVal);
-      //place comma between the analog sensor data
-      if (analogPin < 3) 
-      {
-        dataString += ","; 
-      }
+  if (dataFile)   {
+    for (int i = 0; i < 10; i++) {
+      telemetry.RPM = i;
+      telemetry.TPS = i;
+      telemetry.BrakeFront = i;
+      telemetry.FLPot = i;
+      dataFile.printf("%f, %f, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.BrakeFront, telemetry.FLPot);
     }
     dataFile.println(); //create a new row to read data more clearly
+    dataFile.println("End of Test Data");
     dataFile.close();   //close file
-    Serial.println();   //print to the serial port too:
-
   }  
   // if the file isn't open, pop up an error:
   else
