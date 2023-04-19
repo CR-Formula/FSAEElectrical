@@ -37,6 +37,9 @@ typedef struct data_struct {
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
+  float MagX;       // Magnometer X Axis
+  float MagY;       // Magnometer Y Axis
+  float MagZ;       // Magnometer Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -66,7 +69,8 @@ void loop() {
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
-  Serial.printf("%f, %f, %f, %f, %f, %f\n", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
+  Serial.printf("%f, %f, %f, %f, %f, %f, ", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
+  Serial.printf("%f, %f, %f\n", telemetry.MagX, telemetry.MagY, telemetry.MagZ);
 
   // delay for stability
   delay(1);

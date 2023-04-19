@@ -66,6 +66,9 @@ typedef struct data_struct {
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
+  float MagX;       // Magnometer X Axis
+  float MagY;       // Magnometer Y Axis
+  float MagZ;       // Magnometer Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -282,6 +285,11 @@ void ICM_Data(ICM_20948_I2C *sensor) {
   telemetry.GyrX = sensor->gyrX();
   telemetry.GyrY = sensor->gyrY();
   telemetry.GyrZ = sensor->gyrZ();
+
+  // Mag Values
+  telemetry.MagX = sensor->magX();
+  telemetry.MagY = sensor->magY();
+  telemetry.MagZ = sensor->magZ();
 }
 
 void loop() {

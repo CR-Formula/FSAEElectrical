@@ -49,6 +49,9 @@ typedef struct data_struct {
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
+  float MagX;       // Magnometer X Axis
+  float MagY;       // Magnometer Y Axis
+  float MagZ;       // Magnometer Z Axis
 } data_struct;
 data_struct telemetry;
 
