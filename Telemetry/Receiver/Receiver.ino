@@ -40,6 +40,7 @@ typedef struct data_struct {
   float MagX;       // Magnometer X Axis
   float MagY;       // Magnometer Y Axis
   float MagZ;       // Magnometer Z Axis
+  float GearRatio;  // Stores the current gear ratio
 } data_struct;
 data_struct telemetry;
 

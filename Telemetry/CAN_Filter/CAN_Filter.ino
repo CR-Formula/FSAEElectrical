@@ -36,6 +36,18 @@ Adafruit_MLX90614 RRB = Adafruit_MLX90614(); // Rear Right Brake Temp
 // Create EasyTransfer Object
 EasyTransfer ET;
 
+// Code to setup transmission speed interrupts
+#define transSpeedINT 3 // Interrupt Pin
+int const timeFilter = 100; // Time passed to check tooth count
+long startTime = millis();
+long endTime;
+int toothCount = 0;
+long timeDiff = 0; // Difference in start and end
+long outputRPM = 0; // Calculated output shaft RPM
+int outputTeeth = 24; // number of gear teeth
+double diffSeconds; // Difference in start and end in seconds
+char Gear = 'N'; // Holds temp gear value
+
 // Holds all calculated Telemetry Data
 typedef struct data_struct {
   float RPM;        // RPM value
@@ -69,6 +81,7 @@ typedef struct data_struct {
   float MagX;       // Magnometer X Axis
   float MagY;       // Magnometer Y Axis
   float MagZ;       // Magnometer Z Axis
+  float GearRatio;  // Stores the current gear ratio
 } data_struct;
 data_struct telemetry;
 
@@ -111,6 +124,10 @@ void setup() {
 
   // Initialize ICM
   myICM.begin(Wire);
+
+  // Initialize Transmission Speed Interrupts
+  pinMode(transSpeedINT, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(transSpeedINT), outputCount, CHANGE);
 }
 
 // Function to read in CAN data from the ECU
@@ -226,7 +243,10 @@ void Send_Dash() {
   Serial2.print("rpmBar.val=");
   Serial2.print(rpmBar);
   Nextion_CMD();
-  // TODO: Add gear and Laptimes
+  Serial2.print("Gear.txt=\"");
+  Serial2.print(Gear);
+  Nextion_CMD();
+  // TODO: Laptimes
 
   // Send value for shift lights
   // Shift light range from 8525 - 15500
@@ -258,7 +278,8 @@ void Brake_Pressure() {
   int RearPres = analogRead(A5);
 
   // .5V - 4.5V --> 0 Bar - 100 Bar
-  // Print in PSI
+  // Print in PSI --> * 14.504
+  // Brake Bias (Front / Rear) * 100
   telemetry.BrakeFront = (((double)FrontPres * 100.0) / 1023.0) * 14.504;
   telemetry.BrakeRear = (((double)RearPres * 100.0) / 1023.0) * 14.504;
 }
@@ -292,6 +313,47 @@ void ICM_Data(ICM_20948_I2C *sensor) {
   telemetry.MagZ = sensor->magZ();
 }
 
+// Calculate Transmission speed based off of interrupts
+void outputCount() {
+  toothCount++;
+}
+
+// Calculate the Gear Ratio given Trans Speed and Engine RPM
+void gear_Ratio() {
+  // Define Trans Speed Sensor Pin
+  // Engine Speed / Trans Speed = Gear Ratio
+  endTime = millis();
+  if (endTime - startTime >= 100) {
+    timeDiff = endTime - startTime;
+    startTime = millis();
+    diffSeconds = timeDiff / 1000.0;
+    outputRPM = (toothCount / diffSeconds) / outputTeeth * 60;
+    telemetry.GearRatio = telemetry.RPM / outputRPM; 
+  }
+  // Gear Ratio (1/2/3/4/5/6) -->	2.583/2/1.667/1.444/1.286/1.15
+  if (telemetry.GearRatio > 2.583 * .98 && telemetry.GearRatio < 2.583 * 1.02) {
+    Gear = '1';
+  }
+  else if (telemetry.GearRatio > 2 * .98 && telemetry.GearRatio < 2 * 1.02) {
+    Gear = '2';
+  }
+  else if (telemetry.GearRatio > 1.667 * .98 && telemetry.GearRatio < 1.667 * 1.02) {
+    Gear = '3';
+  }
+  else if (telemetry.GearRatio > 1.444 * .98 && telemetry.GearRatio < 1.444 * 1.02) {
+    Gear = '4';
+  }
+  else if (telemetry.GearRatio > 1.286 * .98 && telemetry.GearRatio < 1.286 * 1.02) {
+    Gear = '5';
+  }
+  else if (telemetry.GearRatio > 1.15 * .98 && telemetry.GearRatio < 1.15 * 1.02) {
+    Gear = '6';
+  }
+  else {
+    Gear = 'N';
+  }
+}
+
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
@@ -301,6 +363,7 @@ void loop() {
   ICM_Data(&myICM);
   Brake_Pressure();
   Send_Dash();
+  gear_Ratio();
 
   // Send the data over Serial using EasyTransfer library
   ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
