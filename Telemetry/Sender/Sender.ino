@@ -97,6 +97,7 @@ void loop() {
   if (result == ESP_OK) {
     // Print out the data for debug
     Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.TPS, telemetry.FRTemp, telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
+    Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.TPS, telemetry.FRTemp, telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
   }
   else {
     Serial.println("ERROR: problem sending the data");

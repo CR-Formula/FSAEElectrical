@@ -158,6 +158,7 @@ void CAN_Data() {
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { 
       telemetry.FuelP = (rxBuf[0] + rxBuf[1] * 256) * 0.001; // Fuel Pressure
+      telemetry.FuelP = (rxBuf[0] + rxBuf[1] * 256) * 0.001; // Fuel Pressure
       telemetry.OilP = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFFC48) {
