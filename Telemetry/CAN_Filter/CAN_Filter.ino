@@ -38,14 +38,11 @@ EasyTransfer ET;
 
 // Code to setup transmission speed interrupts
 #define transSpeedINT 3 // Interrupt Pin
-int const timeFilter = 100; // Time passed to check tooth count
 long startTime = millis();
 long endTime;
-int toothCount = 0;
-long timeDiff = 0; // Difference in start and end
+long totalTime = 0; // Difference in start and end
 long outputRPM = 0; // Calculated output shaft RPM
-int outputTeeth = 24; // number of gear teeth
-double diffSeconds; // Difference in start and end in seconds
+const int outputTeeth = 24; // number of gear teeth
 char Gear = 'N'; // Holds temp gear value
 
 // Holds all calculated Telemetry Data
@@ -323,31 +320,29 @@ void outputCount() {
 void gear_Ratio() {
   // Define Trans Speed Sensor Pin
   // Engine Speed / Trans Speed = Gear Ratio
-  endTime = millis();
-  if (endTime - startTime >= 100) {
-    timeDiff = endTime - startTime;
-    startTime = millis();
-    diffSeconds = timeDiff / 1000.0;
-    outputRPM = (toothCount / diffSeconds) / outputTeeth * 60;
-    telemetry.GearRatio = telemetry.RPM / outputRPM; 
+  if (toothCount >= outputTeeth) {
+    endTime = millis();
+    totalTime = endTime - startTime;
+    outputRPM = 1.0 / (totalTime / 60000.0);
   }
+  telemetry.GearRatio = telemetry.RPM / outputRPM;
   // Gear Ratio (1/2/3/4/5/6) -->	2.583/2/1.667/1.444/1.286/1.15
-  if (telemetry.GearRatio > 2.583 * .98 && telemetry.GearRatio < 2.583 * 1.02) {
+  if (telemetry.GearRatio >= 2.292 && telemetry.GearRatio < 2.583 * 1.11) { // 2.583
     Gear = '1';
   }
-  else if (telemetry.GearRatio > 2 * .98 && telemetry.GearRatio < 2 * 1.02) {
+  else if (telemetry.GearRatio >= 1.883 && telemetry.GearRatio < 2.292) { // 2
     Gear = '2';
   }
-  else if (telemetry.GearRatio > 1.667 * .98 && telemetry.GearRatio < 1.667 * 1.02) {
+  else if (telemetry.GearRatio >= 1.556 && telemetry.GearRatio < 1.883) { // 1.667
     Gear = '3';
   }
-  else if (telemetry.GearRatio > 1.444 * .98 && telemetry.GearRatio < 1.444 * 1.02) {
+  else if (telemetry.GearRatio >= 1.365 && telemetry.GearRatio < 1.556) { // 1.444
     Gear = '4';
   }
-  else if (telemetry.GearRatio > 1.286 * .98 && telemetry.GearRatio < 1.286 * 1.02) {
+  else if (telemetry.GearRatio >= 1.218 && telemetry.GearRatio < 1.365) { // 1.286
     Gear = '5';
   }
-  else if (telemetry.GearRatio > 1.15 * .98 && telemetry.GearRatio < 1.15 * 1.02) {
+  else if (telemetry.GearRatio >= 1.15 * 0.94 && telemetry.GearRatio < 1.218) { // 1.15
     Gear = '6';
   }
   else {

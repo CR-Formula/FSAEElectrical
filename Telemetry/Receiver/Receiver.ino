@@ -72,7 +72,7 @@ void loop() {
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
   Serial.printf("%f, %f, %f, %f, %f, %f, ", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
-  Serial.printf("%f, %f, %f\n", telemetry.MagX, telemetry.MagY, telemetry.MagZ);
+  Serial.printf("%f, %f, %f, %f\n", telemetry.MagX, telemetry.MagY, telemetry.MagZ, telemetry.GearRatio);
 
   // delay for stability
   delay(1);
