@@ -33,7 +33,7 @@ public class Main {
 	 */
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {
-		
+
 		try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch(Exception e){}
 		
 		// populate the window
@@ -94,21 +94,29 @@ public class Main {
 		
 		// show the window - the scuffed way
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		try {
-			window.setVisible(true);
-		} catch (Exception e) {
-			window.setVisible(true);
-		}
-
+		window.setVisible(true);
+//		try {
+//			window.setVisible(true);
+//		} catch (Exception e) {
+//			window.setVisible(true);
+//		}
 
 		if (args.length > 0 && args[0].toLowerCase().equals("notpi4")) {
-			File[] files = new File[2];
-			files[0] = new File("/home/notpi4/FSAEElectrical/telemetry_config.txt");
-			files[1] = new File("/home/notpi4/FSAEElectrical/Logs/2022 Michigan June/Autocross.csv");
-			String[] filepaths = new String[files.length];
-			for(int i = 0; i < files.length; i++)
-				filepaths[i] = files[i].getAbsolutePath();
-			CommunicationController.importFiles(filepaths);
+			if (args.length > 1 && args[1].toLowerCase().equals("demo")) {
+				File[] files = new File[2];
+				files[0] = new File("/home/notpi4/FSAEElectrical/telemetry_config.txt");
+				files[1] = new File("/home/notpi4/FSAEElectrical/Logs/2022 Michigan June/Autocross.csv");
+				String[] filepaths = new String[files.length];
+				for(int i = 0; i < files.length; i++)
+					filepaths[i] = files[i].getAbsolutePath();
+				CommunicationController.importFiles(filepaths);
+			} else {
+				File config = new File("/home/notpi4/FSAEElectrical/telemetry_config.txt");
+				CommunicationController.importFiles(new String[] {config.getAbsolutePath()});
+			}
+		} else {
+			File config = new File("C:\\Users\\Henry\\OneDrive\\Desktop\\Programming Projects\\FSAEElectrical\\telemetry_config.txt");
+			CommunicationController.importFiles(new String[] {config.getAbsolutePath()});
 		}
 	}
 	
