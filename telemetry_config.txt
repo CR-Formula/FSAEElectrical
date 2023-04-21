@@ -14,7 +14,7 @@ GUI Settings:
 
 Communication Settings:
 
-	port = UART: COM3
+	port = UART: ttyAMA0
 	uart baud rate = 115200
 	tcp/udp port number = 8080
 	packet type = CSV
