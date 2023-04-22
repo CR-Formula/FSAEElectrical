@@ -323,7 +323,7 @@ void gear_Ratio() {
   if (toothCount >= outputTeeth) {
     endTime = millis();
     totalTime = endTime - startTime;
-    outputRPM = 1.0 / (totalTime / 60000.0);
+    outputRPM = ((double)toothCount / (double)outputTeeth) / (totalTime / 60000.0);
   }
   telemetry.GearRatio = telemetry.RPM / outputRPM;
   // Gear Ratio (1/2/3/4/5/6) -->	2.583/2/1.667/1.444/1.286/1.15
