@@ -227,22 +227,32 @@ void Send_Dash() {
   char message[32];
   sprintf(message, "%d\"", (int)telemetry.RPM);
   Serial2.print("rpm.txt=\"");
-  Serial2.print(message);
+  Serial2.print(message); // RPM
   Nextion_CMD();
   sprintf(message, "%d\"", (int)telemetry.CoolT);
   Serial2.print("waterTemp.txt=\"");
-  Serial2.print(message);
+  Serial2.print(message); // Coolant Temp
   Nextion_CMD();
-  sprintf(message, "%d\"", (int)telemetry.OilP);
+  sprintf(message, "%.2f\"", telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
-  Serial2.print(message);
+  Serial2.print(message); // Oil Pressure with 2 decimal places
   Nextion_CMD();
   int rpmBar = telemetry.RPM / 160;
   Serial2.print("rpmBar.val=");
-  Serial2.print(rpmBar);
+  Serial2.print(rpmBar); // Value for RPM Bar
   Nextion_CMD();
-  Serial2.print("Gear.txt=\"");
-  Serial2.print(Gear);
+  sprintf(message, "%c\"", Gear);
+  Serial2.print("gear.txt=\"");
+  Serial2.print(message); // Gear Data
+  Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.Speed);
+  Serial2.print("speed.txt=\"");
+  Serial2.print(message); // Speed of the car
+  Nextion_CMD();
+  double brakeBias = telemetry.BrakeRear / telemetry.BrakeFront * 100.0;
+  sprintf(message, "%d\"", brakeBias);
+  Serial2.print("bias.txt=\""); // Brake Bias
+  Serial2.print(message);
   Nextion_CMD();
   // TODO: Laptimes
 
