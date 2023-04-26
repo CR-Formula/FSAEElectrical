@@ -42,6 +42,7 @@ long startTime = millis();
 long endTime;
 long totalTime = 0; // Difference in start and end
 long outputRPM = 0; // Calculated output shaft RPM
+int toothCount = 0; // Stores current tooth count
 const int outputTeeth = 24; // number of gear teeth
 char Gear = 'N'; // Holds temp gear value
 
