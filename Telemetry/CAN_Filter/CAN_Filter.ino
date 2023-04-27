@@ -130,7 +130,7 @@ void CAN_Data() {
       telemetry.IA = (rxBuf[6] + rxBuf[7] * 256) * 0.1; // Igition Angle
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF148) {
-      telemetry.Lam = (rxBuf[4] + rxBuf[5] * 256) * 0.01; // Lambda
+      telemetry.Lam = (rxBuf[4] + rxBuf[5] * 256) * 0.001; // Lambda
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF548) {
       telemetry.AirT = (rxBuf[2] + rxBuf[3] * 256) * 0.1; // Air Temp
@@ -286,7 +286,7 @@ void loop() {
   // function calls for each sensor/module
   CAN_Data();
   Brake_Temp();
-  Telemetry_Filter();
+  // Telemetry_Filter();
   Suspension_Pot();
   ICM_Data(&myICM);
   Brake_Pressure();
