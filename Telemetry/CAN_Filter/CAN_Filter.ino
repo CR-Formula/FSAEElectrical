@@ -234,7 +234,7 @@ void Send_Dash() {
   Serial2.print("waterTemp.txt=\"");
   Serial2.print(message); // Coolant Temp
   Nextion_CMD();
-  sprintf(message, "%.2f\"", telemetry.OilP);
+  sprintf(message, "%f\"", (double)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message); // Oil Pressure with 2 decimal places
   Nextion_CMD();
