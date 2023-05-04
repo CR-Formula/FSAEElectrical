@@ -209,13 +209,13 @@ void Send_Dash() {
   char message[32];
   sprintf(message, "%d\"", (int)telemetry.RPM);
   Serial2.print("rpm.txt=\"");
-  Serial2.print(message);
+  Serial2.print(message); 
   Nextion_CMD();
   sprintf(message, "%d\"", (int)telemetry.CoolT);
   Serial2.print("waterTemp.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
-  sprintf(message, "%d\"", (int)telemetry.OilP);
+  sprintf(message, "%.2d\"", (double)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
@@ -285,18 +285,26 @@ void ICM_Data(ICM_20948_I2C *sensor) {
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
+  Serial.println("CAN");
   Brake_Temp();
+  Serial.println("Brake Temp");
   // Telemetry_Filter();
-  Suspension_Pot();
+  // Suspension_Pot();
+  // Serial.println("Sus Pot");
   ICM_Data(&myICM);
+  Serial.println("Accel/Gyro");
   Brake_Pressure();
+  Serial.println("Brake Pressure");
   Send_Dash();
+  Serial.println("Send Dash");
 
   // Send the data over Serial using EasyTransfer library
   ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+  Serial.println("Easy Transfer");
 
   // delay for stability
   delay(5);
+  Serial.println("Delay");
 
   // Print_Test_Data();
 }
