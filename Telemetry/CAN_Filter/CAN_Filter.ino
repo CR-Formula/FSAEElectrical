@@ -209,7 +209,7 @@ void Nextion_CMD() {
 // Function to send values to updated the dash display and shift lights
 void Send_Dash() {
   // Send dash values as text objects
-  char message[32];
+  char message[64];
   sprintf(message, "%d\"", (int)telemetry.RPM);
   Serial2.print("rpm.txt=\"");
   Serial2.print(message); 
@@ -220,19 +220,19 @@ void Send_Dash() {
   Serial2.print(message);
   Nextion_CMD();
 
-  sprintf(message, "%.2d\"", (double)telemetry.OilP);
+  sprintf(message, "%d\"", (int)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)brakeBias);
+  Serial2.print("bias.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
 
   int rpmBar = telemetry.RPM / 160;
   Serial2.print("rpmBar.val=");
   Serial2.print(rpmBar);
-  Nextion_CMD();
-
-  sprintf(message, "%d\"", brakeBias);
-  Serial2.print("bias.txt=\"");
-  Serial2.print(message);
   Nextion_CMD();
   // TODO: Add gear and Laptimes
 
@@ -262,12 +262,16 @@ void Suspension_Pot() {
 void Brake_Pressure() {
   int FrontPres = analogRead(A4);
   int RearPres = analogRead(A5);
+  
+  // .5v - 4.5V --> 0 - 100 bar
+  // bar --> psi = bar * 14.504
+  double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
+  double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
 
-  // TODO: will need to change range mapping once we select the pressure sensors
-  telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
-  telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
+  telemetry.BrakeFront = fPSI;
+  telemetry.BrakeRear = rPSI;
 
-  brakeBias = (.99 * (double)telemetry.BrakeFront) / ((.99 * (double)telemetry.BrakeFront) + (0.79 * (double)telemetry.BrakeRear));
+  brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
 }
 
 // Function to print test data to validate connections
@@ -275,7 +279,7 @@ void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
   Serial.println(telemetry.FRTemp);
-  Serial.println(telemetry.FRTemp);
+  Serial.println(brakeBias);
   Serial.println();
 }
 
@@ -311,5 +315,5 @@ void loop() {
   // delay for stability
   delay(5);
 
-  // Print_Test_Data();
+  Print_Test_Data();
 }
