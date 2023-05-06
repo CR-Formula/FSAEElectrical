@@ -214,7 +214,7 @@ void Send_Dash() {
   Serial2.print("rpm.txt=\"");
   Serial2.print(message); 
   Nextion_CMD();
-  
+
   sprintf(message, "%d\"", (int)telemetry.CoolT);
   Serial2.print("waterTemp.txt=\"");
   Serial2.print(message);
@@ -267,7 +267,7 @@ void Brake_Pressure() {
   telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
   telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
 
-  brakeBias = ((double)telemetry.BrakeFront * 0.99) / ((double)telemetry.BrakeRear * 0.79);
+  brakeBias = (.99 * (double)telemetry.BrakeFront) / ((.99 * (double)telemetry.BrakeFront) + (0.79 * (double)telemetry.BrakeRear));
 }
 
 // Function to print test data to validate connections
