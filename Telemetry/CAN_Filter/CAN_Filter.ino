@@ -69,6 +69,9 @@ typedef struct data_struct {
 } data_struct;
 data_struct telemetry;
 
+// Stores Calculated Brake Bias Value
+double brakeBias = 0;
+
 // Variables used for filtering out extraneous values
 int RPMLast;
 float TPSLast;
@@ -130,7 +133,7 @@ void CAN_Data() {
       telemetry.IA = (rxBuf[6] + rxBuf[7] * 256) * 0.1; // Igition Angle
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF148) {
-      telemetry.Lam = (rxBuf[4] + rxBuf[5] * 256) * 0.01; // Lambda
+      telemetry.Lam = (rxBuf[4] + rxBuf[5] * 256) * 0.001; // Lambda
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF548) {
       telemetry.AirT = (rxBuf[2] + rxBuf[3] * 256) * 0.1; // Air Temp
@@ -206,19 +209,27 @@ void Nextion_CMD() {
 // Function to send values to updated the dash display and shift lights
 void Send_Dash() {
   // Send dash values as text objects
-  char message[32];
+  char message[64];
   sprintf(message, "%d\"", (int)telemetry.RPM);
   Serial2.print("rpm.txt=\"");
-  Serial2.print(message);
+  Serial2.print(message); 
   Nextion_CMD();
+
   sprintf(message, "%d\"", (int)telemetry.CoolT);
   Serial2.print("waterTemp.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
+
   sprintf(message, "%d\"", (int)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)brakeBias);
+  Serial2.print("bias.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
   int rpmBar = telemetry.RPM / 160;
   Serial2.print("rpmBar.val=");
   Serial2.print(rpmBar);
@@ -241,7 +252,6 @@ void Suspension_Pot() {
   int RLPot = analogRead(A2);
   int RRPot = analogRead(A3);
 
-  // TODO: will need to change range mapping once we select the pressure sensors
   telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
   telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
   telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
@@ -252,10 +262,16 @@ void Suspension_Pot() {
 void Brake_Pressure() {
   int FrontPres = analogRead(A4);
   int RearPres = analogRead(A5);
+  
+  // .5v - 4.5V --> 0 - 100 bar
+  // bar --> psi = bar * 14.504
+  double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
+  double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
 
-  // TODO: will need to change range mapping once we select the pressure sensors
-  telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
-  telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
+  telemetry.BrakeFront = fPSI;
+  telemetry.BrakeRear = rPSI;
+
+  brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
 }
 
 // Function to print test data to validate connections
@@ -263,7 +279,7 @@ void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
   Serial.println(telemetry.FRTemp);
-  Serial.println(telemetry.FRTemp);
+  Serial.println(brakeBias);
   Serial.println();
 }
 
@@ -286,8 +302,9 @@ void loop() {
   // function calls for each sensor/module
   CAN_Data();
   Brake_Temp();
-  Telemetry_Filter();
-  Suspension_Pot();
+  // Telemetry_Filter();
+  // Suspension_Pot();
+  // Serial.println("Sus Pot");
   ICM_Data(&myICM);
   Brake_Pressure();
   Send_Dash();
@@ -298,5 +315,5 @@ void loop() {
   // delay for stability
   delay(5);
 
-  // Print_Test_Data();
+  Print_Test_Data();
 }
