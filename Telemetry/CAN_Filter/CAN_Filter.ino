@@ -69,6 +69,9 @@ typedef struct data_struct {
 } data_struct;
 data_struct telemetry;
 
+// Stores Calculated Brake Bias Value
+double brakeBias = 0;
+
 // Variables used for filtering out extraneous values
 int RPMLast;
 float TPSLast;
@@ -211,17 +214,25 @@ void Send_Dash() {
   Serial2.print("rpm.txt=\"");
   Serial2.print(message); 
   Nextion_CMD();
+  
   sprintf(message, "%d\"", (int)telemetry.CoolT);
   Serial2.print("waterTemp.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
+
   sprintf(message, "%.2d\"", (double)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
+
   int rpmBar = telemetry.RPM / 160;
   Serial2.print("rpmBar.val=");
   Serial2.print(rpmBar);
+  Nextion_CMD();
+
+  sprintf(message, "%d\"", brakeBias);
+  Serial2.print("bias.txt=\"");
+  Serial2.print(message);
   Nextion_CMD();
   // TODO: Add gear and Laptimes
 
@@ -241,7 +252,6 @@ void Suspension_Pot() {
   int RLPot = analogRead(A2);
   int RRPot = analogRead(A3);
 
-  // TODO: will need to change range mapping once we select the pressure sensors
   telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
   telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
   telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
@@ -256,6 +266,8 @@ void Brake_Pressure() {
   // TODO: will need to change range mapping once we select the pressure sensors
   telemetry.BrakeFront = ((double)FrontPres * 10) / 1023.0;
   telemetry.BrakeRear = ((double)RearPres * 10) / 1023.0;
+
+  brakeBias = ((double)telemetry.BrakeFront * 0.99) / ((double)telemetry.BrakeRear * 0.79);
 }
 
 // Function to print test data to validate connections
@@ -285,26 +297,19 @@ void ICM_Data(ICM_20948_I2C *sensor) {
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
-  Serial.println("CAN");
   Brake_Temp();
-  Serial.println("Brake Temp");
   // Telemetry_Filter();
   // Suspension_Pot();
   // Serial.println("Sus Pot");
   ICM_Data(&myICM);
-  Serial.println("Accel/Gyro");
   Brake_Pressure();
-  Serial.println("Brake Pressure");
   Send_Dash();
-  Serial.println("Send Dash");
 
   // Send the data over Serial using EasyTransfer library
   ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
-  Serial.println("Easy Transfer");
 
   // delay for stability
   delay(5);
-  Serial.println("Delay");
 
   // Print_Test_Data();
 }
