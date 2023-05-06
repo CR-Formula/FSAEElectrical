@@ -44,6 +44,8 @@ typedef struct data_struct {
 } data_struct;
 data_struct telemetry;
 
+double brakeBias = 0;
+
 // When the board recieves data:
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   // Tracks the size of the data structure
@@ -67,13 +69,14 @@ void setup() {
  
 void loop() {
   // CSV format Serial Print
+  
+  brakeBias = (.99 * telemetry.BrakeFront) / ((.99 * telemetry.BrakeFront) + (0.79 * telemetry.BrakeRear));
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %d, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear, brakeBias);
   Serial.printf("%f, %f, %f, %f, %f, %f, ", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
   Serial.printf("%f, %f, %f, %f\n", telemetry.MagX, telemetry.MagY, telemetry.MagZ, telemetry.GearRatio);
-
   // delay for stability
   delay(1);
 }

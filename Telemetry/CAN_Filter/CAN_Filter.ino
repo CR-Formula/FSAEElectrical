@@ -83,6 +83,9 @@ typedef struct data_struct {
 } data_struct;
 data_struct telemetry;
 
+// Stores Calculated Brake Bias Value
+double brakeBias = 0;
+
 // Variables used for filtering out extraneous values
 int RPMLast;
 float TPSLast;
@@ -225,19 +228,28 @@ void Nextion_CMD() {
 // Function to send values to updated the dash display and shift lights
 void Send_Dash() {
   // Send dash values as text objects
-  char message[32];
+  char message[64];
   sprintf(message, "%d\"", (int)telemetry.RPM);
   Serial2.print("rpm.txt=\"");
   Serial2.print(message); // RPM
   Nextion_CMD();
+
   sprintf(message, "%d\"", (int)telemetry.CoolT);
   Serial2.print("waterTemp.txt=\"");
   Serial2.print(message); // Coolant Temp
   Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)telemetry.OilP);
   sprintf(message, "%f\"", (double)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message); // Oil Pressure with 2 decimal places
   Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)brakeBias);
+  Serial2.print("bias.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
   int rpmBar = telemetry.RPM / 160;
   Serial2.print("rpmBar.val=");
   Serial2.print(rpmBar); // Value for RPM Bar
@@ -285,12 +297,16 @@ void Suspension_Pot() {
 void Brake_Pressure() {
   int FrontPres = analogRead(A4);
   int RearPres = analogRead(A5);
+  
+  // .5v - 4.5V --> 0 - 100 bar
+  // bar --> psi = bar * 14.504
+  double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
+  double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
 
-  // .5V - 4.5V --> 0 Bar - 100 Bar
-  // Print in PSI --> * 14.504
-  // Brake Bias (Front / Rear) * 100
-  telemetry.BrakeFront = (((double)FrontPres * 100.0) / 1023.0) * 14.504;
-  telemetry.BrakeRear = (((double)RearPres * 100.0) / 1023.0) * 14.504;
+  telemetry.BrakeFront = fPSI;
+  telemetry.BrakeRear = rPSI;
+
+  brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
 }
 
 // Function to print test data to validate connections
@@ -298,7 +314,7 @@ void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
   Serial.println(telemetry.FRTemp);
-  Serial.println(telemetry.FRTemp);
+  Serial.println(brakeBias);
   Serial.println();
 }
 
@@ -366,7 +382,8 @@ void loop() {
   CAN_Data();
   Brake_Temp();
   // Telemetry_Filter();
-  Suspension_Pot();
+  // Suspension_Pot();
+  // Serial.println("Sus Pot");
   ICM_Data(&myICM);
   Brake_Pressure();
   Send_Dash();
@@ -378,5 +395,5 @@ void loop() {
   // delay for stability
   delay(5);
 
-  // Print_Test_Data();
+  Print_Test_Data();
 }
