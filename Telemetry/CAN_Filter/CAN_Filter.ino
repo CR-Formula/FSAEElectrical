@@ -304,7 +304,6 @@ void loop() {
   Brake_Temp();
   // Telemetry_Filter();
   // Suspension_Pot();
-  // Serial.println("Sus Pot");
   ICM_Data(&myICM);
   Brake_Pressure();
   Send_Dash();
