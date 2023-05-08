@@ -31,12 +31,16 @@ typedef struct data_struct {
   float RLPot;      // Rear Left suspension damper
   float BrakeFront; // Front Brake Pressure
   float BrakeRear;  // Rear Brake Pressure
+  float BrakeBias;  // Brake Bias
   float AccX;       // Acclerometer X Axis
   float AccY;       // Acclerometer Y Axis
   float AccZ;       // Acclerometer Z Axis
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
+  float MagX;       // Magnetometer X Axis
+  float MagY;       // Magnetometer Y Axis
+  float MagZ;       // Magnetometer Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -66,11 +70,10 @@ void setup() {
 void loop() {
   // CSV format Serial Print
   
-  brakeBias = (.99 * telemetry.BrakeFront) / ((.99 * telemetry.BrakeFront) + (0.79 * telemetry.BrakeRear));
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
   Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %d, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear, brakeBias);
-  Serial.printf("%f, %f, %f, %f, %f, %f\n", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear, telemetry.BrakeBias);
+  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ, telemetry.MagX, telemetry.MagY, telemetry.MagZ);
 
   // delay for stability
   delay(1);

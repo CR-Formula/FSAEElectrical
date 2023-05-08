@@ -55,12 +55,16 @@ typedef struct data_struct {
   float RLPot;      // Rear Left suspension damper
   float BrakeFront; // Front Brake Pressure
   float BrakeRear;  // Rear Brake Pressure
+  float BrakeBias;  // Brake Bias
   float AccX;       // Acclerometer X Axis
   float AccY;       // Acclerometer Y Axis
   float AccZ;       // Acclerometer Z Axis
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
+  float MagX;       // Magnetometer X Axis
+  float MagY;       // Magnetometer Y Axis
+  float MagZ;       // Magnetometer Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -257,6 +261,7 @@ void Brake_Pressure() {
   
   // .5v - 4.5V --> 0 - 100 bar
   // bar --> psi = bar * 14.504
+  // Do all the math with doubles then convert to float
   double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
   double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
 
@@ -264,6 +269,7 @@ void Brake_Pressure() {
   telemetry.BrakeRear = rPSI;
 
   brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
+  telemetry.BrakeBias = brakeBias;
 }
 
 // Function to print test data to validate connections
@@ -288,6 +294,11 @@ void ICM_Data(ICM_20948_I2C *sensor) {
   telemetry.GyrX = sensor->gyrX();
   telemetry.GyrY = sensor->gyrY();
   telemetry.GyrZ = sensor->gyrZ();
+
+  // Magnetometer Values
+  telemetry.MagX = sensor->magX();
+  telemetry.MagY = sensor->magY();
+  telemetry.MagZ = sensor->magZ();
 }
 
 // Convert the data struct to a byte array and send it over Serial 0

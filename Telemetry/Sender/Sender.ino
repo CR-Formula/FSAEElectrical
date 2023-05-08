@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
-#include <EasyTransfer.h>
 
 // MAC_Addresses for the different ESP32 Boards                         // Board Identifiers
 // uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04};  // Long Antenna
@@ -40,12 +39,16 @@ typedef struct data_struct {
   float RLPot;      // Rear Left suspension damper
   float BrakeFront; // Front Brake Pressure
   float BrakeRear;  // Rear Brake Pressure
+  float BrakeBias;  // Brake Bias
   float AccX;       // Acclerometer X Axis
   float AccY;       // Acclerometer Y Axis
   float AccZ;       // Acclerometer Z Axis
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
+  float MagX;       // Magnetometer X Axis
+  float MagY;       // Magnetometer Y Axis
+  float MagZ;       // Magnetometer Z Axis
 } data_struct;
 data_struct telemetry;
 
