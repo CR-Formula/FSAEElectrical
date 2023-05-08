@@ -277,6 +277,7 @@ void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
   Serial.println(telemetry.FRTemp);
+  Serial.println(telemetry.BrakeFront);
   Serial.println(brakeBias);
   Serial.println();
 }
