@@ -2,7 +2,6 @@
 
 #include <mcp_can.h>
 #include <SPI.h>
-#include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
 #include <ICM_20948.h>
 #include <Wire.h>
@@ -31,10 +30,6 @@ Adafruit_MLX90614 FLB = Adafruit_MLX90614(); // Front Left Brake Temp
 Adafruit_MLX90614 FRB = Adafruit_MLX90614(); // Front Right Brake Temp
 Adafruit_MLX90614 RLB = Adafruit_MLX90614(); // Rear Left Brake Temp
 Adafruit_MLX90614 RRB = Adafruit_MLX90614(); // Rear Right Brake Temp
-
-
-// Create EasyTransfer Object
-EasyTransfer ET;
 
 // Holds all calculated Telemetry Data
 typedef struct data_struct {
@@ -99,9 +94,6 @@ void setup() {
 
   // Configure the INT input pin
   pinMode(CAN0_INT, INPUT);
-
-  // Start EasyTransfer
-  ET.begin(details(telemetry), &Serial);
 
   // initalize brake temp sensors
   FLB.begin(0x5A, &Wire);
@@ -298,6 +290,13 @@ void ICM_Data(ICM_20948_I2C *sensor) {
   telemetry.GyrZ = sensor->gyrZ();
 }
 
+// Convert the data struct to a byte array and send it over Serial 0
+void sendByteData() {
+  byte *byteData = (byte *)&telemetry;
+  int structSize = sizeof(telemetry);
+  Serial.write(byteData, structSize);
+}
+
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
@@ -308,8 +307,8 @@ void loop() {
   Brake_Pressure();
   Send_Dash();
 
-  // Send the data over Serial using EasyTransfer library
-  ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+  // Send the data over Serial as a byte array
+  sendByteData();
 
   // delay for stability
   delay(5);

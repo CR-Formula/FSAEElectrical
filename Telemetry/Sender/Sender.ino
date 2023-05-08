@@ -7,9 +7,6 @@
 #include <iostream>
 #include <EasyTransfer.h>
 
-// EasyTransfer Object
-EasyTransfer ET;
-
 // MAC_Addresses for the different ESP32 Boards                         // Board Identifiers
 // uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04};  // Long Antenna
 // uint8_t broadcastAddress1[] = {0x30, 0xC6, 0xF7, 0x20, 0x50, 0x2C};  // ESP CAM 1 (antenna board)
@@ -84,8 +81,10 @@ void setup() {
 }
 
 void loop() {
-  // get data from arduino main board
-  ET.receiveData();
+  // Get byte data from arduino main board
+  byte *receivedByteData = (byte *)&telemetry;
+  Serial2.readBytes(receivedByteData, sizeof(telemetry));
+
   // sends the data
   esp_err_t result = esp_now_send(0, (uint8_t *)&telemetry, sizeof(telemetry));
 
