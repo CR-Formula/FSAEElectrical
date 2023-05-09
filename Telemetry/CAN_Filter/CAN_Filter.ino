@@ -2,6 +2,7 @@
 
 #include <mcp_can.h>
 #include <SPI.h>
+#include <EasyTransfer.h>
 #include <Adafruit_MLX90614.h>
 #include <ICM_20948.h>
 #include <Wire.h>
@@ -30,6 +31,10 @@ Adafruit_MLX90614 FLB = Adafruit_MLX90614(); // Front Left Brake Temp
 Adafruit_MLX90614 FRB = Adafruit_MLX90614(); // Front Right Brake Temp
 Adafruit_MLX90614 RLB = Adafruit_MLX90614(); // Rear Left Brake Temp
 Adafruit_MLX90614 RRB = Adafruit_MLX90614(); // Rear Right Brake Temp
+
+
+// Create EasyTransfer Object
+EasyTransfer ET;
 
 // Holds all calculated Telemetry Data
 typedef struct data_struct {
@@ -98,6 +103,9 @@ void setup() {
 
   // Configure the INT input pin
   pinMode(CAN0_INT, INPUT);
+
+  // Start EasyTransfer
+  ET.begin(details(telemetry), &Serial);
 
   // initalize brake temp sensors
   FLB.begin(0x5A, &Wire);
@@ -261,7 +269,6 @@ void Brake_Pressure() {
   
   // .5v - 4.5V --> 0 - 100 bar
   // bar --> psi = bar * 14.504
-  // Do all the math with doubles then convert to float
   double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
   double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
 
@@ -277,11 +284,7 @@ void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
   Serial.println(telemetry.FRTemp);
-  Serial.println(telemetry.BrakeFront);
   Serial.println(brakeBias);
-  Serial.println();
-  Serial.println(sizeof(data_struct));
-  Serial.println(sizeof(telemetry));
   Serial.println();
 }
 
@@ -298,20 +301,6 @@ void ICM_Data(ICM_20948_I2C *sensor) {
   telemetry.GyrX = sensor->gyrX();
   telemetry.GyrY = sensor->gyrY();
   telemetry.GyrZ = sensor->gyrZ();
-
-  // Magnetometer Values
-  telemetry.MagX = sensor->magX();
-  telemetry.MagY = sensor->magY();
-  telemetry.MagZ = sensor->magZ();
-}
-
-// Convert the data struct to a byte array and send it over Serial 0
-void sendByteData() {
-  byte binary_data[sizeof(data_struct)];
-  memcpy(binary_data, reinterpret_cast<byte*>(&telemetry), sizeof(data_struct));
-  for (int i = 0; i < sizeof(data_struct); i++) {
-    Serial.write(binary_data[i]);
-  }
 }
 
 void loop() {
@@ -324,11 +313,11 @@ void loop() {
   Brake_Pressure();
   Send_Dash();
 
-  // Send the data over Serial as a byte array
-  sendByteData();
+  // Send the data over Serial using EasyTransfer library
+  ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
 
   // delay for stability
-  delay(1000);
+  delay(7);
 
-  Print_Test_Data();
+  // Print_Test_Data();
 }
