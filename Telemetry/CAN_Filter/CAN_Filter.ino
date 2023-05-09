@@ -280,6 +280,9 @@ void Print_Test_Data() {
   Serial.println(telemetry.BrakeFront);
   Serial.println(brakeBias);
   Serial.println();
+  Serial.println(sizeof(data_struct));
+  Serial.println(sizeof(telemetry));
+  Serial.println();
 }
 
 // Function that collects ICM Data from the Accel/Gyro
@@ -304,9 +307,11 @@ void ICM_Data(ICM_20948_I2C *sensor) {
 
 // Convert the data struct to a byte array and send it over Serial 0
 void sendByteData() {
-  byte *byteData = (byte *)&telemetry;
-  int structSize = sizeof(telemetry);
-  Serial.write(byteData, structSize);
+  byte binary_data[sizeof(data_struct)];
+  memcpy(binary_data, reinterpret_cast<byte*>(&telemetry), sizeof(data_struct));
+  for (int i = 0; i < sizeof(data_struct); i++) {
+    Serial.write(binary_data[i]);
+  }
 }
 
 void loop() {
@@ -323,7 +328,7 @@ void loop() {
   sendByteData();
 
   // delay for stability
-  delay(5);
+  delay(1000);
 
   Print_Test_Data();
 }

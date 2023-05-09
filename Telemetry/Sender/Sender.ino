@@ -5,14 +5,17 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <iostream>
+#include <cstdint>
+#include <cstring>
 
 // MAC_Addresses for the different ESP32 Boards                         // Board Identifiers
 // uint8_t broadcastAddress1[] = {0x24, 0x0A, 0xC4, 0xEE, 0x7D, 0x04};  // Long Antenna
 // uint8_t broadcastAddress1[] = {0x30, 0xC6, 0xF7, 0x20, 0x50, 0x2C};  // ESP CAM 1 (antenna board)
 // uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0xB4, 0x50};  // White Tape Devkit AB
-uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0x94, 0x5C};  // No White Tape Devkit AB
+// uint8_t broadcastAddress1[] = {0xEC, 0x62, 0x60, 0x9D, 0x94, 0x5C};  // No White Tape Devkit AB
 // uint8_t broadcastAddress1[] = {0x08, 0x3A, 0xF2, 0xB7, 0x70, 0xD0};  // Blue Tape Devkit
-// uint8_t broadcastAddress1[] = {0x40, 0x91, 0x51, 0xAC, 0x2E, 0x54};  // No Tape Devkit
+uint8_t broadcastAddress1[] = {0x40, 0x91, 0x51, 0xAC, 0x2E, 0x54};  // No Tape Devkit
 
 // Data Structure to store variables to be sent
 // struct must match receiver
@@ -60,8 +63,8 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 void setup() {
   Serial.begin(115200); // Serial Monitor printout
   Serial2.begin(115200); // Serial port for the wireless connection
+  Serial2.setRxBufferSize(256); // Increase Serial 2 RX buffer size
   WiFi.mode(WIFI_STA);
-  ET.begin(details(telemetry), &Serial2);
 
   // Checks for ESP connection
   if (esp_now_init() != ESP_OK) {
@@ -85,8 +88,21 @@ void setup() {
 
 void loop() {
   // Get byte data from arduino main board
-  byte *receivedByteData = (byte *)&telemetry;
-  Serial2.readBytes(receivedByteData, sizeof(telemetry));
+  // byte *receivedByteData = (byte *)&telemetry;
+  byte binaryDataReceived[sizeof(data_struct)];
+  for (int i = 0; i < sizeof(data_struct); i++) {
+    binaryDataReceived[i] = Serial.read();
+    Serial.println(binaryDataReceived[i]);
+  }
+  memcpy(&telemetry, reinterpret_cast<byte*>(&binaryDataReceived), sizeof(data_struct));
+
+  // Serial.println(sizeof(data_struct));
+  // Serial.println(sizeof(telemetry));
+  // Serial.println(telemetry.BrakeBias);
+  // Serial.println(telemetry.FRTemp);
+  // Serial.println();
+
+  // telemetry = *((data_struct*)receivedByteData);
 
   // sends the data
   esp_err_t result = esp_now_send(0, (uint8_t *)&telemetry, sizeof(telemetry));
@@ -94,11 +110,11 @@ void loop() {
   // Tests that the data was sent successfully and either prints an Error or the Data that was sent
   if (result == ESP_OK) {
     // Print out the data for debug
-    Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.TPS, telemetry.FRTemp, telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ);
+    Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.TPS, telemetry.FRTemp, telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.BrakeBias);
   }
   else {
     Serial.println("ERROR: problem sending the data");
   }
   // delay for stability
-  delay(1);
+  delay(1000);
 }
