@@ -75,6 +75,7 @@ data_struct telemetry;
 
 // Stores Calculated Brake Bias Value
 double brakeBias = 0;
+double oilPressure = 0;
 
 // Variables used for filtering out extraneous values
 int RPMLast;
@@ -145,7 +146,9 @@ void CAN_Data() {
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { 
       telemetry.FuelP = (rxBuf[0] + rxBuf[1] * 256) * 0.001; // Fuel Pressure
-      telemetry.OilP = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure
+      oilPressure = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure Analog
+      oilPressure = (oilPressure -.5) / 4 * 150; // Convert to PSI
+      telemetry.OilP = oilPressure; // Store in struct
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFFC48) {
       double wheel1 = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Non driven wheel speed 1 (ft/s)
@@ -224,13 +227,33 @@ void Send_Dash() {
   Serial2.print(message);
   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.OilP);
+  sprintf(message, "%d\"", (int)oilPressure);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
 
   sprintf(message, "%d\"", (int)brakeBias);
   Serial2.print("bias.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)telemetry.FLTemp);
+  Serial2.print("brakeFL.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)telemetry.FLTemp);
+  Serial2.print("brakeFR.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)telemetry.RLTemp);
+  Serial2.print("brakeRL.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
+
+  sprintf(message, "%d\"", (int)telemetry.RRTemp);
+  Serial2.print("brakeRR.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
 
