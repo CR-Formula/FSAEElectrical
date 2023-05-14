@@ -145,20 +145,9 @@ void CAN_Data() {
       telemetry.CoolT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Coolant Temp
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { 
-      telemetry.FuelP = (rxBuf[0] + rxBuf[1] * 256) * 0.001; // Fuel Pressure
       oilPressure = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure Analog
       oilPressure = (oilPressure -.5) / 4 * 150; // Convert to PSI
       telemetry.OilP = oilPressure; // Store in struct
-    }
-    if ((rxId & 0x1FFFFFFF) == 0x0CFFFC48) {
-      double wheel1 = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Non driven wheel speed 1 (ft/s)
-      double wheel2 = (rxBuf[6] + rxBuf[7] * 256) * 0.1; // Non driven wheel speed 2 (ft/s)
-      if (wheel1 > wheel2) { // Take the higher of the two wheel speeds
-        telemetry.Speed = wheel1 / 1.467;
-      }
-      else {
-        telemetry.Speed = wheel2 / 1.467;
-      }
     }
   }
 }
@@ -324,23 +313,32 @@ void ICM_Data(ICM_20948_I2C *sensor) {
   telemetry.GyrX = sensor->gyrX();
   telemetry.GyrY = sensor->gyrY();
   telemetry.GyrZ = sensor->gyrZ();
+
+  // Magnetometer Values
+  telemetry.MagX = sensor->magX();
+  telemetry.MagY = sensor->magY();
+  telemetry.MagZ = sensor->magZ();
 }
 
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
+  Serial.println("CAN Data");
   Brake_Temp();
+  Serial.println("Brake Temp");
   // Telemetry_Filter();
   // Suspension_Pot();
-  ICM_Data(&myICM);
+  // ICM_Data(&myICM);
   Brake_Pressure();
+  Serial.println("Brake Pressure");
   Send_Dash();
+  Serial.println("Send_Dash");
 
   // Send the data over Serial using EasyTransfer library
   ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
+  Serial.println("ET Send Data");
 
-  // delay for stability
-  delay(7);
+  delay(7); // Delay for stability
 
   // Print_Test_Data();
 }
