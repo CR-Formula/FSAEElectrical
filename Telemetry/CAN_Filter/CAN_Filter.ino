@@ -323,22 +323,17 @@ void ICM_Data(ICM_20948_I2C *sensor) {
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
-  Serial.println("CAN Data");
-  Brake_Temp();
-  Serial.println("Brake Temp");
+  // Brake_Temp();
   // Telemetry_Filter();
   // Suspension_Pot();
   // ICM_Data(&myICM);
   Brake_Pressure();
-  Serial.println("Brake Pressure");
   Send_Dash();
-  Serial.println("Send_Dash");
 
   // Send the data over Serial using EasyTransfer library
   ET.sendData(); // Writes a bunch of junk to serial monitor, this is normal as it uses .write()
-  Serial.println("ET Send Data");
 
   delay(7); // Delay for stability
 
-  // Print_Test_Data();
+  Print_Test_Data();
 }
