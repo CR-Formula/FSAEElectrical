@@ -62,6 +62,7 @@ public class OpenGLBarGraphs extends PositionedChart {
 
 	// Data set amount bounds & variables
 	int datasetAmount;
+	int datasetAmountOriginal;
 	final static int datasetAmountDefault = 1;
 	final static int lowerDatasetAmount = 1;
 	final static int upperDatasetAmount = 4;
@@ -80,7 +81,7 @@ public class OpenGLBarGraphs extends PositionedChart {
 		super(x1, y1, x2, y2);
 
 		datasetAmountWidget = new WidgetTextfieldInteger("Bar Graph Count", datasetAmountDefault, lowerDatasetAmount,
-				upperDatasetAmount, newTopSpeed -> datasetAmount = newTopSpeed);
+				upperDatasetAmount, newDatasetAmount -> datasetAmountOriginal = newDatasetAmount);
 
 		datasetsWidget = new WidgetDatasets(4, new String[] { "Top Left", "Top Right", "Bottom Left", "Bottom Right" },
 				newDatasets -> datasets = newDatasets);
@@ -115,11 +116,18 @@ public class OpenGLBarGraphs extends PositionedChart {
 	@Override
 	public EventHandler drawChart(GL2ES3 gl, float[] chartMatrix, int width, int height, int lastSampleNumber,
 			double zoomLevel, int mouseX, int mouseY) {
-
+		
 		EventHandler handler = null;
 
 		float[] barData = new float[datasetAmount];
 
+		boolean haveDatasets = datasets != null && !datasets.isEmpty() && lastSampleNumber > -1;
+		
+		if (haveDatasets)
+			datasetAmount = datasetAmountOriginal;
+		else 
+			datasetAmount = 0;
+		
 		for (int i = 0; i < datasetAmount; i++) {
 			barData[i] = datasets.get(i).getSample(lastSampleNumber);
 		}
@@ -142,8 +150,6 @@ public class OpenGLBarGraphs extends PositionedChart {
 			barMin[i] = autoscaleMin ? barMin[i] : manualMin;
 			barMax[i] = autoscaleMax ? barMax[i] : manualMax;
 		}
-
-		boolean haveDatasets = datasets != null && !datasets.isEmpty();
 
 		float[] xLeft = new float[datasetAmount];
 		float[] yBottom = new float[datasetAmount];

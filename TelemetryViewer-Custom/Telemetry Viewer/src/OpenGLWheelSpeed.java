@@ -187,7 +187,7 @@ public class OpenGLWheelSpeed extends PositionedChart {
 			startIndex = 0;
 		sampleCount = endIndex - startIndex + 1;
 		
-		boolean haveDatasets = datasets != null && !datasets.isEmpty();
+		boolean haveDatasets = datasets != null && !datasets.isEmpty() && lastSampleNumber > -1;
 		
 		if (haveDatasets) {
 			leftWheel = datasets.get(0).getSample(endIndex);

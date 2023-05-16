@@ -147,12 +147,6 @@ public class OpenGLWheelTempGraph extends PositionedChart {
 		float[] wheelData = new float[4];
 		float[] breakData = new float[4];
 
-		for (int i = 0; i < 4; i++) {
-			wheelData[i] = wheelDatasets.get(i).getSample(lastSampleNumber);
-			if (showBreakTemps)
-				breakData[i] = breakDatasets.get(i).getSample(lastSampleNumber);
-		}
-
 		float[] wheelTempMin = new float[4];
 		float[] wheelTempMax = new float[4];
 		
@@ -171,7 +165,7 @@ public class OpenGLWheelTempGraph extends PositionedChart {
 		
 		// Setting real min max in the last 100 samples
 		for (int i = 0; i < 4; i++) {
-			for (int j = lastSampleNumber - 100; j < lastSampleNumber - 1; j++) {
+			for ( int j = lastSampleNumber - 100 > -1 ? lastSampleNumber - 100 : 0; j < lastSampleNumber - 1; j++) {
 				wheelTempMin[i] = wheelDatasets.get(i).getSample(j) < wheelTempMin[i] ? wheelDatasets.get(i).getSample(j) : wheelTempMin[i];
 				wheelTempMax[i] = wheelDatasets.get(i).getSample(j) > wheelTempMax[i] ? wheelDatasets.get(i).getSample(j) : wheelTempMax[i];
 				if (showBreakTemps) {
@@ -208,7 +202,15 @@ public class OpenGLWheelTempGraph extends PositionedChart {
 			labelHeight = yLabelTop - yLabelBottom;
 		}
 		
-		boolean haveDatasets = wheelDatasets != null && !wheelDatasets.isEmpty();
+		boolean haveDatasets = wheelDatasets != null && !wheelDatasets.isEmpty() && lastSampleNumber > -1;
+		
+		if (haveDatasets) {
+			for (int i = 0; i < 4; i++) {
+				wheelData[i] = wheelDatasets.get(i).getSample(lastSampleNumber);
+				if (showBreakTemps)
+					breakData[i] = breakDatasets.get(i).getSample(lastSampleNumber);
+			}
+		}
 		
 		float[] xLeftWheel = new float[4];
 		float[] yBottomWheel = new float[4];
