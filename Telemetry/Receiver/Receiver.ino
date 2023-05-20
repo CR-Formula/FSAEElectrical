@@ -9,13 +9,13 @@
 // Structure example to receive data
 // Must match the sender structure
 typedef struct data_struct {
-  float RPM;        // RPM value
-  float TPS;        // TPS value
-  float FOT;        // Fuel Open Time value
-  float IA;         // Ignition Angle value
-  float Lam;        // Lambda value
-  float AirT;       // Air Temp value
-  float CoolT;      // Coolent Temp value
+  float RPM;        // RPM
+  float TPS;        // TPS
+  float FOT;        // Fuel Open Time
+  float IA;         // Ignition Angle
+  float Lam;        // Lambda
+  float AirT;       // Air Temp
+  float CoolT;      // Coolant Temp
   float Lat;        // Latitude
   float Lng;        // Longitude
   float Speed;      // GPS Speed
@@ -25,16 +25,16 @@ typedef struct data_struct {
   float FRTemp;     // Front Right Brake Temp
   float RLTemp;     // Rear Left Brake Temp
   float RRTemp;     // Rear Right Brake Temp
-  float FRPot;      // Front Right suspension damper
-  float FLPot;      // Front Left suspension damper
-  float RRPot;      // Rear Right suspension damper
-  float RLPot;      // Rear Left suspension damper
+  float FRPot;      // Front Right Suspension Damper
+  float FLPot;      // Front Left Suspension Damper
+  float RRPot;      // Rear Right Suspension Damper
+  float RLPot;      // Rear Left Suspension Damper
   float BrakeFront; // Front Brake Pressure
   float BrakeRear;  // Rear Brake Pressure
   float BrakeBias;  // Brake Bias
-  float AccX;       // Acclerometer X Axis
-  float AccY;       // Acclerometer Y Axis
-  float AccZ;       // Acclerometer Z Axis
+  float AccX;       // Accelerometer X Axis
+  float AccY;       // Accelerometer Y Axis
+  float AccZ;       // Accelerometer Z Axis
   float GyrX;       // Gyroscope X Axis
   float GyrY;       // Gyroscope Y Axis
   float GyrZ;       // Gyroscope Z Axis
