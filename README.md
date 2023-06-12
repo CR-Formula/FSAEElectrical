@@ -6,6 +6,9 @@ This repo contains all the embedded and software development we have produced fo
 ### 3D Prints
 Housing for our electrical equipment which is placed on the car or for hand held use remotely.
 
+### Printed Circuit Board Designs
+Selected schematics and PCB files used in our live data collection.
+
 ### Logs
 Logs in CSV format of live data from testing the car on campus and live performance at competitions.
 
