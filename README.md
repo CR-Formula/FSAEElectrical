@@ -9,6 +9,9 @@ Housing for our electrical equipment which is placed on the car or for hand held
 ### Logs
 Logs in CSV format of live data from testing the car on campus and live performance at competitions.
 
+### Printed Circuit Board Designs
+Selected schematics and PCB files used in our live data collection.
+
 ### Module Tests
 This is code we utilize to test whether our electrical equipment is setup correctly and helps us trouble shoot problems.
 
