@@ -17,10 +17,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 
 import javax.swing.JPanel;
@@ -1018,14 +1021,14 @@ public class CommunicationController {
 	 * 
 	 * @param filepath              The absolute path, including the part of the filename that will be common to all exported files.
 	 * @param exportSettingsFile    If true, export the settings to filepath + ".txt"
-	 * @param exportCsvFile         If true, export the samples to filepath + ".csv"
+	 * @param exportStandardCsvFile         If true, export the samples to filepath + ".csv"
 	 * @param exportCameraNames     For each camera name in this List, export images to filepath + camera name + ".mjpg" and corresponding index data to filepath + camera name + ".bin"
 	 */
-	public static void exportFiles(String filepath, boolean exportSettingsFile, boolean exportCsvFile, List<String> exportCameraNames) {
+	public static void exportFiles(String filepath, boolean exportSettingsFile, boolean exportStandardCsvFile, List<String> exportCameraNames, boolean exportAtlasCsvFile) {
 		
 		Thread exportThread = new Thread(() -> {
 			
-			double fileCount = exportCameraNames.size() + (exportCsvFile ? 1 : 0);
+			double fileCount = exportCameraNames.size() + (exportSettingsFile ? 1 : 0) + (exportStandardCsvFile ? 1 : 0) + (exportAtlasCsvFile ? 1 : 0); 
 		
 			CommunicationView.instance.allowConnecting(false);
 			CommunicationView.instance.allowImporting(false);
@@ -1038,14 +1041,14 @@ public class CommunicationController {
 			if(exportSettingsFile)
 				exportSettingsFile(filepath + ".txt");
 	
-			if(exportCsvFile)
-				exportCsvFile(filepath + ".csv", (progressAmount) -> NotificationsController.setProgress(progressAmount / fileCount));
+			if(exportStandardCsvFile)
+				exportCsvFile(filepath, (progressAmount) -> NotificationsController.setProgress(progressAmount / fileCount), exportAtlasCsvFile);
 	
 			for(int i = 0; i < exportCameraNames.size(); i++)
 				for(Camera camera : DatasetsController.getExistingCameras())
 					if(exportCameraNames.get(i).equals(camera.name)) {
 						int cameraN = i;
-						camera.exportFiles(filepath, (progressAmount) -> NotificationsController.setProgress(exportCsvFile ? (((1 + cameraN) / fileCount) + (progressAmount / fileCount)) :
+						camera.exportFiles(filepath, (progressAmount) -> NotificationsController.setProgress(exportStandardCsvFile ? (((1 + cameraN) / fileCount) + (progressAmount / fileCount)) :
 							                                                                                                     (((cameraN) / fileCount) + (progressAmount / fileCount))));
 					}
 			
@@ -1070,20 +1073,73 @@ public class CommunicationController {
 	 * @param filepath           Full path with file name.
 	 * @param progressTracker    Consumer<Double> that will be notified as progress is made.
 	 */
-	static void exportCsvFile(String filepath, Consumer<Double> progressTracker) {
+	static void exportCsvFile(String filepath, Consumer<Double> progressTracker, boolean exportAtlasCsvFile) {
 		
 		int datasetsCount = DatasetsController.getDatasetsCount();
 		int sampleCount = DatasetsController.getSampleCount();
 		
 		try {
 			
-			PrintWriter logFile = new PrintWriter(filepath, "UTF-8");
-			logFile.print("Sample Number (" + CommunicationController.getSampleRate() + " samples per second),UNIX Timestamp (Milliseconds since 1970-01-01)");
+			PrintWriter logFileStandard = new PrintWriter(filepath + ".csv", "UTF-8");
+			PrintWriter logFileAtlas = new PrintWriter(filepath + " Atlas.csv", "UTF-8");
+			
+			logFileStandard.print("Sample Number (" + CommunicationController.getSampleRate() + " samples per second),UNIX Timestamp (Milliseconds since 1970-01-01)");
+			logFileAtlas.println("\"Format\",\"AIM CSV File\"\n\"Venue\",\"Howe Hall International\"\n\"Vehicle\",\"CR27\"\"User\",\"Unknown\"\"Data Source\",\"AIM Data Logger\"\"Comment\",\"This data was sourced from Telemetry Viewer\"");
+			
+			Calendar atlasCalendar = Calendar.getInstance();
+			atlasCalendar.setTimeInMillis(DatasetsController.getTimestamp(0));
+			
+			String atlasDate = atlasCalendar.MONTH + "/" + atlasCalendar.DAY_OF_MONTH + "/" + atlasCalendar.YEAR;
+			String atlasTime = atlasCalendar.HOUR_OF_DAY + ":" + atlasCalendar.MINUTE + ":" + atlasCalendar.SECOND;
+			
+			logFileAtlas.println("\"Date\",\"" + atlasDate + "\"");
+			logFileAtlas.println("\"Time\",\"" + atlasTime + "\"");
+			logFileAtlas.println("\"Sample rate\"," + sampleRate);
+			
+			long atlasTimeDuration = atlasCalendar.MINUTE + (atlasCalendar.SECOND / 60);
+			atlasCalendar.setTimeInMillis(DatasetsController.getTimestamp(DatasetsController.getDatasetsCount()));
+			atlasTimeDuration = (atlasCalendar.MINUTE + (atlasCalendar.SECOND / 60)) - atlasTimeDuration;
+			logFileAtlas.println("\"Duration\"," + atlasTimeDuration);
+			logFileAtlas.println("\"Segment\",\"NA\"");
+			
+
+			logFileAtlas.println();
+			
+			StringJoiner joiner = new StringJoiner(",");
+			for(Dataset dataset : DatasetsController.getAllDatasets()) {
+				joiner.add(dataset.name);
+			}
+			String headers = joiner.toString();
+			
+			logFileStandard.println(headers + "\n" + headers);
+			
+			joiner = new StringJoiner(",");
+			for(Dataset dataset : DatasetsController.getAllDatasets()) {
+				joiner.add(dataset.unit);
+			}
+			String units = joiner.toString();
+
+			logFileStandard.println(units);
+			
+			int[] indexes = new int[DatasetsController.getDatasetsCount()];
+			for (int i = 0; i < DatasetsController.getDatasetsCount(); i++) {
+				indexes[i] = i;
+			}
+			
+			joiner = new StringJoiner(",");
+			joiner.add("");
+			for(int i = 1; i < DatasetsController.getDatasetsCount(); i++) {
+				joiner.add(indexes[i] + "");
+			}
+			String indexesString = joiner.toString();
+			
+			logFileAtlas.println(indexesString);
+			logFileAtlas.println();
+			
 			for(int i = 0; i < datasetsCount; i++) {
 				Dataset d = DatasetsController.getDatasetByIndex(i);
-				logFile.print("," + d.name + " (" + d.unit + ")");
+				logFileStandard.print("," + d.name + " (" + d.unit + ")");
 			}
-			logFile.println();
 			
 			for(int i = 0; i < sampleCount; i++) {
 				// ensure active slots don't get flushed to disk, and periodically update the progress tracker
@@ -1092,16 +1148,23 @@ public class CommunicationController {
 					progressTracker.accept((double) i / (double) sampleCount);
 				}
 				
-				logFile.print(i + "," + DatasetsController.getTimestamp(i));
-				for(int n = 0; n < datasetsCount; n++)
-					logFile.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
-				logFile.println();
+				logFileStandard.print(i + "," + DatasetsController.getTimestamp(i));
+				logFileAtlas.print(((long) i / 10000));
+				for(int n = 0; n < datasetsCount; n++) {
+					logFileStandard.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
+					logFileAtlas.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
+				}
+				logFileStandard.println();
+				logFileAtlas.println();
 				
 			}
 			
 			DatasetsController.dontFlushRangeBeingExported(-1, -1);
 			
-			logFile.close();
+			
+			
+			logFileStandard.close();
+			logFileAtlas.close();
 			
 		} catch(Exception e) { }
 		

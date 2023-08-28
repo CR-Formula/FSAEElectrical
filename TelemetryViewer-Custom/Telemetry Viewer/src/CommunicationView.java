@@ -86,7 +86,8 @@ public class CommunicationView extends JPanel {
 			List<JCheckBox> checkboxes = new ArrayList<JCheckBox>();
 			checkboxes.add(new JCheckBox("Settings file (the data structure, chart settings, and GUI settings)", true));
 			if(DatasetsController.getSampleCount() > 0) {
-				checkboxes.add(new JCheckBox("CSV file (the acquired samples and corresponding timestamps)", true));
+				checkboxes.add(new JCheckBox("CSV file (Atlas)", true));
+				checkboxes.add(new JCheckBox("CSV file (Standard)", true));
 				for(Camera camera : DatasetsController.getExistingCameras())
 					checkboxes.add(new JCheckBox("Camera files for \"" + camera.name + "\"", true));
 			}
@@ -116,19 +117,23 @@ public class CommunicationView extends JPanel {
 					if(saveFile.getSelectedFile().getName().indexOf(".") != -1)
 						absolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("."));
 					boolean exportSettingsFile = false;
-					boolean exportCsvFile = false;
+					boolean exportStandardCsvFile = false;
+					boolean exportAtlasCsvFile = false;
 					List<String> exportCameraNames = new ArrayList<String>();
 					for(JCheckBox checkbox : checkboxes) {
 						if(checkbox.isSelected() && checkbox.getText().startsWith("Settings file"))
 							exportSettingsFile = true;
-						else if(checkbox.isSelected() && checkbox.getText().startsWith("CSV file"))
-							exportCsvFile = true;
+						else if(checkbox.isSelected() && checkbox.getText().indexOf("Atlas") > -1) {
+							exportAtlasCsvFile = true;
+						}
+						else if(checkbox.isSelected() && checkbox.getText().indexOf("Standard") > -1)
+							exportStandardCsvFile = true;
 						else if(checkbox.isSelected()) {
 							String cameraName = checkbox.getText().substring(18, checkbox.getText().length() - 1);
 							exportCameraNames.add(cameraName);
 						}
 					}
-					CommunicationController.exportFiles(absolutePath, exportSettingsFile, exportCsvFile, exportCameraNames);
+					CommunicationController.exportFiles(absolutePath, exportSettingsFile, exportStandardCsvFile, exportCameraNames, exportAtlasCsvFile);
 					exportWindow.dispose();
 				}
 				
