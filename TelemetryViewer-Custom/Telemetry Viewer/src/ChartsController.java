@@ -77,7 +77,7 @@ public class ChartsController {
 			"Histogram",
 			"Dial",
 			"Dot Plot",
-			"Bar Graphs",
+//			"Bar Graphs",
 			"Wheel Temps",
 			"Wheel Speed",
 			"Quaternion",

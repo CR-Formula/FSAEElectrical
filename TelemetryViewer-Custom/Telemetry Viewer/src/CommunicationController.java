@@ -1084,7 +1084,12 @@ public class CommunicationController {
 			PrintWriter logFileAtlas = new PrintWriter(filepath + " Atlas.csv", "UTF-8");
 			
 			logFileStandard.print("Sample Number (" + CommunicationController.getSampleRate() + " samples per second),UNIX Timestamp (Milliseconds since 1970-01-01)");
-			logFileAtlas.println("\"Format\",\"AIM CSV File\"\n\"Venue\",\"Howe Hall International\"\n\"Vehicle\",\"CR27\"\"User\",\"Unknown\"\"Data Source\",\"AIM Data Logger\"\"Comment\",\"This data was sourced from Telemetry Viewer\"");
+			logFileAtlas.println("\"Format\",\"AIM CSV File\"");
+			logFileAtlas.println("\"Venue\",\"Howe Hall International\"");
+			logFileAtlas.println("\"Vehicle\",\"CR27\"");
+			logFileAtlas.println("\"User\",\"Unknown\"");
+			logFileAtlas.println("\"Data Source\",\"AIM Data Logger\"");
+			logFileAtlas.println("\"Comment\",\"This data was sourced from Telemetry Viewer\"");
 			
 			Calendar atlasCalendar = Calendar.getInstance();
 			atlasCalendar.setTimeInMillis(DatasetsController.getTimestamp(0));
@@ -1094,12 +1099,12 @@ public class CommunicationController {
 			
 			logFileAtlas.println("\"Date\",\"" + atlasDate + "\"");
 			logFileAtlas.println("\"Time\",\"" + atlasTime + "\"");
-			logFileAtlas.println("\"Sample rate\"," + sampleRate);
-			
-			long atlasTimeDuration = atlasCalendar.MINUTE + (atlasCalendar.SECOND / 60);
-			atlasCalendar.setTimeInMillis(DatasetsController.getTimestamp(DatasetsController.getDatasetsCount()));
-			atlasTimeDuration = (atlasCalendar.MINUTE + (atlasCalendar.SECOND / 60)) - atlasTimeDuration;
-			logFileAtlas.println("\"Duration\"," + atlasTimeDuration);
+			logFileAtlas.println("\"Sample rate\",\"" + CommunicationController.getSampleRate() + "\"");
+
+			long atlasTimeDuration = (long) DatasetsController.getDatasetsCount() / CommunicationController.getSampleRate();
+			logFileAtlas.println("\"Duration\",\"" + atlasTimeDuration + "\"");
+			logFileAtlas.println("\"Duration\",\"" + (DatasetsController.getDatasetsCount() * 0.00001) + "\"");
+			logFileAtlas.println("\"Duration\",\"" + (DatasetsController.getDatasetsCount()) + "\"");
 			logFileAtlas.println("\"Segment\",\"NA\"");
 			
 
@@ -1107,19 +1112,20 @@ public class CommunicationController {
 			
 			StringJoiner joiner = new StringJoiner(",");
 			for(Dataset dataset : DatasetsController.getAllDatasets()) {
-				joiner.add(dataset.name);
+				joiner.add("\"" + dataset.name + "\"");
 			}
 			String headers = joiner.toString();
 			
-			logFileStandard.println(headers + "\n" + headers);
+			logFileAtlas.println(headers);
+			logFileAtlas.println(headers);
 			
 			joiner = new StringJoiner(",");
 			for(Dataset dataset : DatasetsController.getAllDatasets()) {
-				joiner.add(dataset.unit);
+				joiner.add("\"" + dataset.unit + "\"");
 			}
 			String units = joiner.toString();
 
-			logFileStandard.println(units);
+			logFileAtlas.println(units);
 			
 			int[] indexes = new int[DatasetsController.getDatasetsCount()];
 			for (int i = 0; i < DatasetsController.getDatasetsCount(); i++) {
@@ -1127,9 +1133,9 @@ public class CommunicationController {
 			}
 			
 			joiner = new StringJoiner(",");
-			joiner.add("");
+			joiner.add("\"\"");
 			for(int i = 1; i < DatasetsController.getDatasetsCount(); i++) {
-				joiner.add(indexes[i] + "");
+				joiner.add("\"" + indexes[i] + "\"");
 			}
 			String indexesString = joiner.toString();
 			
@@ -1149,7 +1155,7 @@ public class CommunicationController {
 				}
 				
 				logFileStandard.print(i + "," + DatasetsController.getTimestamp(i));
-				logFileAtlas.print(((long) i / 10000));
+				logFileAtlas.print((long) i / CommunicationController.getSampleRate());
 				for(int n = 0; n < datasetsCount; n++) {
 					logFileStandard.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
 					logFileAtlas.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
