@@ -1101,10 +1101,8 @@ public class CommunicationController {
 			logFileAtlas.println("\"Time\",\"" + atlasTime + "\"");
 			logFileAtlas.println("\"Sample rate\",\"" + CommunicationController.getSampleRate() + "\"");
 
-			long atlasTimeDuration = (long) DatasetsController.getDatasetsCount() / CommunicationController.getSampleRate();
+			float atlasTimeDuration = (float) (sampleCount - 1) / CommunicationController.getSampleRate();
 			logFileAtlas.println("\"Duration\",\"" + atlasTimeDuration + "\"");
-			logFileAtlas.println("\"Duration\",\"" + (DatasetsController.getDatasetsCount() * 0.00001) + "\"");
-			logFileAtlas.println("\"Duration\",\"" + (DatasetsController.getDatasetsCount()) + "\"");
 			logFileAtlas.println("\"Segment\",\"NA\"");
 			
 
@@ -1147,6 +1145,8 @@ public class CommunicationController {
 				logFileStandard.print("," + d.name + " (" + d.unit + ")");
 			}
 			
+			
+			String iFormat = "%." + (int) Math.ceil(Math.log(CommunicationController.getSampleRate())/Math.log(10)) + "f";
 			for(int i = 0; i < sampleCount; i++) {
 				// ensure active slots don't get flushed to disk, and periodically update the progress tracker
 				if(i % 1024 == 0) {
@@ -1155,7 +1155,7 @@ public class CommunicationController {
 				}
 				
 				logFileStandard.print(i + "," + DatasetsController.getTimestamp(i));
-				logFileAtlas.print((long) i / CommunicationController.getSampleRate());
+				logFileAtlas.print(String.format(iFormat, (float) i / CommunicationController.getSampleRate()));
 				for(int n = 0; n < datasetsCount; n++) {
 					logFileStandard.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
 					logFileAtlas.print("," + Float.toString(DatasetsController.getDatasetByIndex(n).getSample(i)));
