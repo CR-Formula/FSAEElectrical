@@ -123,18 +123,26 @@ public class OpenGLBarGraphs extends PositionedChart {
 
 		boolean haveDatasets = datasets != null && !datasets.isEmpty() && lastSampleNumber > -1;
 		
-		if (haveDatasets)
-			datasetAmount = datasetAmountOriginal;
-		else 
-			datasetAmount = 0;
+		System.out.println((datasets != null) + " | " + (!datasets.isEmpty()) + " | " +  (lastSampleNumber > -1));
+		
+		datasetAmount = haveDatasets ? datasetAmountOriginal : 0;
+		
+		System.out.println("datasetAmount: " + datasetAmount);
 		
 		for (int i = 0; i < datasetAmount; i++) {
 			barData[i] = datasets.get(i).getSample(lastSampleNumber);
 		}
 
-		float[] barMin = new float[datasetAmount];
-		float[] barMax = new float[datasetAmount];
-
+		float[] barMin;
+		float[] barMax;
+		if (datasetAmount < 1 || !haveDatasets) {
+			barMin = new float[datasetAmount];
+			barMax = new float[datasetAmount];
+		} else {
+			barMin = new float[1];
+			barMax = new float[1];
+		}
+		
 		for (int i = 0; i < datasetAmount; i++) {
 			barMin[i] = barData[i];
 			barMax[i] = barData[i];

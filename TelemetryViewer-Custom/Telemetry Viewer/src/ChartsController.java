@@ -77,7 +77,7 @@ public class ChartsController {
 			"Histogram",
 			"Dial",
 			"Dot Plot",
-			"Bar Graphs",
+//			"Bar Graphs",
 			"Wheel Temps",
 			"Wheel Speed",
 			"Quaternion",
@@ -106,7 +106,7 @@ public class ChartsController {
 		else if(chartType.equals("Histogram"))        chart = new OpenGLHistogramChart(x1, y1, x2, y2);
 		else if(chartType.equals("Dial"))             chart = new OpenGLDialChart(x1, y1, x2, y2);
 		else if(chartType.equals("Dot Plot"))         chart = new OpenGLDotPlot(x1, y1, x2, y2);
-		else if(chartType.equals("Bar Graphs"))       chart = new OpenGLBarGraphs(x1, y1, x2, y2);
+//		else if(chartType.equals("Bar Graphs"))       chart = new OpenGLBarGraphs(x1, y1, x2, y2);
 		else if(chartType.equals("Wheel Temps"))   	  chart = new OpenGLWheelTempGraph(x1, y1, x2, y2);
 		else if(chartType.equals("Wheel Speed"))   	  chart = new OpenGLWheelSpeed(x1, y1, x2, y2);
 		else if(chartType.equals("Quaternion"))       chart = new OpenGLQuaternionChart(x1, y1, x2, y2);
