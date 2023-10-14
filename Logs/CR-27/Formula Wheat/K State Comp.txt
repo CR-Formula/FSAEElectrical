@@ -1,0 +1,424 @@
+Telemetry Viewer v0.7 Settings
+
+GUI Settings:
+
+	tile column count = 6
+	tile row count = 6
+	time format = Only Time
+	show 24-hour time = false
+	show plot tooltips = true
+	smooth scrolling = true
+	show fps and period = false
+	chart index for benchmarks = -1
+	antialiasing level = 16
+
+Communication Settings:
+
+	port = UART: COM5
+	uart baud rate = 115200
+	tcp/udp port number = 8080
+	packet type = CSV
+	sample rate = 10000
+
+32 Data Structure Locations:
+
+	location = 0
+	binary processor = null
+	name = RPM
+	color = 0xFF0000
+	unit = rpm
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 1
+	binary processor = null
+	name = TPS
+	color = 0xFF33FF
+	unit = %
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 2
+	binary processor = null
+	name = FOT
+	color = 0x3366FF
+	unit = ms
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 3
+	binary processor = null
+	name = Ignition Angle
+	color = 0x33FFFF
+	unit = deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 4
+	binary processor = null
+	name = Lambda
+	color = 0xFF9900
+	unit = Lambda
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 5
+	binary processor = null
+	name = AirT
+	color = 0x33FF00
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 6
+	binary processor = null
+	name = CoolT
+	color = 0x00FFFF
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 7
+	binary processor = null
+	name = Latitude
+	color = 0x00CC00
+	unit = Deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 8
+	binary processor = null
+	name = Longitude
+	color = 0x00CC00
+	unit = Deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 9
+	binary processor = null
+	name = Speed
+	color = 0x3399FF
+	unit = mph
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 10
+	binary processor = null
+	name = OilPressure
+	color = 0xFF33FF
+	unit = psi
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 11
+	binary processor = null
+	name = Fuel Pressure
+	color = 0x33FF33
+	unit = psi
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 12
+	binary processor = null
+	name = Front Left Temp
+	color = 0xFF0066
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 13
+	binary processor = null
+	name = Front Right Temp
+	color = 0xFF0066
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 14
+	binary processor = null
+	name = Rear Left Temp
+	color = 0xFF0066
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 15
+	binary processor = null
+	name = Rear Right Temp
+	color = 0xFF0066
+	unit = C
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 16
+	binary processor = null
+	name = Front Right Damper
+	color = 0x6666FF
+	unit = mm
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 17
+	binary processor = null
+	name = Front Left Damper
+	color = 0x6666FF
+	unit = mm
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 18
+	binary processor = null
+	name = Rear Right Damper
+	color = 0x6666FF
+	unit = mm
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 19
+	binary processor = null
+	name = Rear Left Damper
+	color = 0x6666FF
+	unit = mm
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 20
+	binary processor = null
+	name = Brake Pressure Front
+	color = 0xFFCC33
+	unit = psi
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 21
+	binary processor = null
+	name = Brake Pressure Rear
+	color = 0xFFCC33
+	unit = psi
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 22
+	binary processor = null
+	name = Brake Bias
+	color = 0xFFCC33
+	unit = %
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 23
+	binary processor = null
+	name = AccX
+	color = 0x6600CC
+	unit = g
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 24
+	binary processor = null
+	name = AccY
+	color = 0x6600CC
+	unit = g
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 25
+	binary processor = null
+	name = AccZ
+	color = 0x6600CC
+	unit = g
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 26
+	binary processor = null
+	name = GyroX
+	color = 0x6600CC
+	unit = deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 27
+	binary processor = null
+	name = GyroY
+	color = 0x6600CC
+	unit = deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 28
+	binary processor = null
+	name = GyroZ
+	color = 0x6600CC
+	unit = deg
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 29
+	binary processor = null
+	name = MagX
+	color = 0x6600CC
+	unit = gauss
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 30
+	binary processor = null
+	name = MagY
+	color = 0x6600CC
+	unit = gauss
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+	location = 31
+	binary processor = null
+	name = MagZ
+	color = 0x6600CC
+	unit = gauss
+	conversion factor a = 1.0
+	conversion factor b = 1.0
+
+Checksum:
+
+	location = -1
+	checksum processor = null
+
+6 Charts:
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 0
+	bottom right x = 1
+	bottom right y = 1
+	normal datasets = 0
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = false
+	manual y-axis minimum = 0.0
+	autoscale y-axis maximum = false
+	manual y-axis maximum = 15000.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+	over max warning = false
+	max amount = 220
+
+	chart type = Dial
+	top left x = 2
+	top left y = 0
+	bottom right x = 3
+	bottom right y = 1
+	normal datasets = 1
+	bitfield edge states = 
+	bitfield level states = 
+	autoscale dial minimum = false
+	manual dial minimum = 0.0
+	autoscale dial maximum = false
+	manual dial maximum = 100.0
+	sample count = 1000
+	show dataset label = true
+	show reading label = true
+	show min/max labels = true
+	show statistics = true
+
+	chart type = Time Domain
+	top left x = 4
+	top left y = 0
+	bottom right x = 5
+	bottom right y = 2
+	normal datasets = 4
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = false
+	manual y-axis minimum = 0.0
+	autoscale y-axis maximum = false
+	manual y-axis maximum = 2.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+	over max warning = false
+	max amount = 220
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 2
+	bottom right x = 3
+	bottom right y = 3
+	normal datasets = 6
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = false
+	manual y-axis minimum = 150.0
+	autoscale y-axis maximum = false
+	manual y-axis maximum = 250.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+	over max warning = false
+	max amount = 220
+
+	chart type = Time Domain
+	top left x = 0
+	top left y = 4
+	bottom right x = 3
+	bottom right y = 5
+	normal datasets = 5
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = false
+	manual y-axis minimum = 70.0
+	autoscale y-axis maximum = false
+	manual y-axis maximum = 110.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+	over max warning = false
+	max amount = 220
+
+	chart type = Time Domain
+	top left x = 4
+	top left y = 3
+	bottom right x = 5
+	bottom right y = 5
+	normal datasets = 10
+	bitfield edge states = 
+	bitfield level states = 
+	duration type = Samples
+	duration = 1000
+	x-axis = Sample Count
+	autoscale y-axis minimum = false
+	manual y-axis minimum = 0.0
+	autoscale y-axis maximum = false
+	manual y-axis maximum = 80.0
+	show x-axis title = true
+	show x-axis scale = true
+	show y-axis title = true
+	show y-axis scale = true
+	show legend = true
+	cached mode = false
+	over max warning = false
+	max amount = 220
