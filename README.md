@@ -1,5 +1,5 @@
 # ISU Formula SAE Electrical Repo
-This repo contains all the embedded and software development we have produced for the FSAE Team for its Electrical subsytem.
+This repo contains all the embedded and software development we have produced for the FSAE Team for its Electrical subsystem on cars CR-26 and CR-27.
 
 ## What's all included?
 
