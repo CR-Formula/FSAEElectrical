@@ -1,13 +1,15 @@
 // Speed = (Tire circumference / # of teeth per revolution) / time between teeth
 
 
-const int interruptPin = 2;
-long startTime = millis();
-long endTime;
+const int interruptPin = 2; // Interrupt pin on Arduino
+long startTime = millis(); // Starts the timer
+long endTime; // Holds the value for the ending time
 long timeDif = 0; // Holds time difference in ms
+
 long mph = 0;
 const long tireSize = 47.124; // Tire size in in
-const int teeth = 23;
+const int teeth = 23; // Number of teeth on the reluctor wheel
+
 float seconds; // Difference in seconds
 
 void setup() {
