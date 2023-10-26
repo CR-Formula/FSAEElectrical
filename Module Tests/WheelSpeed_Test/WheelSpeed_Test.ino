@@ -11,6 +11,7 @@ const long tireSize = 47.124; // Tire size in in
 const int teeth = 23; // Number of teeth on the reluctor wheel
 
 float seconds; // Difference in seconds
+int trigger_count = 0; // Number of times the interrupt has been triggered
 
 void setup() {
   Serial.begin(115200);
@@ -24,6 +25,8 @@ void loop() {
   Serial.println(mph);
   Serial.print("timeDif: ");
   Serial.println(timeDif);
+  Serial.print("Count: ");
+  Serial.println(trigger_count);
   // Serial.print("Hours: ");
   // Serial.println(seconds);
   // Serial.println(startTime);
@@ -34,6 +37,7 @@ void event() {
   endTime = millis();
   timeDif = endTime - startTime;
   startTime = millis();
+  trigger_count++;
   seconds = timeDif / (float)1000;
   mph = (tireSize / teeth) / seconds; // Speed in in/s
   mph = mph / 17.6;
