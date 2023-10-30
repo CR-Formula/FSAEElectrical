@@ -16,11 +16,13 @@ int trigger_count = 0; // Number of times the interrupt has been triggered
 void setup() {
   Serial.begin(115200);
   pinMode(interruptPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), event, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), event, FALLING);
 }
 
 void loop() {
-  // Serial.print("Count: ");
+  if (millis() - startTime > 3000) {
+    mph = 0;
+  } 
   Serial.print("MPH: ");
   Serial.println(mph);
   Serial.print("timeDif: ");
