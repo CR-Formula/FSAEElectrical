@@ -23,10 +23,10 @@ void loop() {
   if (millis() - startTime > 3000) {
     mph = 0;
   } 
-  Serial.print("MPH: ");
-  Serial.println(mph);
-  Serial.print("timeDif: ");
-  Serial.println(timeDif);
+  // Serial.print("MPH: ");
+  // Serial.println(mph);
+  // Serial.print("timeDif: ");
+  // Serial.println(timeDif);
   Serial.print("Count: ");
   Serial.println(trigger_count);
   // Serial.print("Hours: ");
