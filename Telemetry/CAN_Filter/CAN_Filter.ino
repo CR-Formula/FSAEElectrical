@@ -30,38 +30,29 @@ MCP_CAN CAN0(53); // Mega
 
 // Holds all calculated Telemetry Data
 typedef struct data_struct {
-  uint32_t RPM;        // RPM
-  uint32_t TPS;        // TPS
-  uint32_t FOT;        // Fuel Open Time
-  uint32_t IA;         // Ignition Angle
-  uint32_t Lam;        // Lambda
-  uint32_t AirT;       // Air Temp
-  uint32_t CoolT;      // Coolant Temp
-  uint32_t Lat;        // Latitude
-  uint32_t Lng;        // Longitude
-  uint32_t Speed;      // GPS Speed
-  uint32_t OilP;       // Oil Pressure
-  uint32_t FuelP;      // Fuel Pressure
-  uint32_t FLTemp;     // Front Left Brake Temp
-  uint32_t FRTemp;     // Front Right Brake Temp
-  uint32_t RLTemp;     // Rear Left Brake Temp
-  uint32_t RRTemp;     // Rear Right Brake Temp
-  uint32_t FRPot;      // Front Right Suspension Damper
-  uint32_t FLPot;      // Front Left Suspension Damper
-  uint32_t RRPot;      // Rear Right Suspension Damper
-  uint32_t RLPot;      // Rear Left Suspension Damper
-  uint32_t BrakeFront; // Front Brake Pressure
-  uint32_t BrakeRear;  // Rear Brake Pressure
-  uint32_t BrakeBias;  // Brake Bias
-  uint32_t AccX;       // Accelerometer X Axis
-  uint32_t AccY;       // Accelerometer Y Axis
-  uint32_t AccZ;       // Accelerometer Z Axis
-  uint32_t GyrX;       // Gyroscope X Axis
-  uint32_t GyrY;       // Gyroscope Y Axis
-  uint32_t GyrZ;       // Gyroscope Z Axis
-  uint32_t MagX;       // Magnetometer X Axis
-  uint32_t MagY;       // Magnetometer Y Axis
-  uint32_t MagZ;       // Magnetometer Z Axis
+  double RPM;        // RPM
+  double TPS;        // TPS
+  double FOT;        // Fuel Open Time
+  double IA;         // Ignition Angle
+  double Lam;        // Lambda
+  double AirT;       // Air Temp
+  double CoolT;      // Coolant Temp
+  double Speed;      // Vehicle Speed
+  double OilP;       // Oil Pressure
+  double FuelP;      // Fuel Pressure
+  double FLTemp;     // Front Left Brake Temp
+  double FRTemp;     // Front Right Brake Temp
+  double RLTemp;     // Rear Left Brake Temp
+  double RRTemp;     // Rear Right Brake Temp
+  double FRPot;      // Front Right Suspension Damper
+  double FLPot;      // Front Left Suspension Damper
+  double RRPot;      // Rear Right Suspension Damper
+  double RLPot;      // Rear Left Suspension Damper
+  double BrakeFront; // Front Brake Pressure
+  double BrakeRear;  // Rear Brake Pressure
+  double AccX;       // Accelerometer X Axis
+  double AccY;       // Accelerometer Y Axis
+  double AccZ;       // Accelerometer Z Axis
 } data_struct;
 data_struct telemetry;
 
