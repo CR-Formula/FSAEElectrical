@@ -1,17 +1,15 @@
 #include <SPI.h>
 #include <RH_RF95.h>
 
-#if defined (__AVR_ATmega32U4__)  // Mega
-  #define RFM95_CS    8
-  #define RFM95_INT   7
-  #define RFM95_RST   4
+// Mega
+#define RFM95_CS    49 // Needs to change
+#define RFM95_INT   3 
+#define RFM95_RST   7
 
-#elif defined (__AVR_ATmega328P__)  // Uno
-  #define RFM95_CS    4  //
-  #define RFM95_INT   3  //
-  #define RFM95_RST   2  // "A"
-
-#endif
+// Uno
+// #define RFM95_CS    4
+// #define RFM95_INT   3
+// #define RFM95_RST   2
 
 #define RF95_FREQ 915.0
 
