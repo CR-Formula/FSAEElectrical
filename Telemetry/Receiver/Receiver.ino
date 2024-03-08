@@ -1,81 +1,89 @@
-/*Iowa State Formula SAE Electrical Subsystem*/
+#include <SPI.h>
+#include <RH_RF95.h>
 
-#include <esp_now.h>
-#include <WiFi.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include <iostream>
+// Uno
+#define RFM95_CS    4
+#define RFM95_INT   3
+#define RFM95_RST   2
+#define RF95_FREQ 915.0
 
-// Structure example to receive data
-// Must match the sender structure
-typedef struct data_struct {
-  float RPM;        // RPM
-  float TPS;        // TPS
-  float FOT;        // Fuel Open Time
-  float IA;         // Ignition Angle
-  float Lam;        // Lambda
-  float AirT;       // Air Temp
-  float CoolT;      // Coolant Temp
-  float Lat;        // Latitude
-  float Lng;        // Longitude
-  float Speed;      // GPS Speed
-  float OilP;       // Oil Pressure
-  float FuelP;      // Fuel Pressure
-  float FLTemp;     // Front Left Brake Temp
-  float FRTemp;     // Front Right Brake Temp
-  float RLTemp;     // Rear Left Brake Temp
-  float RRTemp;     // Rear Right Brake Temp
-  float FRPot;      // Front Right Suspension Damper
-  float FLPot;      // Front Left Suspension Damper
-  float RRPot;      // Rear Right Suspension Damper
-  float RLPot;      // Rear Left Suspension Damper
-  float BrakeFront; // Front Brake Pressure
-  float BrakeRear;  // Rear Brake Pressure
-  float BrakeBias;  // Brake Bias
-  float AccX;       // Accelerometer X Axis
-  float AccY;       // Accelerometer Y Axis
-  float AccZ;       // Accelerometer Z Axis
-  float GyrX;       // Gyroscope X Axis
-  float GyrY;       // Gyroscope Y Axis
-  float GyrZ;       // Gyroscope Z Axis
-  float MagX;       // Magnetometer X Axis
-  float MagY;       // Magnetometer Y Axis
-  float MagZ;       // Magnetometer Z Axis
+typedef struct data_struct
+{
+  uint8_t RPM;        // RPM
+  uint32_t TPS;        // TPS
+  uint32_t FOT;        // Fuel Open Time
+  uint32_t IA;         // Ignition Angle
+  uint32_t Lam;        // Lambda
+  uint32_t AirT;       // Air Temp
+  uint32_t CoolT;      // Coolant Temp
+  uint32_t Speed;      // Vehicle Speed
+  uint32_t OilP;       // Oil Pressure
+  uint32_t FuelP;      // Fuel Pressure
+  uint32_t FLTemp;     // Front Left Brake Temp
+  uint32_t FRTemp;     // Front Right Brake Temp
+  uint32_t RLTemp;     // Rear Left Brake Temp
+  uint32_t RRTemp;     // Rear Right Brake Temp
+  uint32_t FRPot;      // Front Right Suspension Damper
+  uint32_t FLPot;      // Front Left Suspension Damper
+  uint32_t RRPot;      // Rear Right Suspension Damper
+  uint32_t RLPot;      // Rear Left Suspension Damper
+  uint32_t BrakeFront; // Front Brake Pressure
+  uint32_t BrakeRear;  // Rear Brake Pressure
+  uint32_t AccX;       // Accelerometer X Axis
+  uint32_t AccY;       // Accelerometer Y Axis
+  uint32_t AccZ;       // Accelerometer Z Axis
 } data_struct;
 data_struct telemetry;
 
-double brakeBias = 0;
+uint32_t message[sizeof(telemetry)]; // buffer for message
 
-// When the board recieves data:
-void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
-  // Tracks the size of the data structure
-  memcpy(&telemetry, incomingData, sizeof(telemetry)); // Memory Allocation for data
-}
- 
+RH_RF95 rf95(RFM95_CS, RFM95_INT);
+
 void setup() {
-  // Serial monitor printout for debug
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+
   Serial.begin(115200);
-  WiFi.mode(WIFI_STA);
+  delay(5);
 
-  // init the ESP connection
-  if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
-    return;
+  // Reset LoRa Module
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+
+  // Must match the transmitter's settings in CAN_Filter.ino
+  while (!rf95.init()) {
+    Serial.println("LoRa radio init failed");
+    while (1);
   }
+  Serial.println("LoRa radio init OK!");
 
-  // Register Reciever with the Sender
-  esp_now_register_recv_cb(OnDataRecv);
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("setFrequency failed");
+    while (1);
+  }
+  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+  rf95.setTxPower(23, false);
 }
- 
-void loop() {
-  // CSV format Serial Print
-  
-  brakeBias = (.99 * telemetry.BrakeFront) / ((.99 * telemetry.BrakeFront) + (0.79 * telemetry.BrakeRear));
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, ", telemetry.RPM, telemetry.TPS, telemetry.FOT, telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.Lat, telemetry.Lng, telemetry.Speed, telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, ", telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot, telemetry.BrakeFront, telemetry.BrakeRear, telemetry.BrakeBias);
-  Serial.printf("%f, %f, %f, %f, %f, %f, %f, %f, %f\n", telemetry.AccX, telemetry.AccY, telemetry.AccZ, telemetry.GyrX, telemetry.GyrY, telemetry.GyrZ, telemetry.MagX, telemetry.MagY, telemetry.MagZ);
 
-  // delay for stability
-  delay(1);
+void loop() {
+  if (rf95.available()) { // Check for new message
+    uint8_t buf[sizeof(telemetry)]; // buffer for message
+    uint8_t len = sizeof(buf);
+
+    if (rf95.recv(buf, &len)) {
+      memcpy(&telemetry, buf, sizeof(telemetry)); // Copy the message into the data struct
+      // Print out the data struct
+      
+      sprintf(message, "%f, %f, %f, %f, %f, %f, %f, %f, 
+              %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, 
+              %f, %f, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT,
+              telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Speed,
+              telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp,
+              telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot,
+              telemetry.BrakeFront, telemetry.BrakeRear, telemetry.AccX, telemetry.AccY, telemetry.AccZ);
+      Serial.print(message);
+    }
+  }
 }

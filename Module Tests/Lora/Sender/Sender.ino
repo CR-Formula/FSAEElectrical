@@ -2,7 +2,7 @@
 #include <RH_RF95.h>
 
 // Mega
-#define RFM95_CS    49 // Needs to change
+#define RFM95_CS    49
 #define RFM95_INT   3 
 #define RFM95_RST   7
 

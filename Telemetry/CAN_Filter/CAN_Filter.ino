@@ -28,31 +28,40 @@ static const int TxPin = 4;
 // MCP_CAN CAN0(10); // Uno
 MCP_CAN CAN0(53); // Mega
 
+// Defines for the LoRa Module Pins
+#define RFM95_CS    49
+#define RFM95_INT   3
+#define RFM95_RST   7
+#define RF95_FREQ 915.0
+
+RH_RF95 rf95(RFM95_CS, RFM95_INT); // LoRa Module
+
 // Holds all calculated Telemetry Data
-typedef struct data_struct {
-  double RPM;        // RPM
-  double TPS;        // TPS
-  double FOT;        // Fuel Open Time
-  double IA;         // Ignition Angle
-  double Lam;        // Lambda
-  double AirT;       // Air Temp
-  double CoolT;      // Coolant Temp
-  double Speed;      // Vehicle Speed
-  double OilP;       // Oil Pressure
-  double FuelP;      // Fuel Pressure
-  double FLTemp;     // Front Left Brake Temp
-  double FRTemp;     // Front Right Brake Temp
-  double RLTemp;     // Rear Left Brake Temp
-  double RRTemp;     // Rear Right Brake Temp
-  double FRPot;      // Front Right Suspension Damper
-  double FLPot;      // Front Left Suspension Damper
-  double RRPot;      // Rear Right Suspension Damper
-  double RLPot;      // Rear Left Suspension Damper
-  double BrakeFront; // Front Brake Pressure
-  double BrakeRear;  // Rear Brake Pressure
-  double AccX;       // Accelerometer X Axis
-  double AccY;       // Accelerometer Y Axis
-  double AccZ;       // Accelerometer Z Axis
+typedef struct data_struct
+{
+  uint8_t RPM;        // RPM
+  uint32_t TPS;        // TPS
+  uint32_t FOT;        // Fuel Open Time
+  uint32_t IA;         // Ignition Angle
+  uint32_t Lam;        // Lambda
+  uint32_t AirT;       // Air Temp
+  uint32_t CoolT;      // Coolant Temp
+  uint32_t Speed;      // Vehicle Speed
+  uint32_t OilP;       // Oil Pressure
+  uint32_t FuelP;      // Fuel Pressure
+  uint32_t FLTemp;     // Front Left Brake Temp
+  uint32_t FRTemp;     // Front Right Brake Temp
+  uint32_t RLTemp;     // Rear Left Brake Temp
+  uint32_t RRTemp;     // Rear Right Brake Temp
+  uint32_t FRPot;      // Front Right Suspension Damper
+  uint32_t FLPot;      // Front Left Suspension Damper
+  uint32_t RRPot;      // Rear Right Suspension Damper
+  uint32_t RLPot;      // Rear Left Suspension Damper
+  uint32_t BrakeFront; // Front Brake Pressure
+  uint32_t BrakeRear;  // Rear Brake Pressure
+  uint32_t AccX;       // Accelerometer X Axis
+  uint32_t AccY;       // Accelerometer Y Axis
+  uint32_t AccZ;       // Accelerometer Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -73,6 +82,10 @@ float OilPLast;
 void setup() {
   Serial2.begin(115200); // Serial port 2 for Nextion
 
+  // Init LoRa Module reset pin
+  pinMode(RFM95_RST, OUTPUT);
+  digitalWrite(RFM95_RST, HIGH);
+
   // Initializes MCP2515 running at 16MHz with a baudrate of 250kb/s and the masks and filters disabled.
   if (CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_16MHZ) == CAN_OK)
     Serial.println("MCP2515 Initialized Successfully!");
@@ -84,6 +97,29 @@ void setup() {
 
   // Configure the INT input pin
   pinMode(CAN0_INT, INPUT);
+
+  // Reset LoRa Module
+  digitalWrite(RFM95_RST, LOW);
+  delay(10);
+  digitalWrite(RFM95_RST, HIGH);
+  delay(10);
+
+  // Configure the LoRa Module
+  while (!rf95.init()) {
+    Serial.println("LoRa radio init failed");
+    while (1);
+  }
+  Serial.println("LoRa radio init OK!");
+
+  if (!rf95.setFrequency(RF95_FREQ)) {
+    Serial.println("setFrequency failed");
+    while (1);
+  }
+  Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
+  rf95.setTxPower(23, false);
+
+  // TODO: Look into Spreading Factor and bandwidth settings
+  // SF11/500kHz  bitrate: 1760 Max   Payload Size: 109
 }
 
 // Function to read in CAN data from the ECU
@@ -113,9 +149,7 @@ void CAN_Data() {
       telemetry.CoolT = (rxBuf[4] + rxBuf[5] * 256) * 0.1; // Coolant Temp
     }
     if ((rxId & 0x1FFFFFFF) == 0x0CFFF348) { 
-      oilPressure = (rxBuf[6] + rxBuf[7] * 256) * 0.001; // Oil Pressure Analog
-      oilPressure = (oilPressure -.5) / 4 * 150; // Convert to PSI
-      telemetry.OilP = oilPressure; // Store in struct
+      telemetry.OilP = (((rxBuf[6] + rxBuf[7] * 256) * 0.001) - .5) / 4.0 * 150.0; // Oil Pressure PSI
     }
   }
 }
@@ -176,7 +210,7 @@ void Send_Dash() {
   Serial2.print(message);
   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)oilPressure);
+  sprintf(message, "%d\"", (int)telemetry.OilP);
   Serial2.print("oilPress.txt=\"");
   Serial2.print(message);
   Nextion_CMD();
@@ -223,15 +257,15 @@ void Send_Dash() {
 // Read in analog Suspention Damper Potentiometers
 void Suspension_Pot() {
   // Values are 0-1023 and map to 0-50mm
-  int FLPot = analogRead(A0);
-  int FRPot = analogRead(A1);
-  int RLPot = analogRead(A2);
-  int RRPot = analogRead(A3);
+  // int FLPot = analogRead(A0);
+  // int FRPot = analogRead(A1);
+  // int RLPot = analogRead(A2);
+  // int RRPot = analogRead(A3);
 
-  telemetry.FLPot = ((double)FLPot * 50.0) / 1023.0;
-  telemetry.FRPot = ((double)FRPot * 50.0) / 1023.0;
-  telemetry.RLPot = ((double)RLPot * 50.0) / 1023.0;
-  telemetry.RRPot = ((double)RRPot * 50.0) / 1023.0;
+  telemetry.FLPot = ((double)analogRead(A0) * 50.0) / 1023.0;
+  telemetry.FRPot = ((double)analogRead(A1) * 50.0) / 1023.0;
+  telemetry.RLPot = ((double)analogRead(A2) * 50.0) / 1023.0;
+  telemetry.RRPot = ((double)analogRead(A3) * 50.0) / 1023.0;
 }
 
 // Read in analog break pressure values
@@ -247,8 +281,14 @@ void Brake_Pressure() {
   telemetry.BrakeFront = fPSI;
   telemetry.BrakeRear = rPSI;
 
-  brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
-  telemetry.BrakeBias = brakeBias;
+  // brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
+}
+
+void Lora_Send() {
+  char buf[sizeof(telemetry)]; // Buffer for data transmission
+  memcpy(buf, &telemetry, sizeof(telemetry)); // Copy data from struct
+  rf95.send((uint8_t *)buf, sizeof(buf)); // Send Data
+  rf95.waitPacketSent(); // Wait for packet to complete
 }
 
 // Function to print test data to validate connections
@@ -265,10 +305,11 @@ void loop() {
   CAN_Data();
   // Brake_Temp();
   // Telemetry_Filter();
-  // Suspension_Pot();
-  // Brake_Pressure();
+  Suspension_Pot();
+  Brake_Pressure();
   Send_Dash();
-  
+  Lora_Send();
+
   // Print_Test_Data();
   
   delay(7); // Delay for stability
