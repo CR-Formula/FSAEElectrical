@@ -2,15 +2,22 @@
 
 #include <mcp_can.h> // CAN Bus Library
 #include <SPI.h> // SPI Library
-#include <EasyTransfer.h> // EasyTransfer Library
-#include <Adafruit_MLX90614.h> // MLX90614 Library
-#include <Wire.h> // I2C Library
 #include <Adafruit_LSM9DS1.h> // IMU Library
 #include <Adafruit_Sensor.h> // Sensor Library
 #include <RH_RF95.h> // LoRa Library
 #include <math.h> // Math Library
 #include <stdio.h> // Standard I/O Library
 #include <stdlib.h> // Standard Library
+
+void Accel_Cal(); // Calibrate Accelerometer
+void Accel_Read(); // Read Accelerometer
+void CAN_Data(); // Read in CAN Data
+void Telemetry_Filter(); // Filter out extraneous values
+void Send_Dash(); // Send values to update the dash display
+void Suspension_Pot(); // Read in analog Suspension Damper Potentiometers
+void Brake_Pressure(); // Read in analog Brake Pressure values
+void Lora_Send(); // Send data over LoRa
+void Print_Test_Data(); // Print test data to validate connections
 
 // Stores the CAN Packet ID
 long unsigned int rxId;
@@ -78,7 +85,15 @@ float AirTLast;
 float CoolTLast;
 float OilPLast;
 
-// Function to initialize sensors, connections, and serial ports
+// Variables for Accelerometer
+int     XYZ_RAW[3];
+int     XYZ_Cal_Offset[3];
+double  XYZ_G[3];
+uint8_t CALIBRATION_DONE;
+
+/**
+ * @brief Initialize Peripherials and Sensors
+ */
 void setup() {
   Serial2.begin(115200); // Serial port 2 for Nextion
 
@@ -117,17 +132,21 @@ void setup() {
   }
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
   rf95.setTxPower(23, false);
-
   // TODO: Look into Spreading Factor and bandwidth settings
   // SF11/500kHz  bitrate: 1760 Max   Payload Size: 109
+
+  // Initialize Accelerometer
+  CALIBRATION_DONE = 0;
+  Serial.begin(115200);
+  Accel_Cal();
 }
 
-// Function to read in CAN data from the ECU
+/**
+ * @brief Function to read Data fron PE3 ECU
+ * @note All 2 byte data is stored [LowByte, HighByte]
+ * @note Num = (LowByte + HighByte * 256) * resolution
+ */
 void CAN_Data() {
-  // Checks for CAN0_INT pin to be low, then reads the recieve buffer
-  // variables for the PE3 ECU CAN data
-  // All 2 byte data is stored [LowByte, HighByte]
-  // Num = (LowByte + HighByte * 256) * resolution
   if (!digitalRead(CAN0_INT))
   {
     // Read Id, length, and message data
@@ -154,7 +173,42 @@ void CAN_Data() {
   }
 }
 
-// Function to filter out extraneous values
+/**
+ * @brief Reads data from the Analog Accelerometer
+ * @note Applies calibration offset
+ * 
+ */
+void Accel_Read() {
+  telemetry.AccX = ((double)(analogRead(A6) - XYZ_Cal_Offset[0] - 512) / 170.667); /* Acceleration in g units */
+  telemetry.AccY = ((double)(analogRead(A7) - XYZ_Cal_Offset[0] - 506) / 170.667);
+  telemetry.AccZ = ((double)(analogRead(A8) - XYZ_Cal_Offset[0] - 615) / 170.667);
+}
+
+/**
+ * @brief Calibrate Accelerometer
+ * @note Reads in 5 values and averages them
+ * 
+ */
+void Accel_Cal() {
+
+  for (int i = 0; i < 5; i++) {
+    XYZ_Cal_Offset[0] += analogRead(A6);
+    XYZ_Cal_Offset[1] += analogRead(A7);
+    XYZ_Cal_Offset[2] += analogRead(A8);
+  }
+
+  XYZ_Cal_Offset[0] = XYZ_Cal_Offset[0] / 5;
+  XYZ_Cal_Offset[1] = XYZ_Cal_Offset[1] / 5;
+  XYZ_Cal_Offset[2] = XYZ_Cal_Offset[2] / 5;
+
+  delay(1);
+  CALIBRATION_DONE = 1;
+}
+
+/**
+ * @brief Function to filter out extraneous values
+ * @note Originaly written to reduce Time Slicing
+ */
 void Telemetry_Filter() {
   if (telemetry.RPM > 20000) {
       telemetry.RPM = RPMLast;
@@ -189,14 +243,19 @@ void Telemetry_Filter() {
   OilPLast = telemetry.OilP;
 }
 
-// write function to update Nextion display
+/**
+ * @brief Writes End Command to the Nextion Display
+ */
 void Nextion_CMD() {
     Serial2.write(0xff);
     Serial2.write(0xff);
     Serial2.write(0xff);
 }
 
-// Function to send values to updated the dash display and shift lights
+/**
+ * @brief Send Data to the Dash
+ * @note The telemetry values have to match Nextion Object names
+ */
 void Send_Dash() {
   // Send dash values as text objects
   char message[64];
@@ -254,21 +313,21 @@ void Send_Dash() {
   }
 }
 
-// Read in analog Suspention Damper Potentiometers
+/**
+ * @brief Reads in suspension potentiometer values
+ * @todo verify conversions
+ */
 void Suspension_Pot() {
-  // Values are 0-1023 and map to 0-50mm
-  // int FLPot = analogRead(A0);
-  // int FRPot = analogRead(A1);
-  // int RLPot = analogRead(A2);
-  // int RRPot = analogRead(A3);
-
   telemetry.FLPot = ((double)analogRead(A0) * 50.0) / 1023.0;
   telemetry.FRPot = ((double)analogRead(A1) * 50.0) / 1023.0;
   telemetry.RLPot = ((double)analogRead(A2) * 50.0) / 1023.0;
   telemetry.RRPot = ((double)analogRead(A3) * 50.0) / 1023.0;
 }
 
-// Read in analog break pressure values
+/**
+ * @brief Read break pressure values
+ * @todo verify conversions
+ */
 void Brake_Pressure() {
   int FrontPres = analogRead(A4);
   int RearPres = analogRead(A5);
@@ -284,6 +343,10 @@ void Brake_Pressure() {
   // brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
 }
 
+/**
+ * @brief Send the LoRa Packet
+ * 
+ */
 void Lora_Send() {
   char buf[sizeof(telemetry)]; // Buffer for data transmission
   memcpy(buf, &telemetry, sizeof(telemetry)); // Copy data from struct
@@ -291,7 +354,10 @@ void Lora_Send() {
   rf95.waitPacketSent(); // Wait for packet to complete
 }
 
-// Function to print test data to validate connections
+/**
+ * @brief Function to print test data for debug
+ * @note Comment this out when you upload to the car
+ */
 void Print_Test_Data() {
   Serial.println();
   Serial.println(telemetry.TPS);
@@ -300,6 +366,10 @@ void Print_Test_Data() {
   Serial.println();
 }
 
+/**
+ * @brief Super loop that calls all the telemetry functions
+ * 
+ */
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
@@ -312,5 +382,5 @@ void loop() {
 
   // Print_Test_Data();
   
-  delay(7); // Delay for stability
+  delay(1); // Delay for stability
 }

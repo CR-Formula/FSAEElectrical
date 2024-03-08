@@ -39,6 +39,10 @@ uint32_t message[sizeof(telemetry)]; // buffer for message
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
+/**
+ * @brief Setup the LoRa module and Serial
+ * @note The LoRa configuration must match the transmitter's configuration
+ */
 void setup() {
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
@@ -67,6 +71,9 @@ void setup() {
   rf95.setTxPower(23, false);
 }
 
+/**
+ * @brief Super Loop to print out the received message over COM port
+ */
 void loop() {
   if (rf95.available()) { // Check for new message
     uint8_t buf[sizeof(telemetry)]; // buffer for message
