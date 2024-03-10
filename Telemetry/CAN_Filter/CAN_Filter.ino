@@ -46,29 +46,29 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT); // LoRa Module
 // Holds all calculated Telemetry Data
 typedef struct data_struct
 {
-  uint8_t RPM;        // RPM
-  uint32_t TPS;        // TPS
-  uint32_t FOT;        // Fuel Open Time
-  uint32_t IA;         // Ignition Angle
-  uint32_t Lam;        // Lambda
-  uint32_t AirT;       // Air Temp
-  uint32_t CoolT;      // Coolant Temp
-  uint32_t Speed;      // Vehicle Speed
-  uint32_t OilP;       // Oil Pressure
-  uint32_t FuelP;      // Fuel Pressure
-  uint32_t FLTemp;     // Front Left Brake Temp
-  uint32_t FRTemp;     // Front Right Brake Temp
-  uint32_t RLTemp;     // Rear Left Brake Temp
-  uint32_t RRTemp;     // Rear Right Brake Temp
-  uint32_t FRPot;      // Front Right Suspension Damper
-  uint32_t FLPot;      // Front Left Suspension Damper
-  uint32_t RRPot;      // Rear Right Suspension Damper
-  uint32_t RLPot;      // Rear Left Suspension Damper
-  uint32_t BrakeFront; // Front Brake Pressure
-  uint32_t BrakeRear;  // Rear Brake Pressure
-  uint32_t AccX;       // Accelerometer X Axis
-  uint32_t AccY;       // Accelerometer Y Axis
-  uint32_t AccZ;       // Accelerometer Z Axis
+  uint8_t RPM;            // RPM
+  uint32_t TPS;           // TPS
+  uint32_t FOT;           // Fuel Open Time
+  uint32_t IA;            // Ignition Angle
+  uint32_t Lam;           // Lambda
+  uint32_t AirT;          // Air Temp
+  uint32_t CoolT;         // Coolant Temp
+  uint32_t Speed;         // Vehicle Speed
+  uint32_t OilP;          // Oil Pressure
+  uint32_t FuelP;         // Fuel Pressure
+  uint32_t FLTemp;        // Front Left Brake Temp
+  uint32_t FRTemp;        // Front Right Brake Temp
+  uint32_t RLTemp;        // Rear Left Brake Temp
+  uint32_t RRTemp;        // Rear Right Brake Temp
+  uint32_t FRPot;         // Front Right Suspension Damper
+  uint32_t FLPot;         // Front Left Suspension Damper
+  uint32_t RRPot;         // Rear Right Suspension Damper
+  uint32_t RLPot;         // Rear Left Suspension Damper
+  uint32_t BrakeFront;    // Front Brake Pressure
+  uint32_t BrakeRear;     // Rear Brake Pressure
+  uint32_t AccX;          // Accelerometer X Axis
+  uint32_t AccY;          // Accelerometer Y Axis
+  uint32_t AccZ;          // Accelerometer Z Axis
 } data_struct;
 data_struct telemetry;
 
@@ -255,10 +255,14 @@ void Nextion_CMD() {
 /**
  * @brief Send Data to the Dash
  * @note The telemetry values have to match Nextion Object names
+ * @todo Add shift light functionality
  */
 void Send_Dash() {
   // Send dash values as text objects
   char message[64];
+
+  //TODO: Add PWM for shift lights Pin 6
+
   sprintf(message, "%d\"", (int)telemetry.RPM);
   Serial2.print("rpm.txt=\"");
   Serial2.print(message); 
