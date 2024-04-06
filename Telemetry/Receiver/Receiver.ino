@@ -35,7 +35,7 @@ typedef struct data_struct
 } data_struct;
 data_struct telemetry;
 
-uint32_t message[sizeof(telemetry)]; // buffer for message
+uint32_t message[256]; // buffer for message
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
@@ -82,15 +82,52 @@ void loop() {
     if (rf95.recv(buf, &len)) {
       memcpy(&telemetry, buf, sizeof(telemetry)); // Copy the message into the data struct
       // Print out the data struct
-      
-      sprintf(message, "%f, %f, %f, %f, %f, %f, %f, %f, 
-              %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, 
-              %f, %f, %f, %f\n", telemetry.RPM, telemetry.TPS, telemetry.FOT,
-              telemetry.IA, telemetry.Lam, telemetry.AirT, telemetry.CoolT, telemetry.Speed,
-              telemetry.OilP, telemetry.FuelP, telemetry.FLTemp, telemetry.FRTemp, telemetry.RLTemp,
-              telemetry.RRTemp, telemetry.FRPot, telemetry.FLPot, telemetry.RRPot, telemetry.RLPot,
-              telemetry.BrakeFront, telemetry.BrakeRear, telemetry.AccX, telemetry.AccY, telemetry.AccZ);
-      Serial.print(message);
+      Serial.print(telemetry.RPM);
+      Serial.print(", ");
+      Serial.print(telemetry.TPS);
+      Serial.print(", ");
+      Serial.print(telemetry.FOT);
+      Serial.print(", ");
+      Serial.print(telemetry.IA);
+      Serial.print(", ");
+      Serial.print(telemetry.Lam);
+      Serial.print(", ");
+      Serial.print(telemetry.AirT);
+      Serial.print(", ");
+      Serial.print(telemetry.CoolT);
+      Serial.print(", ");
+      Serial.print(telemetry.Speed);
+      Serial.print(", ");
+      Serial.print(telemetry.OilP);
+      Serial.print(", ");
+      Serial.print(telemetry.FuelP);
+      Serial.print(", ");
+      Serial.print(telemetry.FLTemp);
+      Serial.print(", ");
+      Serial.print(telemetry.FRTemp);
+      Serial.print(", ");
+      Serial.print(telemetry.RLTemp);
+      Serial.print(", ");
+      Serial.print(telemetry.RRTemp);
+      Serial.print(", ");
+      Serial.print(telemetry.FRPot);
+      Serial.print(", ");
+      Serial.print(telemetry.FLPot);
+      Serial.print(", ");
+      Serial.print(telemetry.RRPot);
+      Serial.print(", ");
+      Serial.print(telemetry.RLPot);
+      Serial.print(", ");
+      Serial.print(telemetry.BrakeFront);
+      Serial.print(", ");
+      Serial.print(telemetry.BrakeRear);
+      Serial.print(", ");
+      Serial.print(telemetry.AccX);
+      Serial.print(", ");
+      Serial.print(telemetry.AccY);
+      Serial.print(", ");
+      Serial.print(telemetry.AccZ);
+      Serial.println();
     }
   }
 }
