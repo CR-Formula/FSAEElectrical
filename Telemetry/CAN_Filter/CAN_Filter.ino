@@ -73,6 +73,17 @@ typedef struct data_struct {
 } data_struct;
 data_struct telemetry;
 
+typedef struct prev_nextion_data_struct {
+  int RPM;
+  int TPS;
+  int Lam;
+  int AirT;
+  int CoolT;
+  int OilP;
+  int BrakeBias;
+} prev_nextion_data_struct
+prev_nextion_data_struct prev_nextion;
+
 // Stores Calculated Brake Bias Value
 double brakeBias = 0;
 double oilPressure = 0;
@@ -206,50 +217,51 @@ void Nextion_CMD() {
 void Send_Dash() {
   // Send dash values as text objects
   char message[64];
-  sprintf(message, "%d\"", (int)telemetry.RPM);
-  Serial2.print("rpm.txt=\"");
-  Serial2.print(message); 
-  Nextion_CMD();
+  if (prev_nextion.RPM != null && prev_nextion.RPM != (int) telemetry.RPM) {
+    sprintf(message, "%d\"", (int)telemetry.RPM);
+    Serial2.print("rpm.txt=\"");
+    Serial2.print(message); 
+    Nextion_CMD();
+    
+    int rpmBar = telemetry.RPM / 160;
+    Serial2.print("rpmBar.val=");
+    Serial2.print(rpmBar);
+    Nextion_CMD();
+    prev_nextion.RPM = (int) telemetry.RPM;
+  } else {
+    prev_nextion.RPM = (int) telemtry.RPM;
+  }
 
-  sprintf(message, "%d\"", (int)telemetry.CoolT);
-  Serial2.print("waterTemp.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+  if (prev_nextion.CoolT != null && prev_nextion.CoolT != telemetry.CoolT) {
+    sprintf(message, "%d\"", (int)telemetry.CoolT);
+    Serial2.print("waterTemp.txt=\"");
+    Serial2.print(message);
+    Nextion_CMD();
+    prev_nextion.CoolT = (int) telemetry.CoolT;
+  } else {
+    prev_nextion.CoolT = (int) telemtry.CoolT;
+  }
 
-  sprintf(message, "%d\"", (int)oilPressure);
-  Serial2.print("oilPress.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+  if (prev_nextion.OilP != null && prev_nextion.OilP != (int) oilPressure) {
+    sprintf(message, "%d\"", (int)oilPressure);
+    Serial2.print("oilPress.txt=\"");
+    Serial2.print(message);
+    Nextion_CMD();
+    prev_nextion.OilP = (int) oilPressure;
+  } else {
+    prev_nextion.OilP = (int) oilPressure;
+  }
 
-  sprintf(message, "%d\"", (int)brakeBias);
-  Serial2.print("bias.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+  if (prev_nextion.BrakeBias != null && prev_nextion.BrakeBias != (int) brakeBias) {
+    sprintf(message, "%d\"", (int)brakeBias);
+    Serial2.print("bias.txt=\"");
+    Serial2.print(message);
+    Nextion_CMD();
+    prev_nextion.BrakeBias = (int) BrakeBias;
+  } else {
+    prev_nextion.BrakeBias = (int) BrakeBias;
+  }
 
-  sprintf(message, "%d\"", (int)telemetry.FLTemp);
-  Serial2.print("brakeFL.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
-
-  sprintf(message, "%d\"", (int)telemetry.FLTemp);
-  Serial2.print("brakeFR.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
-
-  sprintf(message, "%d\"", (int)telemetry.RLTemp);
-  Serial2.print("brakeRL.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
-
-  sprintf(message, "%d\"", (int)telemetry.RRTemp);
-  Serial2.print("brakeRR.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
-
-  int rpmBar = telemetry.RPM / 160;
-  Serial2.print("rpmBar.val=");
-  Serial2.print(rpmBar);
-  Nextion_CMD();
   // TODO: Add gear and Laptimes
 
   // Send value for shift lights
