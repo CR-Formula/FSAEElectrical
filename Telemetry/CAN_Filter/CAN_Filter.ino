@@ -9,6 +9,13 @@
 #include <stdio.h> // Standard I/O Library
 #include <stdlib.h> // Standard Library
 
+#define FR_THERMO A1
+#define ACC_X A15
+#define ACC_Y A13
+#define ACC_Z A14
+#define FR_POT A12
+#define RR_POT A12
+
 void Accel_Cal(); // Calibrate Accelerometer
 void Accel_Read(); // Read Accelerometer
 void CAN_Data(); // Read in CAN Data
@@ -30,7 +37,7 @@ static const int RxPin = 3;
 static const int TxPin = 4;
 
 // Sets INT to pin 2
-#define CAN0_INT 2
+#define CAN0_INT    2
 // Sets CS
 // MCP_CAN CAN0(10); // Uno
 MCP_CAN CAN0(53); // Mega
@@ -39,7 +46,7 @@ MCP_CAN CAN0(53); // Mega
 #define RFM95_CS    49
 #define RFM95_INT   3
 #define RFM95_RST   7
-#define RF95_FREQ 915.0
+#define RF95_FREQ   915.0
 
 RH_RF95 rf95(RFM95_CS, RFM95_INT); // LoRa Module
 
@@ -179,9 +186,9 @@ void CAN_Data() {
  * 
  */
 void Accel_Read() {
-  telemetry.AccX = ((double)(analogRead(A6) - XYZ_Cal_Offset[0] - 512) / 170.667); /* Acceleration in g units */
-  telemetry.AccY = ((double)(analogRead(A7) - XYZ_Cal_Offset[0] - 506) / 170.667);
-  telemetry.AccZ = ((double)(analogRead(A8) - XYZ_Cal_Offset[0] - 615) / 170.667);
+  telemetry.AccX = ((double)(analogRead(ACC_X) - XYZ_Cal_Offset[0] - 512) / 170.667); /* Acceleration in g units */
+  telemetry.AccY = ((double)(analogRead(ACC_Y) - XYZ_Cal_Offset[1] - 506) / 170.667);
+  telemetry.AccZ = ((double)(analogRead(ACC_Z) - XYZ_Cal_Offset[2] - 615) / 170.667);
 }
 
 /**
@@ -192,9 +199,9 @@ void Accel_Read() {
 void Accel_Cal() {
 
   for (int i = 0; i < 5; i++) {
-    XYZ_Cal_Offset[0] += analogRead(A6);
-    XYZ_Cal_Offset[1] += analogRead(A7);
-    XYZ_Cal_Offset[2] += analogRead(A8);
+    XYZ_Cal_Offset[0] += analogRead(ACC_X);
+    XYZ_Cal_Offset[1] += analogRead(ACC_Y);
+    XYZ_Cal_Offset[2] += analogRead(ACC_Z);
   }
 
   XYZ_Cal_Offset[0] = XYZ_Cal_Offset[0] / 5;
@@ -323,9 +330,9 @@ void Send_Dash() {
  */
 void Suspension_Pot() {
   telemetry.FLPot = ((double)analogRead(A0) * 50.0) / 1023.0;
-  telemetry.FRPot = ((double)analogRead(A1) * 50.0) / 1023.0;
+  telemetry.FRPot = ((double)analogRead(FR_POT) * 50.0) / 1023.0;
   telemetry.RLPot = ((double)analogRead(A2) * 50.0) / 1023.0;
-  telemetry.RRPot = ((double)analogRead(A3) * 50.0) / 1023.0;
+  telemetry.RRPot = ((double)analogRead(RR_POT) * 50.0) / 1023.0;
 }
 
 /**
@@ -359,6 +366,18 @@ void Lora_Send() {
 }
 
 /**
+ * @brief Caclulate Brake Temperature
+ * @note Uses a thermocouple to calculate temperature
+ * 
+ */
+void Brake_Temp() {
+  int FRTemp = analogRead(FR_THERMO);
+
+  // T = (V - 1.25) / .005
+  telemetry.FRTemp = ((((double)FRTemp * 5) / 1023.0) - 1.25) / .005;
+}
+
+/**
  * @brief Function to print test data for debug
  * @note Comment this out when you upload to the car
  */
@@ -377,14 +396,14 @@ void Print_Test_Data() {
 void loop() {
   // function calls for each sensor/module
   CAN_Data();
-  // Brake_Temp();
+  Brake_Temp();
   // Telemetry_Filter();
   Suspension_Pot();
-  Brake_Pressure();
+  // Brake_Pressure();
   Send_Dash();
   Lora_Send();
 
-  // Print_Test_Data();
+  Print_Test_Data();
   
   delay(1); // Delay for stability
 }
