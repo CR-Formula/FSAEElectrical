@@ -122,11 +122,11 @@ void loop() {
       Serial.print(", ");
       Serial.print(telemetry.BrakeRear);
       Serial.print(", ");
-      Serial.print(telemetry.AccX);
+      Serial.print((float)telemetry.AccX, );
       Serial.print(", ");
-      Serial.print(telemetry.AccY);
+      Serial.print((float)telemetry.AccY);
       Serial.print(", ");
-      Serial.print(telemetry.AccZ);
+      Serial.print((float)telemetry.AccZ);
       Serial.println();
     }
   }

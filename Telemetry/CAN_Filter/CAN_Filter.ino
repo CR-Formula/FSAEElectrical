@@ -186,9 +186,9 @@ void CAN_Data() {
  * 
  */
 void Accel_Read() {
-  telemetry.AccX = ((double)(analogRead(ACC_X) - XYZ_Cal_Offset[0] - 512) / 170.667); /* Acceleration in g units */
-  telemetry.AccY = ((double)(analogRead(ACC_Y) - XYZ_Cal_Offset[1] - 506) / 170.667);
-  telemetry.AccZ = ((double)(analogRead(ACC_Z) - XYZ_Cal_Offset[2] - 615) / 170.667);
+  telemetry.AccX = ((float)(analogRead(ACC_X) - XYZ_Cal_Offset[0]) / 170.667); /* Acceleration in g units */
+  telemetry.AccY = ((float)(analogRead(ACC_Y) - XYZ_Cal_Offset[1]) / 170.667);
+  telemetry.AccZ = ((float)(analogRead(ACC_Z) - XYZ_Cal_Offset[2]) / 170.667);
 }
 
 /**
@@ -400,6 +400,7 @@ void loop() {
   // Telemetry_Filter();
   Suspension_Pot();
   // Brake_Pressure();
+  Accel_Read();
   Send_Dash();
   Lora_Send();
 
