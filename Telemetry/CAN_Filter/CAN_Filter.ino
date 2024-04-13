@@ -53,29 +53,22 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT); // LoRa Module
 // Holds all calculated Telemetry Data
 typedef struct data_struct
 {
-  uint8_t RPM;            // RPM
-  uint32_t TPS;           // TPS
-  uint32_t FOT;           // Fuel Open Time
-  uint32_t IA;            // Ignition Angle
-  uint32_t Lam;           // Lambda
-  uint32_t AirT;          // Air Temp
-  uint32_t CoolT;         // Coolant Temp
-  uint32_t Speed;         // Vehicle Speed
-  uint32_t OilP;          // Oil Pressure
-  uint32_t FuelP;         // Fuel Pressure
-  uint32_t FLTemp;        // Front Left Brake Temp
-  uint32_t FRTemp;        // Front Right Brake Temp
-  uint32_t RLTemp;        // Rear Left Brake Temp
-  uint32_t RRTemp;        // Rear Right Brake Temp
-  uint32_t FRPot;         // Front Right Suspension Damper
-  uint32_t FLPot;         // Front Left Suspension Damper
-  uint32_t RRPot;         // Rear Right Suspension Damper
-  uint32_t RLPot;         // Rear Left Suspension Damper
-  uint32_t BrakeFront;    // Front Brake Pressure
-  uint32_t BrakeRear;     // Rear Brake Pressure
-  uint32_t AccX;          // Accelerometer X Axis
-  uint32_t AccY;          // Accelerometer Y Axis
-  uint32_t AccZ;          // Accelerometer Z Axis
+  float RPM;           // RPM
+  float TPS;           // TPS
+  float FOT;           // Fuel Open Time
+  float IA;            // Ignition Angle
+  float Lam;           // Lambda
+  float AirT;          // Air Temp
+  float CoolT;         // Coolant Temp
+  float Speed;         // Vehicle Speed
+  float OilP;          // Oil Pressure
+  float FRTemp;        // Front Right Brake Temp
+  float RRTemp;        // Rear Right Brake Temp
+  float FRPot;         // Front Right Suspension Damper
+  float RRPot;         // Rear Right Suspension Damper
+  float AccX;          // Accelerometer X Axis
+  float AccZ;          // Accelerometer Z Axis
+  float AccY;          // Accelerometer Y Axis
 } data_struct;
 data_struct telemetry;
 
@@ -264,74 +257,74 @@ void Nextion_CMD() {
  * @note The telemetry values have to match Nextion Object names
  * @todo Add shift light functionality
  */
-void Send_Dash() {
-  // Send dash values as text objects
-  char message[64];
+// void Send_Dash() {
+//   // Send dash values as text objects
+//   char message[64];
 
-  //TODO: Add PWM for shift lights Pin 6
+//   //TODO: Add PWM for shift lights Pin 6
 
-  sprintf(message, "%d\"", (int)telemetry.RPM);
-  Serial2.print("rpm.txt=\"");
-  Serial2.print(message); 
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.RPM);
+//   Serial2.print("rpm.txt=\"");
+//   Serial2.print(message); 
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.CoolT);
-  Serial2.print("waterTemp.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.CoolT);
+//   Serial2.print("waterTemp.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.OilP);
-  Serial2.print("oilPress.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.OilP);
+//   Serial2.print("oilPress.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)brakeBias);
-  Serial2.print("bias.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)brakeBias);
+//   Serial2.print("bias.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.FLTemp);
-  Serial2.print("brakeFL.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.FLTemp);
+//   Serial2.print("brakeFL.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.FLTemp);
-  Serial2.print("brakeFR.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.FLTemp);
+//   Serial2.print("brakeFR.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.RLTemp);
-  Serial2.print("brakeRL.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.RLTemp);
+//   Serial2.print("brakeRL.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  sprintf(message, "%d\"", (int)telemetry.RRTemp);
-  Serial2.print("brakeRR.txt=\"");
-  Serial2.print(message);
-  Nextion_CMD();
+//   sprintf(message, "%d\"", (int)telemetry.RRTemp);
+//   Serial2.print("brakeRR.txt=\"");
+//   Serial2.print(message);
+//   Nextion_CMD();
 
-  int rpmBar = telemetry.RPM / 160;
-  Serial2.print("rpmBar.val=");
-  Serial2.print(rpmBar);
-  Nextion_CMD();
-  // TODO: Add gear and Laptimes
+//   int rpmBar = telemetry.RPM / 160;
+//   Serial2.print("rpmBar.val=");
+//   Serial2.print(rpmBar);
+//   Nextion_CMD();
+//   // TODO: Add gear and Laptimes
 
-  // Send value for shift lights
-  // Shift light range from 8525 - 15500
-  if (telemetry.RPM > 7750) {
-    int shiftlights = ((telemetry.RPM - 7750) * 80) / 7750;
-    digitalWrite(5, shiftlights);
-  }
-}
+//   // Send value for shift lights
+//   // Shift light range from 8525 - 15500
+//   if (telemetry.RPM > 7750) {
+//     int shiftlights = ((telemetry.RPM - 7750) * 80) / 7750;
+//     digitalWrite(5, shiftlights);
+//   }
+// }
 
 /**
  * @brief Reads in suspension potentiometer values
  * @todo verify conversions
  */
 void Suspension_Pot() {
-  telemetry.FLPot = ((double)analogRead(A0) * 50.0) / 1023.0;
+  // telemetry.FLPot = ((double)analogRead(A0) * 50.0) / 1023.0;
   telemetry.FRPot = ((double)analogRead(FR_POT) * 50.0) / 1023.0;
-  telemetry.RLPot = ((double)analogRead(A2) * 50.0) / 1023.0;
+  // telemetry.RLPot = ((double)analogRead(A2) * 50.0) / 1023.0;
   telemetry.RRPot = ((double)analogRead(RR_POT) * 50.0) / 1023.0;
 }
 
@@ -339,20 +332,20 @@ void Suspension_Pot() {
  * @brief Read break pressure values
  * @todo verify conversions
  */
-void Brake_Pressure() {
-  int FrontPres = analogRead(A4);
-  int RearPres = analogRead(A5);
+// void Brake_Pressure() {
+//   int FrontPres = analogRead(A4);
+//   int RearPres = analogRead(A5);
   
-  // .5v - 4.5V --> 0 - 100 bar
-  // bar --> psi = bar * 14.504
-  double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
-  double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
+//   // .5v - 4.5V --> 0 - 100 bar
+//   // bar --> psi = bar * 14.504
+//   double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
+//   double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
 
-  telemetry.BrakeFront = fPSI;
-  telemetry.BrakeRear = rPSI;
+//   telemetry.BrakeFront = fPSI;
+//   telemetry.BrakeRear = rPSI;
 
-  // brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
-}
+//   // brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
+// }
 
 /**
  * @brief Send the LoRa Packet
@@ -398,10 +391,10 @@ void loop() {
   CAN_Data();
   Brake_Temp();
   // Telemetry_Filter();
-  Suspension_Pot();
+  // Suspension_Pot();
   // Brake_Pressure();
   Accel_Read();
-  Send_Dash();
+  // Send_Dash();
   Lora_Send();
 
   Print_Test_Data();

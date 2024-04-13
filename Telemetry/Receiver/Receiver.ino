@@ -9,29 +9,22 @@
 
 typedef struct data_struct
 {
-  uint8_t RPM;            // RPM
-  uint32_t TPS;           // TPS
-  uint32_t FOT;           // Fuel Open Time
-  uint32_t IA;            // Ignition Angle
-  uint32_t Lam;           // Lambda
-  uint32_t AirT;          // Air Temp
-  uint32_t CoolT;         // Coolant Temp
-  uint32_t Speed;         // Vehicle Speed
-  uint32_t OilP;          // Oil Pressure
-  uint32_t FuelP;         // Fuel Pressure
-  uint32_t FLTemp;        // Front Left Brake Temp
-  uint32_t FRTemp;        // Front Right Brake Temp
-  uint32_t RLTemp;        // Rear Left Brake Temp
-  uint32_t RRTemp;        // Rear Right Brake Temp
-  uint32_t FRPot;         // Front Right Suspension Damper
-  uint32_t FLPot;         // Front Left Suspension Damper
-  uint32_t RRPot;         // Rear Right Suspension Damper
-  uint32_t RLPot;         // Rear Left Suspension Damper
-  uint32_t BrakeFront;    // Front Brake Pressure
-  uint32_t BrakeRear;     // Rear Brake Pressure
-  uint32_t AccX;          // Accelerometer X Axis
-  uint32_t AccY;          // Accelerometer Y Axis
-  uint32_t AccZ;          // Accelerometer Z Axis
+  float RPM;           // RPM
+  float TPS;           // TPS
+  float FOT;           // Fuel Open Time
+  float IA;            // Ignition Angle
+  float Lam;           // Lambda
+  float AirT;          // Air Temp
+  float CoolT;         // Coolant Temp
+  float Speed;         // Vehicle Speed
+  float OilP;          // Oil Pressure
+  float FRTemp;        // Front Right Brake Temp
+  float RRTemp;        // Rear Right Brake Temp
+  float FRPot;         // Front Right Suspension Damper
+  float RRPot;         // Rear Right Suspension Damper
+  float AccX;          // Accelerometer X Axis
+  float AccZ;          // Accelerometer Z Axis
+  float AccY;          // Accelerometer Y Axis
 } data_struct;
 data_struct telemetry;
 
@@ -82,51 +75,51 @@ void loop() {
     if (rf95.recv(buf, &len)) {
       memcpy(&telemetry, buf, sizeof(telemetry)); // Copy the message into the data struct
       // Print out the data struct
-      Serial.print(telemetry.RPM);
+      Serial.print((int)telemetry.RPM);
       Serial.print(", ");
-      Serial.print(telemetry.TPS);
+      Serial.print((int)telemetry.TPS);
       Serial.print(", ");
-      Serial.print(telemetry.FOT);
-      Serial.print(", ");
-      Serial.print(telemetry.IA);
-      Serial.print(", ");
-      Serial.print(telemetry.Lam);
-      Serial.print(", ");
-      Serial.print(telemetry.AirT);
-      Serial.print(", ");
+      // Serial.print((double)telemetry.FOT);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.IA);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.Lam);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.AirT);
+      // Serial.print(", ");
       Serial.print(telemetry.CoolT);
       Serial.print(", ");
-      Serial.print(telemetry.Speed);
-      Serial.print(", ");
-      Serial.print(telemetry.OilP);
-      Serial.print(", ");
-      Serial.print(telemetry.FuelP);
-      Serial.print(", ");
-      Serial.print(telemetry.FLTemp);
-      Serial.print(", ");
-      Serial.print(telemetry.FRTemp);
-      Serial.print(", ");
-      Serial.print(telemetry.RLTemp);
-      Serial.print(", ");
-      Serial.print(telemetry.RRTemp);
-      Serial.print(", ");
-      Serial.print(telemetry.FRPot);
-      Serial.print(", ");
-      Serial.print(telemetry.FLPot);
-      Serial.print(", ");
-      Serial.print(telemetry.RRPot);
-      Serial.print(", ");
-      Serial.print(telemetry.RLPot);
-      Serial.print(", ");
-      Serial.print(telemetry.BrakeFront);
-      Serial.print(", ");
-      Serial.print(telemetry.BrakeRear);
-      Serial.print(", ");
-      Serial.print((float)telemetry.AccX, );
-      Serial.print(", ");
-      Serial.print((float)telemetry.AccY);
-      Serial.print(", ");
-      Serial.print((float)telemetry.AccZ);
+      // Serial.print((double)telemetry.Speed);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.OilP);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.FuelP);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.FLTemp);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.FRTemp);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.RLTemp);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.RRTemp);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.FRPot);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.FLPot);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.RLPot);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.RRPot);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.BrakeFront);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.BrakeRear);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.AccX);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.AccY);
+      // Serial.print(", ");
+      // Serial.print((double)telemetry.AccZ);
       Serial.println();
     }
   }
