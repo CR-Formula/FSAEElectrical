@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <SD.h>
 
-const int chipSelect = 10;  
+const int chipSelect = 47;  
 
 void setup()
 {
