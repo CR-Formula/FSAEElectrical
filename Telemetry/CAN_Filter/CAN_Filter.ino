@@ -91,6 +91,10 @@ int     XYZ_Cal_Offset[3];
 double  XYZ_G[3];
 uint8_t CALIBRATION_DONE;
 
+char message[64]; // Buffer for Dash Message
+
+char buf[sizeof(telemetry)]; // Buffer for data transmission
+
 /**
  * @brief Initialize Peripherials and Sensors
  */
@@ -257,65 +261,46 @@ void Nextion_CMD() {
  * @note The telemetry values have to match Nextion Object names
  * @todo Add shift light functionality
  */
-// void Send_Dash() {
-//   // Send dash values as text objects
-//   char message[64];
+void Send_Dash() {
+  // Send dash values as text objects
 
-//   //TODO: Add PWM for shift lights Pin 6
+  sprintf(message, "%d\"", (int)telemetry.RPM);
+  Serial2.print("rpm.txt=\"");
+  Serial2.print(message); 
+  Nextion_CMD();
 
-//   sprintf(message, "%d\"", (int)telemetry.RPM);
-//   Serial2.print("rpm.txt=\"");
-//   Serial2.print(message); 
-//   Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.CoolT);
+  Serial2.print("waterTemp.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
 
-//   sprintf(message, "%d\"", (int)telemetry.CoolT);
-//   Serial2.print("waterTemp.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.OilP);
+  Serial2.print("oilPress.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
 
-//   sprintf(message, "%d\"", (int)telemetry.OilP);
-//   Serial2.print("oilPress.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.FRTemp);
+  Serial2.print("brakeFR.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
 
-//   sprintf(message, "%d\"", (int)brakeBias);
-//   Serial2.print("bias.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
+  sprintf(message, "%d\"", (int)telemetry.RRTemp);
+  Serial2.print("brakeRR.txt=\"");
+  Serial2.print(message);
+  Nextion_CMD();
 
-//   sprintf(message, "%d\"", (int)telemetry.FLTemp);
-//   Serial2.print("brakeFL.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
+  int rpmBar = telemetry.RPM / 160;
+  Serial2.print("rpmBar.val=");
+  Serial2.print(rpmBar);
+  Nextion_CMD();
 
-//   sprintf(message, "%d\"", (int)telemetry.FLTemp);
-//   Serial2.print("brakeFR.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
-
-//   sprintf(message, "%d\"", (int)telemetry.RLTemp);
-//   Serial2.print("brakeRL.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
-
-//   sprintf(message, "%d\"", (int)telemetry.RRTemp);
-//   Serial2.print("brakeRR.txt=\"");
-//   Serial2.print(message);
-//   Nextion_CMD();
-
-//   int rpmBar = telemetry.RPM / 160;
-//   Serial2.print("rpmBar.val=");
-//   Serial2.print(rpmBar);
-//   Nextion_CMD();
-//   // TODO: Add gear and Laptimes
-
-//   // Send value for shift lights
-//   // Shift light range from 8525 - 15500
-//   if (telemetry.RPM > 7750) {
-//     int shiftlights = ((telemetry.RPM - 7750) * 80) / 7750;
-//     digitalWrite(5, shiftlights);
-//   }
-// }
+  // Send value for shift lights
+  // Shift light range from 8525 - 15500
+  if (telemetry.RPM > 7750) {
+    int shiftlights = ((telemetry.RPM - 7750) * 80) / 7750;
+    digitalWrite(5, shiftlights);
+  }
+}
 
 /**
  * @brief Reads in suspension potentiometer values
@@ -329,33 +314,12 @@ void Suspension_Pot() {
 }
 
 /**
- * @brief Read break pressure values
- * @todo verify conversions
- */
-// void Brake_Pressure() {
-//   int FrontPres = analogRead(A4);
-//   int RearPres = analogRead(A5);
-  
-//   // .5v - 4.5V --> 0 - 100 bar
-//   // bar --> psi = bar * 14.504
-//   double fPSI = (((double)FrontPres * 112.5) / 1023.0) * 14.504;
-//   double rPSI = (((double)RearPres * 112.5) / 1023.0) * 14.504;
-
-//   telemetry.BrakeFront = fPSI;
-//   telemetry.BrakeRear = rPSI;
-
-//   // brakeBias = (0.99 * fPSI) / ((0.99 * fPSI) + (0.79 * rPSI)) * 100;
-// }
-
-/**
  * @brief Send the LoRa Packet
  * 
  */
 void Lora_Send() {
-  char buf[sizeof(telemetry)]; // Buffer for data transmission
   memcpy(buf, &telemetry, sizeof(telemetry)); // Copy data from struct
   rf95.send((uint8_t *)buf, sizeof(buf)); // Send Data
-  rf95.waitPacketSent(); // Wait for packet to complete
 }
 
 /**
@@ -392,7 +356,6 @@ void loop() {
   Brake_Temp();
   // Telemetry_Filter();
   // Suspension_Pot();
-  // Brake_Pressure();
   Accel_Read();
   // Send_Dash();
   Lora_Send();

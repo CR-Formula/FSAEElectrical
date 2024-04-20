@@ -30,6 +30,8 @@ data_struct telemetry;
 
 uint32_t message[256]; // buffer for message
 
+uint8_t buf[sizeof(telemetry)]; // buffer for message
+
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
 
 /**
@@ -69,7 +71,6 @@ void setup() {
  */
 void loop() {
   if (rf95.available()) { // Check for new message
-    uint8_t buf[sizeof(telemetry)]; // buffer for message
     uint8_t len = sizeof(buf);
 
     if (rf95.recv(buf, &len)) {
@@ -79,47 +80,33 @@ void loop() {
       Serial.print(", ");
       Serial.print((int)telemetry.TPS);
       Serial.print(", ");
-      // Serial.print((double)telemetry.FOT);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.IA);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.Lam);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.AirT);
-      // Serial.print(", ");
-      Serial.print(telemetry.CoolT);
+      Serial.print((double)telemetry.FOT);
       Serial.print(", ");
-      // Serial.print((double)telemetry.Speed);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.OilP);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.FuelP);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.FLTemp);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.FRTemp);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.RLTemp);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.RRTemp);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.FRPot);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.FLPot);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.RLPot);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.RRPot);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.BrakeFront);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.BrakeRear);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.AccX);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.AccY);
-      // Serial.print(", ");
-      // Serial.print((double)telemetry.AccZ);
+      Serial.print((double)telemetry.IA);
+      Serial.print(", ");
+      Serial.print((double)telemetry.Lam);
+      Serial.print(", ");
+      Serial.print((double)telemetry.AirT);
+      Serial.print(", ");
+      Serial.print((double)telemetry.CoolT);
+      Serial.print(", ");
+      Serial.print((double)telemetry.Speed);
+      Serial.print(", ");
+      Serial.print((double)telemetry.OilP);
+      Serial.print(", ");
+      Serial.print((double)telemetry.FRTemp);
+      Serial.print(", ");
+      Serial.print((double)telemetry.RRTemp);
+      Serial.print(", ");
+      Serial.print((double)telemetry.FRPot);
+      Serial.print(", ");
+      Serial.print((double)telemetry.RRPot);
+      Serial.print(", ");
+      Serial.print((double)telemetry.AccX);
+      Serial.print(", ");
+      Serial.print((double)telemetry.AccY);
+      Serial.print(", ");
+      Serial.print((double)telemetry.AccZ);
       Serial.println();
     }
   }
